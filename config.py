@@ -1,0 +1,17 @@
+"""
+Configuration global variables
+"""
+DIS_WIDTH = 640
+DIS_HEIGHT = 480
+
+WHITE = (255, 255, 255)
+YELLOW = (255, 255, 102)
+BLACK = (0, 0, 0)
+RED = (213, 50, 80)
+GREEN = (0, 255, 0)
+BLUE = (50, 153, 213)
+
+VELOCITY = 1
+FRAMERATE = 120
+SPRITE_SIZE = 32
+TILE_SIZE = 16

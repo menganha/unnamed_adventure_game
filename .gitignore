@@ -1,0 +1,4 @@
+*.zip
+gfx
+__pycache__
+.vscode
