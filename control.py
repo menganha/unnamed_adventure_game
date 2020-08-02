@@ -18,7 +18,9 @@ class Control():
 
     def handle_input(self):
         if self.hasGamepad:
-            pygame.event.pump()
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    self.exit = True
             self.moving_right = round(self.gamepad.get_axis(0)) == 1
             self.moving_left = round(self.gamepad.get_axis(0)) == -1
             self.moving_up = round(self.gamepad.get_axis(1)) == -1
