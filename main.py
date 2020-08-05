@@ -7,6 +7,9 @@ from world import World
 from text import Text
 
 # TODO: make that the Text class inherits from sprite
+# TODO: Map scrolling works only for going to the right.
+# Change this in the World and Player Classes
+#
 
 
 class Game():
@@ -50,15 +53,18 @@ class Game():
             self.exit = self.control.exit
 
             # Update
-            self.all_sprites.update(1/cfg.FRAMERATE, self.control)
+            self.all_sprites.update(
+                1/cfg.FRAMERATE, self.control, self.world.solid_objects, self.world.scroll_velocity
+                )
+            self.world.update(self.player.out_of_bounds_x or self.player.out_of_bounds_y)
             #self.all_sprites.update(self.delta, self.control)
 
             # Render
             self.display.fill(cfg.WHITE)
             self.debug_text.draw(self.display)
-            self.pos_text.draw(self.display)
             self.world.draw(self.display)
             self.all_sprites.draw(self.display)
+            self.pos_text.draw(self.display)
             pygame.display.update()
 
         pygame.quit()

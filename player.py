@@ -16,6 +16,7 @@ class Player(pygame.sprite.Sprite):
         self.velX = 0
         self.velY = 0
         self.animation_counter = 0
+        self.out_of_bounds_x, self.out_of_bounds_y = False, False
 
     def _get_frame_dict(self):
         spriteSheet = pygame.image.load("./assets/sprites/player/dog.png").convert_alpha()
@@ -51,7 +52,7 @@ class Player(pygame.sprite.Sprite):
 
         return animation_dict
 
-    def move(self, delta, control: Control):
+    def move(self, delta, control: Control, physical_objects):
         self.velX = 0
         self.velY = 0
         # self.animation_key = 'idleRight'
@@ -86,8 +87,40 @@ class Player(pygame.sprite.Sprite):
         frame_idx = self.animation_dict[self.animation_key][self.animation_counter]
         self.image = self.frame_dict[self.animation_key][frame_idx]
 
+        old_pos_x = self.rect.x
+        old_pos_y = self.rect.y
         self.rect.x += int(delta * self.velX * cfg.FRAMERATE)
         self.rect.y += int(delta * self.velY * cfg.FRAMERATE)
+        hitbox = self.rect.inflate(-16, -16)
+        hitbox.y += 8
 
-    def update(self, delta, control: Control):
-        self.move(delta, control)
+        if hitbox.collidelist(physical_objects) != -1:
+            self.rect.x = old_pos_x
+            self.rect.y = old_pos_y
+
+        self.check_if_within_bounds()
+
+    def check_if_within_bounds(self):
+        if (self.rect.x > cfg.DIS_WIDTH - cfg.SPRITE_SIZE//2
+                or self.rect.x < -cfg.SPRITE_SIZE//2):
+            self.out_of_bounds_x = copysign(1, self.rect.x)
+        if (self.rect.y > cfg.DIS_HEIGHT - cfg.SPRITE_SIZE//2
+                or self.rect.y < -cfg.SPRITE_SIZE//2):
+            self.out_of_bounds_y = copysign(1, self.rect.y)
+
+    def transition(self, delta, scroll_velocity):
+        self.rect.x += -self.out_of_bounds_x*scroll_velocity
+        self.rect.y += -self.out_of_bounds_y*scroll_velocity
+
+        if (self.rect.x > cfg.DIS_WIDTH - cfg.SPRITE_SIZE//4
+                and self.out_of_bounds_x == -1):
+            self.out_of_bounds_x = 0
+        elif (self.rect.x < - cfg.SPRITE_SIZE//4
+                and self.out_of_bounds_x == 1):
+            self.out_of_bounds_x = 0
+
+    def update(self, delta, control: Control, physical_objects, scroll_velocity):
+        if self.out_of_bounds_x or self.out_of_bounds_y:
+            self.transition(delta, scroll_velocity)
+        else:
+            self.move(delta, control, physical_objects)
