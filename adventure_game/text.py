@@ -1,5 +1,5 @@
 import pygame
-from config import DIS_WIDTH, DIS_HEIGHT, BLACK
+from adventure_game.config import DIS_WIDTH, DIS_HEIGHT, BLACK
 
 
 class Text():

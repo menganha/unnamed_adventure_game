@@ -1,10 +1,10 @@
 import pygame
 import sys
-import config as cfg
-from player import Player
-from control import Control
-from world import World
-from text import Text
+import adventure_game.config as cfg
+from adventure_game.player import Player
+from adventure_game.control import Control
+from adventure_game.world import World
+from adventure_game.text import Text
 
 
 class Game():
@@ -17,8 +17,7 @@ class Game():
         self.control = Control()
         self.all_sprites = pygame.sprite.Group()
         self.player = Player()
-        self.sprite_sheet = pygame.image.load("assets/sprites/overworld.png").convert_alpha()
-        self.world = World(self.sprite_sheet)
+        self.world = World()
         self.all_sprites.add(self.player)
         self.font = pygame.font.Font("./assets/font/PressStart2P.ttf", 8)
         self.debug_text = Text(self.font)
@@ -49,9 +48,9 @@ class Game():
 
             # Update
             self.all_sprites.update(
-                1/cfg.FRAMERATE, self.control, self.world.solid_objects, self.world.scroll_velocity
+                1/cfg.FRAMERATE, self.control, self.world.solid_objects, self.world.in_transition
                 )
-            self.world.update(self.player.out_of_bounds_x or self.player.out_of_bounds_y)
+            self.world.update(self.player.out_of_bounds)
             #self.all_sprites.update(self.delta, self.control)
 
             # Render

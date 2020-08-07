@@ -1,6 +1,7 @@
 import pygame
-import config as cfg
+import adventure_game.config as cfg
 import json
+import re
 
 
 class Tile(pygame.sprite.Sprite):
@@ -10,22 +11,27 @@ class Tile(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.topleft = pos
 
-    def update(self, scroll_velocity):
-        self.rect.x -= scroll_velocity
-        # self.rect.y -= 1
-        if self.rect.x <= -cfg.TILE_SIZE or self.rect.y <= -cfg.TILE_SIZE:
+    def update(self, out_of_bounds):
+        self.rect.x -= cfg.SCROLL_VELOCITY * out_of_bounds[0]
+        self.rect.y -= cfg.SCROLL_VELOCITY * out_of_bounds[1]
+        if (
+                self.rect.x <= -cfg.TILE_SIZE and out_of_bounds[0] == 1
+                or self.rect.y <= -cfg.TILE_SIZE and out_of_bounds[1] == 1
+                or self.rect.x >= cfg.DIS_WIDTH+cfg.TILE_SIZE and out_of_bounds[0] == -1
+                or self.rect.y >= cfg.DIS_HEIGHT+cfg.TILE_SIZE and out_of_bounds[1] == -1
+                ):
             self.kill()
 
 
 class World(pygame.sprite.Group):
-    def __init__(self, sprite_sheet):
+    def __init__(self):
         super().__init__()
         self.mapLoaded = False
-        self.sprite_sheet = sprite_sheet
-        self.load_map('data/map1.json')
-        self.map_offset = 0
-        self.scroll_velocity = 5
+        self.sprite_sheet = pygame.image.load("assets/sprites/RPG Nature Tileset.png")
+        self.current_map = r'data/level-x04-y00.json'
+        self.map_offset = [0, 0]
         self.in_transition = False
+        self.load_map()
 
     def get_relevant_tiles(self):
         unique_tiles = set()
@@ -33,11 +39,12 @@ class World(pygame.sprite.Group):
             if layer['type'] == 'objectgroup':
                 continue
             unique_tiles = unique_tiles.union(set(layer['data']))
-        unique_tiles.remove(0)
+        if 0 in unique_tiles:  # 0 refers to no tile
+            unique_tiles.remove(0)
         return list(unique_tiles)
 
-    def load_data(self, file):
-        with open(file) as f:
+    def load_data(self):
+        with open(self.current_map) as f:
             data = json.load(f)['layers']
         return data
 
@@ -66,7 +73,7 @@ class World(pygame.sprite.Group):
                     tile_dict.update({idx+1: tile})
         return tile_dict
 
-    def arrange_world(self, offset=0):
+    def arrange_world(self):
         for layer in self.data:
             if layer['type'] == 'objectgroup':
                 continue
@@ -74,29 +81,40 @@ class World(pygame.sprite.Group):
             for idx, tile_idx in enumerate(layer['data']):
                 if tile_idx == 0:
                     continue
-                y = (idx // width)*cfg.TILE_SIZE
-                x = (idx % width)*cfg.TILE_SIZE + offset
+                x = (idx % width)*cfg.TILE_SIZE + self.map_offset[0]
+                y = (idx // width)*cfg.TILE_SIZE + self.map_offset[1]
                 image = self.tile_dict[tile_idx].convert_alpha()
                 Tile(image, (x, y)).add(self)
 
-    def load_map(self, map_name, offset=0):
-        self.data = self.load_data(map_name)
+    def load_map(self):
+        self.data = self.load_data()
         self.solid_objects = self.get_solid_objects()
         self.unique_tileset_index = self.get_relevant_tiles()
         self.tile_dict = self.get_tile_dict()
-        self.arrange_world(offset)
-        if offset > 0:
+        self.arrange_world()
+        if any(offset != 0 for offset in self.map_offset):
             self.in_transition = True
         else:
             self.in_transition = False
 
-    def update(self, out_of_bounds):
-        if out_of_bounds and not self.in_transition:
-            self.map_offset = cfg.DIS_WIDTH
-            self.load_map('data/map2.json', self.map_offset)
+    def next_map(self, out_of_bounds):
+        match = re.match(r"data/level-x0(\d+)-y0(\d+)\.json", self.current_map)
+        x = int(match.group(1)) + int(out_of_bounds[0])
+        y = int(match.group(2)) - int(out_of_bounds[1])
+        return "data/level-x0{:d}-y0{:d}.json".format(x, y)
 
-        if self.map_offset > 0:
-            super().update(self.scroll_velocity)
-            self.map_offset -= self.scroll_velocity
+    def update(self, out_of_bounds):
+        if any(out_of_bounds) and not self.in_transition:
+            self.map_offset = [cfg.DIS_WIDTH*out_of_bounds[0], cfg.DIS_HEIGHT*out_of_bounds[1]]
+            self.current_map = self.next_map(out_of_bounds)
+            self.load_map()
+
+        if any(offset != 0 for offset in self.map_offset):
+            super().update(out_of_bounds)
+            scroll_vel_vec = [idx*cfg.SCROLL_VELOCITY for idx in out_of_bounds]
+            self.map_offset = [offset - vel for offset, vel in zip(self.map_offset, scroll_vel_vec)]
+            # TODO: Think of changing all this variables to pygame vectors class
+            print(self.map_offset)
         else:
+            self.map_offset = [0, 0]
             self.in_transition = False

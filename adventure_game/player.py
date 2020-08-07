@@ -1,7 +1,7 @@
 import pygame
-from control import Control
-import config as cfg
 from math import copysign
+import adventure_game.config as cfg
+from adventure_game.control import Control
 
 
 class Player(pygame.sprite.Sprite):
@@ -16,7 +16,7 @@ class Player(pygame.sprite.Sprite):
         self.velX = 0
         self.velY = 0
         self.animation_counter = 0
-        self.out_of_bounds_x, self.out_of_bounds_y = False, False
+        self.out_of_bounds = [False, False]
 
     def _get_frame_dict(self):
         spriteSheet = pygame.image.load("./assets/sprites/player/dog.png").convert_alpha()
@@ -103,24 +103,24 @@ class Player(pygame.sprite.Sprite):
     def check_if_within_bounds(self):
         if (self.rect.x > cfg.DIS_WIDTH - cfg.SPRITE_SIZE//2
                 or self.rect.x < -cfg.SPRITE_SIZE//2):
-            self.out_of_bounds_x = copysign(1, self.rect.x)
+            self.out_of_bounds[0] = copysign(1, self.rect.x)
         if (self.rect.y > cfg.DIS_HEIGHT - cfg.SPRITE_SIZE//2
                 or self.rect.y < -cfg.SPRITE_SIZE//2):
-            self.out_of_bounds_y = copysign(1, self.rect.y)
+            self.out_of_bounds[1] = copysign(1, self.rect.y)
 
-    def transition(self, delta, scroll_velocity):
-        self.rect.x += -self.out_of_bounds_x*scroll_velocity
-        self.rect.y += -self.out_of_bounds_y*scroll_velocity
+    def transition(self, delta, in_transition):
+        # Reduce the velocity on frames where the position is an even number
+        scroll_velocity = cfg.SCROLL_VELOCITY
+        if (self.out_of_bounds[0] or self.out_of_bounds[1]) and not in_transition:
+            scroll_velocity = cfg.SCROLL_VELOCITY - 10
+        self.rect.x += -self.out_of_bounds[0]*scroll_velocity
+        self.rect.y += -self.out_of_bounds[1]*scroll_velocity
 
-        if (self.rect.x > cfg.DIS_WIDTH - cfg.SPRITE_SIZE//4
-                and self.out_of_bounds_x == -1):
-            self.out_of_bounds_x = 0
-        elif (self.rect.x < - cfg.SPRITE_SIZE//4
-                and self.out_of_bounds_x == 1):
-            self.out_of_bounds_x = 0
+        if not in_transition:
+            self.out_of_bounds = [0, 0]
 
-    def update(self, delta, control: Control, physical_objects, scroll_velocity):
-        if self.out_of_bounds_x or self.out_of_bounds_y:
-            self.transition(delta, scroll_velocity)
+    def update(self, delta, control: Control, physical_objects, in_transition):
+        if any(self.out_of_bounds):
+            self.transition(delta, in_transition)
         else:
             self.move(delta, control, physical_objects)
