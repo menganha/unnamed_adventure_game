@@ -1,3 +1,3 @@
-Tileset create by stealthix
+# Tileset created by stealthix
 
-https://stealthix.itch.io/
+<https://stealthix.itch.io/>

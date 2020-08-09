@@ -51,7 +51,7 @@ class World(pygame.sprite.Group):
     def get_solid_objects(self):
         solid_objects = []
         for layer in self.data:
-            if layer['type'] == 'objectgroup':
+            if layer['type'] == 'objectgroup' and 'boundaries' in layer['name']:
                 for obj_dict in layer['objects']:
                     solid_objects.append(
                         pygame.Rect(obj_dict['x'],
@@ -114,7 +114,6 @@ class World(pygame.sprite.Group):
             scroll_vel_vec = [idx*cfg.SCROLL_VELOCITY for idx in out_of_bounds]
             self.map_offset = [offset - vel for offset, vel in zip(self.map_offset, scroll_vel_vec)]
             # TODO: Think of changing all this variables to pygame vectors class
-            print(self.map_offset)
         else:
             self.map_offset = [0, 0]
             self.in_transition = False

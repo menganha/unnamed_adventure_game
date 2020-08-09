@@ -7,6 +7,7 @@ class Control():
         self.moving_left = False
         self.moving_up = False
         self.moving_down = False
+        self.action = False
         self.exit = False
         pygame.joystick.init()
         self.hasGamepad = pygame.joystick.get_count()
@@ -38,8 +39,9 @@ class Control():
                         self.moving_left = True
                     if event.key == pygame.K_RIGHT:
                         self.moving_right = True
+                    if event.key == pygame.K_SPACE:
+                        self.action = True
                 if event.type == pygame.KEYUP:
-                    print(event.key)
                     if event.key == pygame.K_UP:
                         self.moving_up = False
                     if event.key == pygame.K_DOWN:
@@ -48,3 +50,5 @@ class Control():
                         self.moving_left = False
                     if event.key == pygame.K_RIGHT:
                         self.moving_right = False
+                    if event.key == pygame.K_SPACE:
+                        self.action = False
