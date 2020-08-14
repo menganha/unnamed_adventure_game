@@ -32,33 +32,39 @@ class Player(pygame.sprite.Group):
         self.hitbox = PlayerHitBox(self.sprite.rect)
         self.hitbox.add(self)
         self.sprite.add(self)
-        self.velX = 0
+        self.velX = 0  # Current velocity
         self.velY = 0
+        self.dir = 0  # Current direction
         self.out_of_bounds = [False, False]
-        self.cooldown_time = 0
+        self.attacking = 0
+        self.attack_length = len(self.animation.animation_data['attack up'])
 
     def handle_attack_input(self, delta, control: Control):
+        if self.attacking > 0:
+            self.attacking -= 1
         if (control.action
-                and self.cooldown_time == 0
+                and self.attacking == 0
                 and not control.previous_frame_action):
-            self.cooldown_time = len(self.animation.animation_data['attack up'])
-        if self.cooldown_time > 0:
-            self.cooldown_time -= 1
+            self.attacking = self.attack_length
 
     def handle_move_input(self, delta, control: Control):
+        # Direction dict: down 0, left 1, up 2, right 3
         self.velX = 0
         self.velY = 0
-
-        if self.cooldown_time > 0:
+        if self.attacking > 0:
             return
         if control.moving_up:
             self.velY = -cfg.VELOCITY
+            self.dir = 2
         if control.moving_down:
             self.velY = cfg.VELOCITY
+            self.dir = 0
         if control.moving_left:
             self.velX = -cfg.VELOCITY
+            self.dir = 1
         if control.moving_right:
             self.velX = cfg.VELOCITY
+            self.dir = 3
         # if self.velX == 0 and self.velY == 0:
         #     self.animation.reset()
 
@@ -79,16 +85,39 @@ class Player(pygame.sprite.Group):
         if self.hitbox.rect.move(self.velX, self.velY).collidelist(physical_objects) != -1:
             self.velX = 0
             self.velY = 0
-            # distance_x = int(delta * self.velX * cfg.FRAMERATE)
-            # distance_y = int(delta * self.velY * cfg.FRAMERATE)
-            # self.sprite.rect.move_ip(distance_x, distance_y)
 
-    def check_collision_with_enemy(self, enemy_group):
-        enemies_collided = pygame.sprite.spritecollide(self.sprite, enemy_group, dokill=False)
-        if enemies_collided is None:
-            pass
-        else:
-            pass
+    def check_collision_with_enemy(self, enemy_group: pygame.sprite.Group):
+        # TODO: only registers hits for one frame
+        if self.attacking == self.attack_length:
+            offset_x = 0
+            offset_y = 0
+            if self.dir == 2:
+                dim = (self.hitbox.rect.width, cfg.SWORD_HITBOX)
+                offset_y = - cfg.SWORD_HITBOX
+            if self.dir == 0:
+                dim = (self.hitbox.rect.width, cfg.SWORD_HITBOX)
+                offset_y = self.hitbox.rect.height + cfg.SWORD_HITBOX
+            if self.dir == 1:
+                dim = (cfg.SWORD_HITBOX, self.hitbox.rect.height)
+                offset_x = - cfg.SWORD_HITBOX
+            if self.dir == 3:
+                dim = (cfg.SWORD_HITBOX, self.hitbox.rect.height)
+                offset_x = self.hitbox.rect.width + cfg.SWORD_HITBOX
+
+            sword_hitbox = pygame.Rect(
+                (self.hitbox.rect.x + offset_x, self.hitbox.rect.y + offset_y),
+                dim)
+            # enemies_hit = pygame.sprite.spritecollide(sword_hitbox, enemy_group, dokill=False)
+            # for enemy in enemies_hit:
+            #     enemy.get_hit()
+
+            for enemy in enemy_group.sprites():
+                if sword_hitbox.colliderect(enemy.rect):
+                    enemy.get_hit()
+
+        # enemies_collided = pygame.sprite.spritecollide(self.hitbox, enemy_group, dokill=False)
+        # if enemies_collided:
+        #     enemy_group.remove(enemies_collided)
 
     def check_if_within_bounds(self):
         if (self.sprite.rect.x > cfg.DIS_WIDTH - cfg.SPRITE_SIZE//2
@@ -112,20 +141,25 @@ class Player(pygame.sprite.Group):
     def update_animation(self):
         if self.velY < 0:
             self.animation.next_frame('walk up')
-        if self.velY > 0:
+        elif self.velY > 0:
             self.animation.next_frame('walk down')
-        if self.velX < 0:
+        elif self.velX < 0:
             self.animation.next_frame('walk left')
-        if self.velX > 0:
+        elif self.velX > 0:
             self.animation.next_frame('walk right')
-        if self.cooldown_time > 0:
-            if 'up' in self.animation.current_key:
+        if self.attacking > 0:
+            #TODO: animation.current_key is probably not going to be used
+            # if 'up' in self.animation.current_key:
+            if self.dir == 2:
                 self.animation.next_frame('attack up')
-            if 'down' in self.animation.current_key:
+            # if 'down' in self.animation.current_key:
+            elif self.dir == 0:
                 self.animation.next_frame('attack down')
-            if 'left' in self.animation.current_key:
+            # if 'left' in self.animation.current_key:
+            elif self.dir == 1:
                 self.animation.next_frame('attack left')
-            if 'right' in self.animation.current_key:
+            # if 'right' in self.animation.current_key:
+            elif self.dir == 3:
                 self.animation.next_frame('attack right')
 
         self.sprite.image = self.animation.current_sprite

@@ -69,10 +69,10 @@ class PlayerAnimation(Animation):
             "walk right": [20, 20, 20, 20, 20, 20],
             "walk up": [20, 20, 20, 20, 20, 20],
             "walk left": [20, 20, 20, 20, 20, 20],
-            "attack down": [5, 5, 5, 5, 5],
-            "attack right": [5, 5, 5, 5, 5],
-            "attack up": [5, 5, 5, 5, 5],
-            "attack left": [5, 5, 5, 5, 5],
+            "attack down": [3, 3, 3, 3, 3],
+            "attack right": [3, 3, 3, 3, 3],
+            "attack up": [3, 3, 3, 3, 3],
+            "attack left": [3, 3, 3, 3, 3],
         }
     sprite_sheet_data = {
             "sprite_size": 32
