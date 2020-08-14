@@ -26,6 +26,8 @@ class Control():
             self.moving_left = round(self.gamepad.get_axis(0)) == -1
             self.moving_up = round(self.gamepad.get_axis(1)) == -1
             self.moving_down = round(self.gamepad.get_axis(1)) == 1
+            self.previous_frame_action = self.action
+            self.action = self.gamepad.get_button(3)
         else:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:

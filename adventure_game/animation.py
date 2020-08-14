@@ -46,10 +46,21 @@ class Animation():
             self.current_key = animation_key
             self.counter = 0
         frame_idx = self.animation_data[animation_key][self.counter]
-        self.current_sprite = self.surfaces_dict[animation_key][frame_idx]
+        if 'right' in animation_key:
+            self.current_sprite = pygame.transform.flip(
+                self.surfaces_dict[animation_key][frame_idx],
+                True, False
+                )
+        else:
+            self.current_sprite = self.surfaces_dict[animation_key][frame_idx]
         self.counter += 1
         if self.counter >= len(self.animation_data[animation_key]):
             self.counter = 0
+
+    def reset(self):
+        self.counter = 0
+        frame_idx = self.animation_data[self.current_key][self.counter]
+        self.current_sprite = self.surfaces_dict[self.current_key][frame_idx]
 
 
 class PlayerAnimation(Animation):
@@ -58,10 +69,13 @@ class PlayerAnimation(Animation):
             "walk right": [20, 20, 20, 20, 20, 20],
             "walk up": [20, 20, 20, 20, 20, 20],
             "walk left": [20, 20, 20, 20, 20, 20],
-            "idle down": [20, 20, 20, 20, 20, 20]
+            "attack down": [5, 5, 5, 5, 5],
+            "attack right": [5, 5, 5, 5, 5],
+            "attack up": [5, 5, 5, 5, 5],
+            "attack left": [5, 5, 5, 5, 5],
         }
     sprite_sheet_data = {
-            "sprite_size": 16
+            "sprite_size": 32
         }
     path = Path('./assets/sprites/player')
 
@@ -77,6 +91,10 @@ class PlayerAnimation(Animation):
             frames_idx = []
             for idx, duration in enumerate(frames_duration):
                 frames_idx.extend([idx for _ in range(duration)])
+            # if 'right' in key:
+            #     frames_idx.reverse()
+            if 'attack' in key:
+                frames_idx.extend([0])
             animation_data.update({key: frames_idx})
         return animation_data
 
@@ -84,6 +102,8 @@ class PlayerAnimation(Animation):
         sprite_sheet_names = {}
         for key in animation_data:
             folder, name = key.split(' ')
+            if 'right' in key:
+                name = 'left'
             file = self.path.joinpath(folder, name + ".png")
             if not file.is_file():
                 raise ValueError("File: {:} was not found".format(file))
@@ -102,16 +122,12 @@ class PlayerAnimation(Animation):
         for key, sprite_sheet in self.sprite_sheets.items():
             sheet_size = sprite_sheet.get_size()
             frames = []
-            if 'idle' in key:
-                extra_pixel_row = 0
-            else:
-                extra_pixel_row = 1
             for ix in range(sheet_size[0]//self.sprite_sheet_data['sprite_size']):
                 rect = pygame.Rect(
                     ix*self.sprite_sheet_data['sprite_size'],
                     0,
                     self.sprite_sheet_data['sprite_size'],
-                    self.sprite_sheet_data['sprite_size'] + extra_pixel_row
+                    self.sprite_sheet_data['sprite_size']
                     )
                 frames.append(sprite_sheet.subsurface(rect))
             frame_dict.update({key: frames})
