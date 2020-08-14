@@ -1,4 +1,5 @@
 import pygame
+from pygame.math import Vector2
 from math import copysign
 import adventure_game.config as cfg
 from adventure_game.control import Control
@@ -17,11 +18,13 @@ class PlayerHitBox(pygame.sprite.Sprite):
     def __init__(self, rect):
         super().__init__()
         self.rect = rect.inflate(-16, -16)
+        self.position = Vector2(self.rect.topleft)
         self.image = pygame.Surface((self.rect.width, self.rect.height), flags=1)
         self.image.fill(cfg.RED)
 
-    def update(self, vel_x, vel_y):
-        self.rect.move_ip(vel_x, vel_y)
+    def update(self, position):
+        self.position = position + (8, 8)
+        self.rect.topleft = self.position
 
 
 class Player(pygame.sprite.Group):
@@ -35,6 +38,7 @@ class Player(pygame.sprite.Group):
         self.velX = 0  # Current velocity
         self.velY = 0
         self.dir = 0  # Current direction
+        self.position = Vector2(self.sprite.rect.topleft)
         self.out_of_bounds = [False, False]
         self.attacking = 0
         self.attack_length = len(self.animation.animation_data['attack up'])
@@ -77,9 +81,9 @@ class Player(pygame.sprite.Group):
             self.velY = copysign(0.7071 * self.velY, self.velY)
 
     def move(self, delta):
-        distance_x = int(delta * self.velX * cfg.FRAMERATE)
-        distance_y = int(delta * self.velY * cfg.FRAMERATE)
-        self.sprite.rect.move_ip(distance_x, distance_y)
+        self.position.x += delta * self.velX
+        self.position.y += delta * self.velY
+        self.sprite.rect.topleft = self.position
 
     def handle_collision_with_objects(self, physical_objects):
         if self.hitbox.rect.move(self.velX, self.velY).collidelist(physical_objects) != -1:
@@ -87,7 +91,9 @@ class Player(pygame.sprite.Group):
             self.velY = 0
 
     def check_collision_with_enemy(self, enemy_group: pygame.sprite.Group):
-        # TODO: only registers hits for one frame
+        # TODO: only registers hits for one frame. Fix this by setting a
+        # condition on cool time when one has hitted an enemy. This is almost
+        # done. and then change to self.attacking <= self.atack_length
         if self.attacking == self.attack_length:
             offset_x = 0
             offset_y = 0
@@ -127,7 +133,7 @@ class Player(pygame.sprite.Group):
                 or self.sprite.rect.y < -cfg.SPRITE_SIZE//2):
             self.out_of_bounds[1] = copysign(1, self.sprite.rect.y)
 
-    def transition(self, delta, in_transition):
+    def transition(self, in_transition):
         # Reduce the velocity on frames where the position is an even number
         scroll_velocity = cfg.SCROLL_VELOCITY
         if (self.out_of_bounds[0] or self.out_of_bounds[1]) and not in_transition:
@@ -147,6 +153,12 @@ class Player(pygame.sprite.Group):
             self.animation.next_frame('walk left')
         elif self.velX > 0:
             self.animation.next_frame('walk right')
+        if self.velX != 0 and self.velY != 0:
+            if self.velY < 0:
+                self.animation_key = 'walk up'
+            else:
+                self.animation_key = 'walk down'
+
         if self.attacking > 0:
             #TODO: animation.current_key is probably not going to be used
             # if 'up' in self.animation.current_key:
@@ -175,6 +187,6 @@ class Player(pygame.sprite.Group):
             self.update_animation()
             self.check_if_within_bounds()
         self.move(delta)
-        super().update(self.velX, self.velY)
+        super().update(self.position)
 
 

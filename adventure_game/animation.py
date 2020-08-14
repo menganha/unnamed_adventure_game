@@ -7,10 +7,10 @@ class Animation():
     Class to create sprite animation
     """
     def __init__(self, sprite_sheet_data, animation_data, sprite_sheet_names):
+        self.animation_data = animation_data
         self.sprite_sheet_data = self._check_sprite_sheet_data(sprite_sheet_data)
         self.sprite_sheets = self._load_sprite_sheets(sprite_sheet_names)
         self.surfaces_dict = self._get_surfaces_dict()
-        self.animation_data = animation_data
         self.counter = 0
         self.current_key = list(animation_data.keys())[0]
         self.current_sprite = self.surfaces_dict[self.current_key][0]
@@ -22,7 +22,10 @@ class Animation():
             return sprite_sheet_data
 
     def _load_sprite_sheets(self, sprite_sheet_names):
-        return pygame.image.load(sprite_sheet_names).convert_alpha()
+        sprite_sheets = {}
+        for key in self.animation_data:
+            sprite_sheets.update({key: pygame.image.load(sprite_sheet_names).convert_alpha()})
+        return sprite_sheets
 
     def _get_surfaces_dict(self):
         """
@@ -30,15 +33,20 @@ class Animation():
         dictionary where each key correspond to a list of surfaces which
         consist of frames in an animation
         """
-        sheet_size = self.sprite_sheets.get_size()
         frame_dict = {}
-        for iy in range(sheet_size[1]//self.sprite_sheet_data['sprite_size']):
+        for key in self.animation_data:
+            sheet_size = self.sprite_sheets[key].get_size()
             frames_x = []
             for ix in range(sheet_size[0]//self.sprite_sheet_data['sprite_size']):
-                rect = pygame.Rect(ix*self.sprite_sheet_data['sprite_size'], iy*self.sprite_sheet_data['sprite_size'], self.sprite_sheet_data['sprite_size'], self.sprite_sheet_data['sprite_size'])
-                frame = self.sprite_sheets.subsurface(rect)
+                rect = pygame.Rect(
+                    ix*self.sprite_sheet_data['sprite_size'],
+                    0,
+                    self.sprite_sheet_data['sprite_size'],
+                    self.sprite_sheet_data['sprite_size']
+                    )
+                frame = self.sprite_sheets[key].subsurface(rect)
                 frames_x.append(frame)
-            frame_dict.update({self.sprite_sheet_data[iy]: frames_x})
+            frame_dict.update({key: frames_x})
         return frame_dict
 
     def next_frame(self, animation_key):
@@ -61,6 +69,32 @@ class Animation():
         self.counter = 0
         frame_idx = self.animation_data[self.current_key][self.counter]
         self.current_sprite = self.surfaces_dict[self.current_key][frame_idx]
+
+    @staticmethod
+    def _get_animation_data(frame_duration_data):
+        animation_data = {}
+        for key in frame_duration_data:
+            frames_duration = frame_duration_data[key][0]
+            frames_idx = []
+            for idx, duration in enumerate(frames_duration):
+                frames_idx.extend([idx for _ in range(duration)])
+            animation_data.update({key: frames_idx})
+        return animation_data
+
+
+class EnemyAnimation(Animation):
+
+    @classmethod
+    def create_jelly_animation(cls):
+        frame_data = {
+                "walk": [(10, 10, 10), R"/assets/sprites/enemy/jelly.png"]
+            }
+        sprite_sheet_data = {
+                "sprite_size": 16
+            }
+        animation_data = cls._get_animation_data(frame_data)
+        sprite_sheet_names = R"./assets/sprites/enemy/jelly.png"
+        return cls(sprite_sheet_data, animation_data, sprite_sheet_names)
 
 
 class PlayerAnimation(Animation):

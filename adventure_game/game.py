@@ -34,12 +34,15 @@ class Game():
             self.exit = self.control.exit
 
             # Update
-            self.player.update(1/cfg.FRAMERATE, self.control,
+            self.player.update(self.delta, self.control,
                                self.world.in_transition,
                                self.world.solid_objects,
                                self.enemies)
             self.world.update(self.player.out_of_bounds)
-            self.enemies.update(self.world.current_map, self.world.in_transition)
+            self.enemies.update(
+                self.world.current_map,
+                self.world.in_transition,
+                self.world.solid_objects)
 
             # Render
             self.display.fill(cfg.WHITE)
