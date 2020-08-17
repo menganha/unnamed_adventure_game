@@ -11,7 +11,7 @@ from adventure_game.enemy import EnemyGroup
 class Game():
     def __init__(self):
         pygame.init()
-        pygame.display.set_caption('Untitled Dog Game')
+        pygame.display.set_caption('Untitled Adventure Game')
         self.display = pygame.display.set_mode((cfg.DIS_WIDTH, cfg.DIS_HEIGHT))
         self.clock = pygame.time.Clock()
         self.exit = False
@@ -28,6 +28,7 @@ class Game():
         while not self.exit:
 
             self.delta = self.clock.tick(cfg.FRAMERATE) / 1000
+            self.delta = 1000 / cfg.FRAMERATE
 
             # Handle Input
             self.control.handle_input()
@@ -38,8 +39,9 @@ class Game():
                                self.world.in_transition,
                                self.world.solid_objects,
                                self.enemies)
-            self.world.update(self.player.out_of_bounds)
+            self.world.update(self.delta, self.player.out_of_bounds)
             self.enemies.update(
+                self.delta,
                 self.world.current_map,
                 self.world.in_transition,
                 self.world.solid_objects)

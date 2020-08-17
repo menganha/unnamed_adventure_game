@@ -1,26 +1,48 @@
 import pygame
+from pygame.math import Vector2
 import adventure_game.config as cfg
 import json
 import re
 
 
 class Tile(pygame.sprite.Sprite):
-    def __init__(self, surface, pos):
+    def __init__(self, surface, position):
         super().__init__()
         self.image = surface
         self.rect = self.image.get_rect()
-        self.rect.topleft = pos
+        self.rect.topleft = position
+        self.position = Vector2(position)
 
-    def update(self, out_of_bounds):
-        self.rect.x -= cfg.SCROLL_VELOCITY * out_of_bounds[0]
-        self.rect.y -= cfg.SCROLL_VELOCITY * out_of_bounds[1]
+    def update(self, shift, direction: Vector2):
+        self.position = self.rect.topleft - shift
+        # self.position = self.position - shift
+        self.rect.topleft = self.position
+
         if (
-                self.rect.x <= -cfg.TILE_SIZE and out_of_bounds[0] == 1
-                or self.rect.y <= -cfg.TILE_SIZE and out_of_bounds[1] == 1
-                or self.rect.x >= cfg.DIS_WIDTH+cfg.TILE_SIZE and out_of_bounds[0] == -1
-                or self.rect.y >= cfg.DIS_HEIGHT+cfg.TILE_SIZE and out_of_bounds[1] == -1
+                self.rect.x <= -cfg.TILE_SIZE and direction.x == 1
+                or self.rect.y <= -cfg.TILE_SIZE and direction.y == 1
+                or self.rect.x >= cfg.DIS_WIDTH+cfg.TILE_SIZE and direction.x == -1
+                or self.rect.y >= cfg.DIS_HEIGHT+cfg.TILE_SIZE and direction.y == -1
                 ):
             self.kill()
+
+    def update_tile_cache(self, shift, direction: Vector2, group):
+        """
+        Updates tiles not yet in a group. Adds them once they are within
+        the drawing bounds
+        """
+        if not self.alive():
+            self.position = self.rect.topleft - shift
+            #self.position = self.position - shift
+            self.rect.topleft = self.position
+
+            if (
+                    self.rect.x <= cfg.DIS_WIDTH and direction.x == 1
+                    or self.rect.y <= cfg.DIS_HEIGHT and direction.y == 1
+                    or self.rect.x >= - cfg.TILE_SIZE and direction.x == -1
+                    or self.rect.y >= -cfg.TILE_SIZE and direction.y == -1
+                    ):
+                self.add(group)
 
 
 class World(pygame.sprite.Group):
@@ -29,9 +51,12 @@ class World(pygame.sprite.Group):
         self.mapLoaded = False
         self.sprite_sheet = pygame.image.load("assets/sprites/RPG Nature Tileset.png")
         self.current_map = r'data/level-x04-y00.json'
-        self.map_offset = [0, 0]
         self.in_transition = False
+        self.map_offset = Vector2((0, 0))
+        self.direction = Vector2((0, 0))
         self.load_map()
+        self.arrange_world()
+        self.add_tiles_from_list()
 
     def get_relevant_tiles(self):
         unique_tiles = set()
@@ -74,6 +99,7 @@ class World(pygame.sprite.Group):
         return tile_dict
 
     def arrange_world(self):
+        self.tile_list = []
         for layer in self.data:
             if layer['type'] == 'objectgroup':
                 continue
@@ -81,39 +107,47 @@ class World(pygame.sprite.Group):
             for idx, tile_idx in enumerate(layer['data']):
                 if tile_idx == 0:
                     continue
-                x = (idx % width)*cfg.TILE_SIZE + self.map_offset[0]
-                y = (idx // width)*cfg.TILE_SIZE + self.map_offset[1]
+                x = (idx % width)*cfg.TILE_SIZE + self.map_offset.x
+                y = (idx // width)*cfg.TILE_SIZE + self.map_offset.y
                 image = self.tile_dict[tile_idx].convert_alpha()
-                Tile(image, (x, y)).add(self)
+                self.tile_list.append(Tile(image, (x, y)))
+
+    def add_tiles_from_list(self, shift=None, direction=None):
+        if not shift and not direction:
+            for tile in self.tile_list:
+                tile.add(self)
+        else:
+            for tile in self.tile_list:
+                tile.update_tile_cache(shift, direction, self)
 
     def load_map(self):
         self.data = self.load_data()
         self.solid_objects = self.get_solid_objects()
         self.unique_tileset_index = self.get_relevant_tiles()
         self.tile_dict = self.get_tile_dict()
-        self.arrange_world()
-        if any(offset != 0 for offset in self.map_offset):
-            self.in_transition = True
-        else:
-            self.in_transition = False
 
-    def next_map(self, out_of_bounds):
+    def next_map(self, out_of_bounds: Vector2):
         match = re.match(r"data/level-x0(\d+)-y0(\d+)\.json", self.current_map)
-        x = int(match.group(1)) + int(out_of_bounds[0])
-        y = int(match.group(2)) - int(out_of_bounds[1])
+        x = int(match.group(1)) + int(out_of_bounds.x)
+        y = int(match.group(2)) - int(out_of_bounds.y)
         return "data/level-x0{:d}-y0{:d}.json".format(x, y)
 
-    def update(self, out_of_bounds):
+    def update(self, delta, out_of_bounds: Vector2):
         if any(out_of_bounds) and not self.in_transition:
-            self.map_offset = [cfg.DIS_WIDTH*out_of_bounds[0], cfg.DIS_HEIGHT*out_of_bounds[1]]
+            self.direction = out_of_bounds
+            self.map_offset = self.direction.elementwise()*Vector2((cfg.DIS_WIDTH, cfg.DIS_HEIGHT))
             self.current_map = self.next_map(out_of_bounds)
             self.load_map()
+            self.arrange_world()
+            self.in_transition = True
 
-        if any(offset != 0 for offset in self.map_offset):
-            super().update(out_of_bounds)
-            scroll_vel_vec = [idx*cfg.SCROLL_VELOCITY for idx in out_of_bounds]
-            self.map_offset = [offset - vel for offset, vel in zip(self.map_offset, scroll_vel_vec)]
-            # TODO: Think of changing all this variables to pygame vectors class
-        else:
-            self.map_offset = [0, 0]
+        # if all(floor(offset) == 0 for offset in self.map_offset):
+        if (self.direction.x*self.map_offset.x <= 0
+                and self.direction.y*self.map_offset.y <= 0):
+            self.map_offset = Vector2((0, 0))
             self.in_transition = False
+        else:
+            shift = int(delta*cfg.SCROLL_VELOCITY)*self.direction
+            self.map_offset = self.map_offset - shift
+            super().update(shift, self.direction)
+            self.add_tiles_from_list(shift, self.direction)

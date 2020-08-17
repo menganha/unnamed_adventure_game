@@ -14,26 +14,11 @@ class PlayerSprite(pygame.sprite.Sprite):
         self.rect.center = (cfg.DIS_WIDTH//2, cfg.DIS_HEIGHT//2)
 
 
-class PlayerHitBox(pygame.sprite.Sprite):
-    def __init__(self, rect):
-        super().__init__()
-        self.rect = rect.inflate(-16, -16)
-        self.position = Vector2(self.rect.topleft)
-        self.image = pygame.Surface((self.rect.width, self.rect.height), flags=1)
-        self.image.fill(cfg.RED)
-
-    def update(self, position):
-        self.position = position + (8, 8)
-        self.rect.topleft = self.position
-
-
 class Player(pygame.sprite.Group):
     def __init__(self):
         super().__init__()
         self.animation = PlayerAnimation()
         self.sprite = PlayerSprite(self.animation.current_sprite)
-        self.hitbox = PlayerHitBox(self.sprite.rect)
-        self.hitbox.add(self)
         self.sprite.add(self)
         self.velX = 0  # Current velocity
         self.velY = 0
@@ -43,7 +28,7 @@ class Player(pygame.sprite.Group):
         self.attacking = 0
         self.attack_length = len(self.animation.animation_data['attack up'])
 
-    def handle_attack_input(self, delta, control: Control):
+    def handle_attack_input(self, control: Control):
         if self.attacking > 0:
             self.attacking -= 1
         if (control.action
@@ -51,7 +36,7 @@ class Player(pygame.sprite.Group):
                 and not control.previous_frame_action):
             self.attacking = self.attack_length
 
-    def handle_move_input(self, delta, control: Control):
+    def handle_move_input(self, control: Control):
         # Direction dict: down 0, left 1, up 2, right 3
         self.velX = 0
         self.velY = 0
@@ -85,8 +70,13 @@ class Player(pygame.sprite.Group):
         self.position.y += delta * self.velY
         self.sprite.rect.topleft = self.position
 
-    def handle_collision_with_objects(self, physical_objects):
-        if self.hitbox.rect.move(self.velX, self.velY).collidelist(physical_objects) != -1:
+    def handle_collision_with_objects(self, delta, physical_objects):
+        hitbox = self.sprite.rect.inflate(-16, -16)
+        position_x = self.position.x + delta * self.velX + 8
+        position_y = self.position.y + delta * self.velY + 8
+        hitbox.x = position_x
+        hitbox.y = position_y
+        if hitbox.collidelist(physical_objects) != -1:
             self.velX = 0
             self.velY = 0
 
@@ -94,55 +84,50 @@ class Player(pygame.sprite.Group):
         # TODO: only registers hits for one frame. Fix this by setting a
         # condition on cool time when one has hitted an enemy. This is almost
         # done. and then change to self.attacking <= self.atack_length
-        if self.attacking == self.attack_length:
-            offset_x = 0
-            offset_y = 0
-            if self.dir == 2:
-                dim = (self.hitbox.rect.width, cfg.SWORD_HITBOX)
-                offset_y = - cfg.SWORD_HITBOX
-            if self.dir == 0:
-                dim = (self.hitbox.rect.width, cfg.SWORD_HITBOX)
-                offset_y = self.hitbox.rect.height + cfg.SWORD_HITBOX
-            if self.dir == 1:
-                dim = (cfg.SWORD_HITBOX, self.hitbox.rect.height)
-                offset_x = - cfg.SWORD_HITBOX
-            if self.dir == 3:
-                dim = (cfg.SWORD_HITBOX, self.hitbox.rect.height)
-                offset_x = self.hitbox.rect.width + cfg.SWORD_HITBOX
+        pass
+        # if self.attacking == self.attack_length:
+        #     offset_x = 0
+        #     offset_y = 0
+        #     if self.dir == 2:
+        #         dim = (self.hitbox.rect.width, cfg.SWORD_HITBOX)
+        #         offset_y = - cfg.SWORD_HITBOX
+        #     if self.dir == 0:
+        #         dim = (self.hitbox.rect.width, cfg.SWORD_HITBOX)
+        #         offset_y = self.hitbox.rect.height + cfg.SWORD_HITBOX
+        #     if self.dir == 1:
+        #         dim = (cfg.SWORD_HITBOX, self.hitbox.rect.height)
+        #         offset_x = - cfg.SWORD_HITBOX
+        #     if self.dir == 3:
+        #         dim = (cfg.SWORD_HITBOX, self.hitbox.rect.height)
+        #         offset_x = self.hitbox.rect.width + cfg.SWORD_HITBOX
 
-            sword_hitbox = pygame.Rect(
-                (self.hitbox.rect.x + offset_x, self.hitbox.rect.y + offset_y),
-                dim)
-            # enemies_hit = pygame.sprite.spritecollide(sword_hitbox, enemy_group, dokill=False)
-            # for enemy in enemies_hit:
-            #     enemy.get_hit()
+        #     sword_hitbox = pygame.Rect(
+        #         (self.hitbox.rect.x + offset_x, self.hitbox.rect.y + offset_y),
+        #         dim)
+        #     # enemies_hit = pygame.sprite.spritecollide(sword_hitbox, enemy_group, dokill=False)
+        #     # for enemy in enemies_hit:
+        #     #     enemy.get_hit()
 
-            for enemy in enemy_group.sprites():
-                if sword_hitbox.colliderect(enemy.rect):
-                    enemy.get_hit()
+        #     for enemy in enemy_group.sprites():
+        #         if sword_hitbox.colliderect(enemy.rect):
+        #             enemy.get_hit()
 
         # enemies_collided = pygame.sprite.spritecollide(self.hitbox, enemy_group, dokill=False)
         # if enemies_collided:
         #     enemy_group.remove(enemies_collided)
 
     def check_if_within_bounds(self):
-        if (self.sprite.rect.x > cfg.DIS_WIDTH - cfg.SPRITE_SIZE//2
-                or self.sprite.rect.x < -cfg.SPRITE_SIZE//2):
-            self.out_of_bounds[0] = copysign(1, self.sprite.rect.x)
-        if (self.sprite.rect.y > cfg.DIS_HEIGHT - cfg.SPRITE_SIZE//2
-                or self.sprite.rect.y < -cfg.SPRITE_SIZE//2):
-            self.out_of_bounds[1] = copysign(1, self.sprite.rect.y)
-
-    def transition(self, in_transition):
-        # Reduce the velocity on frames where the position is an even number
-        scroll_velocity = cfg.SCROLL_VELOCITY
-        if (self.out_of_bounds[0] or self.out_of_bounds[1]) and not in_transition:
-            scroll_velocity = cfg.SCROLL_VELOCITY - 10
-        self.velX = -self.out_of_bounds[0]*scroll_velocity
-        self.velY = -self.out_of_bounds[1]*scroll_velocity
-
-        if not in_transition:
-            self.out_of_bounds = [0, 0]
+        self.out_of_bounds = Vector2((0, 0))
+        if (self.position.x > cfg.DIS_WIDTH - cfg.SPRITE_SIZE//2
+                or self.position.x < -cfg.SPRITE_SIZE//2):
+            self.out_of_bounds.x = copysign(1, self.position.x)
+            self.velX = -self.out_of_bounds.x*cfg.SCROLL_VELOCITY*0.9
+            self.velY = 0
+        if (self.position.y > cfg.DIS_HEIGHT - cfg.SPRITE_SIZE//2
+                or self.position.y < -cfg.SPRITE_SIZE//2):
+            self.out_of_bounds.y = copysign(1, self.position.y)
+            self.velX = 0
+            self.velY = -self.out_of_bounds.y*cfg.SCROLL_VELOCITY*0.9
 
     def update_animation(self):
         if self.velY < 0:
@@ -177,16 +162,12 @@ class Player(pygame.sprite.Group):
         self.sprite.image = self.animation.current_sprite
 
     def update(self, delta, control: Control, in_transition, objects_group, enemy_group):
-        if any(self.out_of_bounds):
-            self.transition(delta, in_transition)
-        else:
-            self.handle_attack_input(delta, control)
-            self.handle_move_input(delta, control)
-            self.handle_collision_with_objects(objects_group)
+        if not in_transition:
+            self.handle_attack_input(control)
+            self.handle_move_input(control)
+            self.handle_collision_with_objects(delta, objects_group)
             self.check_collision_with_enemy(enemy_group)
             self.update_animation()
             self.check_if_within_bounds()
         self.move(delta)
-        super().update(self.position)
-
-
+        # super().update(self.position)
