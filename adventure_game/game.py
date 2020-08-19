@@ -16,10 +16,10 @@ class Game():
         self.clock = pygame.time.Clock()
         self.exit = False
         self.control = Control()
-        self.all_sprites = pygame.sprite.Group()
         self.player = Player()
         self.world = World()
         self.enemies = EnemyGroup(self.world.current_map)
+        self.generic_container = pygame.sprite.Group(self.player)
         self.font = pygame.font.Font("./assets/font/PressStart2P.ttf", 8)
         self.debug_text = Text(self.font)
         self.delta = 0
@@ -35,10 +35,11 @@ class Game():
             self.exit = self.control.exit
 
             # Update
-            self.player.update(self.delta, self.control,
-                               self.world.in_transition,
-                               self.world.solid_objects,
-                               self.enemies)
+            self.generic_container.update(
+                self.delta, self.control,
+                self.world.in_transition,
+                self.world.solid_objects,
+                self.enemies)
             self.world.update(self.delta, self.player.out_of_bounds)
             self.enemies.update(
                 self.delta,
@@ -47,10 +48,10 @@ class Game():
                 self.world.solid_objects)
 
             # Render
-            self.display.fill(cfg.WHITE)
             self.debug_text.draw(self.display)
             self.world.draw(self.display)
-            self.player.draw(self.display)
+            self.display.blit(self.player.red_surface, self.player.position + (8, 8))
+            self.generic_container.draw(self.display)
             self.enemies.draw(self.display)
             pygame.display.update()
 

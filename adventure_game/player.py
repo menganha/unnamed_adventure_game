@@ -6,24 +6,18 @@ from adventure_game.control import Control
 from adventure_game.animation import PlayerAnimation
 
 
-class PlayerSprite(pygame.sprite.Sprite):
-    def __init__(self, image):
-        super().__init__()
-        self.image = image
-        self.rect = self.image.get_rect()
-        self.rect.center = (cfg.DIS_WIDTH//2, cfg.DIS_HEIGHT//2)
-
-
-class Player(pygame.sprite.Group):
+class Player(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__()
         self.animation = PlayerAnimation()
-        self.sprite = PlayerSprite(self.animation.current_sprite)
-        self.sprite.add(self)
+        self.image = self.animation.current_sprite
+        self.rect = self.image.get_rect()
+        self.rect.center = (cfg.DIS_WIDTH//2, cfg.DIS_HEIGHT//2)
+        self.hitbox = self.rect.inflate(-16, -16)
         self.velX = 0  # Current velocity
         self.velY = 0
-        self.dir = 0  # Current direction
-        self.position = Vector2(self.sprite.rect.topleft)
+        self.direction = 0  # Current direction
+        self.position = Vector2(self.rect.topleft)
         self.out_of_bounds = [False, False]
         self.attacking = 0
         self.attack_length = len(self.animation.animation_data['attack up'])
@@ -44,16 +38,16 @@ class Player(pygame.sprite.Group):
             return
         if control.moving_up:
             self.velY = -cfg.VELOCITY
-            self.dir = 2
+            self.direction = 2
         if control.moving_down:
             self.velY = cfg.VELOCITY
-            self.dir = 0
+            self.direction = 0
         if control.moving_left:
             self.velX = -cfg.VELOCITY
-            self.dir = 1
+            self.direction = 1
         if control.moving_right:
             self.velX = cfg.VELOCITY
-            self.dir = 3
+            self.direction = 3
         # if self.velX == 0 and self.velY == 0:
         #     self.animation.reset()
 
@@ -68,15 +62,14 @@ class Player(pygame.sprite.Group):
     def move(self, delta):
         self.position.x += delta * self.velX
         self.position.y += delta * self.velY
-        self.sprite.rect.topleft = self.position
+        self.rect.topleft = self.position
 
     def handle_collision_with_objects(self, delta, physical_objects):
-        hitbox = self.sprite.rect.inflate(-16, -16)
         position_x = self.position.x + delta * self.velX + 8
         position_y = self.position.y + delta * self.velY + 8
-        hitbox.x = position_x
-        hitbox.y = position_y
-        if hitbox.collidelist(physical_objects) != -1:
+        self.hitbox.x = position_x
+        self.hitbox.y = position_y
+        if self.hitbox.collidelist(physical_objects) != -1:
             self.velX = 0
             self.velY = 0
 
@@ -146,20 +139,23 @@ class Player(pygame.sprite.Group):
 
         if self.attacking > 0:
             #TODO: animation.current_key is probably not going to be used
-            # if 'up' in self.animation.current_key:
-            if self.dir == 2:
+            if self.direction == 2:
                 self.animation.next_frame('attack up')
-            # if 'down' in self.animation.current_key:
-            elif self.dir == 0:
+            elif self.direction == 0:
                 self.animation.next_frame('attack down')
-            # if 'left' in self.animation.current_key:
-            elif self.dir == 1:
+            elif self.direction == 1:
                 self.animation.next_frame('attack left')
-            # if 'right' in self.animation.current_key:
-            elif self.dir == 3:
+            elif self.direction == 3:
                 self.animation.next_frame('attack right')
 
-        self.sprite.image = self.animation.current_sprite
+        self.image = self.animation.current_sprite
+
+    def draw_hitbox_over_sprite(self):
+        """
+        Debug function to draw hitbox over sprite
+        """
+        self.red_surface = pygame.Surface((self.hitbox.w, self.hitbox.h))
+        self.red_surface.fill(cfg.RED)
 
     def update(self, delta, control: Control, in_transition, objects_group, enemy_group):
         if not in_transition:
@@ -169,5 +165,5 @@ class Player(pygame.sprite.Group):
             self.check_collision_with_enemy(enemy_group)
             self.update_animation()
             self.check_if_within_bounds()
+            self.draw_hitbox_over_sprite()
         self.move(delta)
-        # super().update(self.position)
