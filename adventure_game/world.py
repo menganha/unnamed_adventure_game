@@ -37,24 +37,25 @@ class World():
         solid_objects = []
         for layer in self.data:
             if layer['type'] == 'objectgroup' and 'boundaries' in layer['name']:
-                for obj_dict in layer['objects']:
-                    solid_objects.append(
-                        pygame.Rect(obj_dict['x'],
-                                    obj_dict['y'],
-                                    obj_dict['width'],
-                                    obj_dict['height'])
-                    )
+                layer_objects = [
+                    pygame.Rect(obj_dict['x'], obj_dict['y'], obj_dict['width'], obj_dict['height'])
+                    for obj_dict in layer['objects']
+                    ]
+                solid_objects.extend(layer_objects)
         return solid_objects
 
     def get_relevant_tiles_id(self):
         """
-        Get list of uniquie tiles id's for a map
+        Get list of unique tiles id's for a map
         """
-        unique_tiles = set()
+        unique_tiles = []
         for layer in self.data:
             if layer['type'] == 'objectgroup':
                 continue
-            unique_tiles = unique_tiles.union(set(layer['data']))
+            unique_tiles.extend(layer['data'])
+
+        unique_tiles = set(unique_tiles)
+
         if 0 in unique_tiles:  # 0 refers to no tile
             unique_tiles.remove(0)
         return list(unique_tiles)
@@ -65,32 +66,30 @@ class World():
         """
         sheetSize = self.sprite_sheet.get_size()
         tile_dict = {}
-        for iy in range(sheetSize[1]//cfg.TILE_SIZE):
-            for ix in range(sheetSize[0]//cfg.TILE_SIZE):
-                idx = ix + iy*sheetSize[0]//cfg.TILE_SIZE
-                if idx+1 in self.unique_tileset_indeces:
-                    rect = pygame.Rect(ix*cfg.TILE_SIZE, iy*cfg.TILE_SIZE, cfg.TILE_SIZE, cfg.TILE_SIZE)
-                    tile = self.sprite_sheet.subsurface(rect)
-                    tile_dict.update({idx+1: tile})
+
+        for idx in self.unique_tileset_indeces:
+            ix = (idx-1) % (sheetSize[0]//cfg.TILE_SIZE)
+            iy = (idx-1) // (sheetSize[0]//cfg.TILE_SIZE)
+            rect = pygame.Rect(ix*cfg.TILE_SIZE, iy*cfg.TILE_SIZE, cfg.TILE_SIZE, cfg.TILE_SIZE)
+            tile = self.sprite_sheet.subsurface(rect)
+            tile_dict.update({idx: tile})
         return tile_dict
 
     def arrange_world(self, destination_surface):
         """
         Blits all tiles into the map image surface
         """
-        tile_blit_sequence = []
+        width = self.sprite_sheet.get_size()[0]//cfg.TILE_SIZE
         for layer in self.data:
             if layer['type'] == 'objectgroup':
                 continue
-            width = layer['width']
             for idx, tile_idx in enumerate(layer['data']):
                 if tile_idx == 0:
                     continue
                 x = (idx % width)*cfg.TILE_SIZE
                 y = (idx // width)*cfg.TILE_SIZE
                 image = self.tile_dict[tile_idx]
-                tile_blit_sequence.append((image, (x, y)))
-        destination_surface.blits(tile_blit_sequence)
+                destination_surface.blit(image, (x, y))
 
     def next_map(self, out_of_bounds: Vector2):
         match = re.match(r"data/level-x0(\d+)-y0(\d+)\.json", self.current_map)
