@@ -1,77 +1,75 @@
+from math import copysign
+
 import pygame
 from pygame.math import Vector2
-from math import copysign
+
 import adventure_game.config as cfg
-from adventure_game.control import Control
 from adventure_game.animation import PlayerAnimation
+from adventure_game.control import Control
 
 
 class Player(pygame.sprite.Sprite):
+    hitbox_deflation = 16
+
     def __init__(self):
         super().__init__()
         self.animation = PlayerAnimation()
         self.image = self.animation.current_sprite
         self.rect = self.image.get_rect()
-        self.rect.center = (cfg.DIS_WIDTH//2, cfg.DIS_HEIGHT//2)
-        self.hitbox = self.rect.inflate(-16, -16)
-        self.velX = 0  # Current velocity
-        self.velY = 0
-        self.direction = 0  # Current direction
+        self.rect.center = (cfg.DIS_WIDTH // 2, cfg.DIS_HEIGHT // 2)
+        self.hitbox = self.rect.inflate(-self.hitbox_deflation, -self.hitbox_deflation)
+        self.hitbox_image = pygame.Surface((self.hitbox.width, self.hitbox.height))
+        self.hitbox_image.fill(cfg.RED)
+        self.hitbox_image.set_alpha(100)
+        self.velocity = Vector2(0, 0)
+        self.direction = 0
         self.position = Vector2(self.rect.topleft)
-        self.out_of_bounds = [False, False]
+        self.out_of_bounds = Vector2(0, 0)
         self.attacking = 0
-        self.attack_length = len(self.animation.animation_data['attack up'])
+        self.attack_length = len(self.animation.animation_data["attack up"])
 
     def handle_attack_input(self, control: Control):
         if self.attacking > 0:
             self.attacking -= 1
-        if (control.action
-                and self.attacking == 0
-                and not control.previous_frame_action):
+        if control.action and self.attacking == 0 and not control.previous_frame_action:
             self.attacking = self.attack_length
 
     def handle_move_input(self, control: Control):
-        # Direction dict: down 0, left 1, up 2, right 3
-        self.velX = 0
-        self.velY = 0
+        self.velocity[:] = 0, 0
         if self.attacking > 0:
             return
         if control.moving_up:
-            self.velY = -cfg.VELOCITY
-            self.direction = 2
+            self.velocity.y = -cfg.VELOCITY
         if control.moving_down:
-            self.velY = cfg.VELOCITY
-            self.direction = 0
+            self.velocity.y = cfg.VELOCITY
         if control.moving_left:
-            self.velX = -cfg.VELOCITY
-            self.direction = 1
+            self.velocity.x = -cfg.VELOCITY
         if control.moving_right:
-            self.velX = cfg.VELOCITY
-            self.direction = 3
-        # if self.velX == 0 and self.velY == 0:
-        #     self.animation.reset()
+            self.velocity.x = cfg.VELOCITY
 
-        if self.velX != 0 and self.velY != 0:
-            # if self.velX < 0:
-            #     self.animation_key = 'left'
-            # else:
-            #     self.animation_key = 'right'
-            self.velX = copysign(0.7071 * self.velX, self.velX)
-            self.velY = copysign(0.7071 * self.velY, self.velY)
+        if self.velocity.elementwise() != 0:
+            self.velocity = 0.7071 * self.velocity
+
+    def update_direction(self, control):
+        """
+        Direction dict: down 0, left 1, up 2, right 3
+        """
+        if self.velocity.x != 0 and self.velocity.y == 0:
+            self.direction = 1 * (self.velocity.x < 0) + 3 * (self.velocity.x > 0)
+        elif self.velocity.y != 0 and self.velocity.x == 0:
+            self.direction = 2 * (self.velocity.y < 0) + 0 * (self.velocity.y > 0)
 
     def move(self, delta):
-        self.position.x += delta * self.velX
-        self.position.y += delta * self.velY
+        self.position += delta * self.velocity
         self.rect.topleft = self.position
 
     def handle_collision_with_objects(self, delta, physical_objects):
-        position_x = self.position.x + delta * self.velX + 8
-        position_y = self.position.y + delta * self.velY + 8
-        self.hitbox.x = position_x
-        self.hitbox.y = position_y
+        position = (
+            self.position + delta * self.velocity + Vector2(self.hitbox_deflation // 2)
+        )
+        self.hitbox.topleft = position
         if self.hitbox.collidelist(physical_objects) != -1:
-            self.velX = 0
-            self.velY = 0
+            self.velocity[:] = 0
 
     def check_collision_with_enemy(self, enemy_group: pygame.sprite.Group):
         # TODO: only registers hits for one frame. Fix this by setting a
@@ -110,60 +108,62 @@ class Player(pygame.sprite.Sprite):
         #     enemy_group.remove(enemies_collided)
 
     def check_if_within_bounds(self):
-        self.out_of_bounds = Vector2((0, 0))
-        if (self.position.x > cfg.DIS_WIDTH - cfg.SPRITE_SIZE//2
-                or self.position.x < -cfg.SPRITE_SIZE//2):
+        self.out_of_bounds = Vector2(0, 0)
+        if (
+            self.position.x > cfg.DIS_WIDTH - cfg.SPRITE_SIZE // 2
+            or self.position.x < -cfg.SPRITE_SIZE // 2
+        ):
             self.out_of_bounds.x = copysign(1, self.position.x)
-            self.velX = -self.out_of_bounds.x*cfg.SCROLL_VELOCITY*0.9
-            self.velY = 0
-        if (self.position.y > cfg.DIS_HEIGHT - cfg.SPRITE_SIZE//2
-                or self.position.y < -cfg.SPRITE_SIZE//2):
+            self.velocity = (
+                -self.out_of_bounds.elementwise() * cfg.SCROLL_VELOCITY * 0.97
+            )
+        if (
+            self.position.y > cfg.DIS_HEIGHT - cfg.SPRITE_SIZE // 2
+            or self.position.y < -cfg.SPRITE_SIZE // 2
+        ):
             self.out_of_bounds.y = copysign(1, self.position.y)
-            self.velX = 0
-            self.velY = -self.out_of_bounds.y*cfg.SCROLL_VELOCITY*0.9
+            self.velocity = (
+                -self.out_of_bounds.elementwise() * cfg.SCROLL_VELOCITY * 0.97
+            )
 
     def update_animation(self):
-        if self.velY < 0:
-            self.animation.next_frame('walk up')
-        elif self.velY > 0:
-            self.animation.next_frame('walk down')
-        elif self.velX < 0:
-            self.animation.next_frame('walk left')
-        elif self.velX > 0:
-            self.animation.next_frame('walk right')
-        if self.velX != 0 and self.velY != 0:
-            if self.velY < 0:
-                self.animation_key = 'walk up'
-            else:
-                self.animation_key = 'walk down'
+        if not self.velocity.elementwise() == 0:
+            if self.direction == 2:
+                frame_name = "walk up"
+            elif self.direction == 0:
+                frame_name = "walk down"
+            elif self.direction == 1:
+                frame_name = "walk left"
+            elif self.direction == 3:
+                frame_name = "walk right"
+
+            self.animation.next_frame(frame_name)
 
         if self.attacking > 0:
-            #TODO: animation.current_key is probably not going to be used
             if self.direction == 2:
-                self.animation.next_frame('attack up')
+                frame_name = "attack up"
             elif self.direction == 0:
-                self.animation.next_frame('attack down')
+                frame_name = "attack down"
             elif self.direction == 1:
-                self.animation.next_frame('attack left')
+                frame_name = "attack left"
             elif self.direction == 3:
-                self.animation.next_frame('attack right')
+                frame_name = "attack right"
 
-        self.image = self.animation.current_sprite
+            self.animation.next_frame(frame_name)
 
-    def draw_hitbox_over_sprite(self):
-        """
-        Debug function to draw hitbox over sprite
-        """
-        self.red_surface = pygame.Surface((self.hitbox.w, self.hitbox.h))
-        self.red_surface.fill(cfg.RED)
+        # Temporary: Blit hitbox to sprite
+        self.image = self.animation.current_sprite.copy()
+        self.image.blit(self.hitbox_image, (8, 8))
 
-    def update(self, delta, control: Control, in_transition, objects_group, enemy_group):
+    def update(
+        self, delta, control: Control, in_transition, objects_group, enemy_group
+    ):
         if not in_transition:
             self.handle_attack_input(control)
             self.handle_move_input(control)
+            self.update_direction(control)
             self.handle_collision_with_objects(delta, objects_group)
             self.check_collision_with_enemy(enemy_group)
             self.update_animation()
             self.check_if_within_bounds()
-            self.draw_hitbox_over_sprite()
         self.move(delta)
