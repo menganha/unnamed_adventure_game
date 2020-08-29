@@ -6,6 +6,7 @@ from pygame.math import Vector2
 import adventure_game.config as cfg
 from adventure_game.animation import PlayerAnimation
 from adventure_game.control import Control
+from adventure_game.hitbox import Hitbox
 
 
 class Player(pygame.sprite.Sprite):
@@ -17,10 +18,19 @@ class Player(pygame.sprite.Sprite):
         self.image = self.animation.current_sprite
         self.rect = self.image.get_rect()
         self.rect.center = (cfg.DIS_WIDTH // 2, cfg.DIS_HEIGHT // 2)
-        self.hitbox = self.rect.inflate(-self.hitbox_deflation, -self.hitbox_deflation)
-        self.hitbox_image = pygame.Surface((self.hitbox.width, self.hitbox.height))
-        self.hitbox_image.fill(cfg.RED)
-        self.hitbox_image.set_alpha(100)
+        self.hitbox = Hitbox(tuple(ele - self.hitbox_deflation for ele in self.rect.size))
+        self.hitbox.get_offset(self.rect)
+        # Temporary render the hitbox image as a red rectangle for debugging
+        self.hitbox.image = pygame.Surface(self.hitbox.rectangle.size)
+        self.hitbox.image.fill(cfg.RED)
+        self.hitbox.image.set_alpha(100)
+        # ---
+        self.sword_hitbox = pygame.Rect(0, 0, 2, 2)
+        self.sword_hitbox_image = pygame.Surface(
+            (self.sword_hitbox.w, self.sword_hitbox.h)
+        )
+        self.sword_hitbox_image.fill(cfg.BLUE)
+        self.sword_hitbox_image.set_alpha(100)
         self.velocity = Vector2(0, 0)
         self.direction = 0
         self.position = Vector2(self.rect.topleft)
@@ -50,7 +60,7 @@ class Player(pygame.sprite.Sprite):
         if self.velocity.elementwise() != 0:
             self.velocity = 0.7071 * self.velocity
 
-    def update_direction(self, control):
+    def update_direction(self):
         """
         Direction dict: down 0, left 1, up 2, right 3
         """
@@ -64,48 +74,44 @@ class Player(pygame.sprite.Sprite):
         self.rect.topleft = self.position
 
     def handle_collision_with_objects(self, delta, physical_objects):
-        position = (
-            self.position + delta * self.velocity + Vector2(self.hitbox_deflation // 2)
-        )
-        self.hitbox.topleft = position
-        if self.hitbox.collidelist(physical_objects) != -1:
-            self.velocity[:] = 0
+        self.hitbox.set_position(self.position + delta * self.velocity)
+        if self.hitbox.has_collided(physical_objects):
+            self.velocity[:] = 0, 0
 
     def check_collision_with_enemy(self, enemy_group: pygame.sprite.Group):
         # TODO: only registers hits for one frame. Fix this by setting a
         # condition on cool time when one has hitted an enemy. This is almost
         # done. and then change to self.attacking <= self.atack_length
-        pass
-        # if self.attacking == self.attack_length:
-        #     offset_x = 0
-        #     offset_y = 0
-        #     if self.dir == 2:
-        #         dim = (self.hitbox.rect.width, cfg.SWORD_HITBOX)
-        #         offset_y = - cfg.SWORD_HITBOX
-        #     if self.dir == 0:
-        #         dim = (self.hitbox.rect.width, cfg.SWORD_HITBOX)
-        #         offset_y = self.hitbox.rect.height + cfg.SWORD_HITBOX
-        #     if self.dir == 1:
-        #         dim = (cfg.SWORD_HITBOX, self.hitbox.rect.height)
-        #         offset_x = - cfg.SWORD_HITBOX
-        #     if self.dir == 3:
-        #         dim = (cfg.SWORD_HITBOX, self.hitbox.rect.height)
-        #         offset_x = self.hitbox.rect.width + cfg.SWORD_HITBOX
 
-        #     sword_hitbox = pygame.Rect(
-        #         (self.hitbox.rect.x + offset_x, self.hitbox.rect.y + offset_y),
-        #         dim)
-        #     # enemies_hit = pygame.sprite.spritecollide(sword_hitbox, enemy_group, dokill=False)
-        #     # for enemy in enemies_hit:
-        #     #     enemy.get_hit()
+        if self.attacking == self.attack_length:
+            offset_x = 0
+            offset_y = 0
+            if self.direction == 2:
+                dim = (self.hitbox.width, cfg.SWORD_HITBOX)
+                offset_y = -cfg.SWORD_HITBOX
+            if self.direction == 0:
+                dim = (self.hitbox.width, cfg.SWORD_HITBOX)
+                offset_y = self.hitbox.height + cfg.SWORD_HITBOX
+            if self.direction == 1:
+                dim = (cfg.SWORD_HITBOX, self.hitbox.height)
+                offset_x = -cfg.SWORD_HITBOX
+            if self.direction == 3:
+                dim = (cfg.SWORD_HITBOX, self.hitbox.height)
+                offset_x = self.hitbox.width + cfg.SWORD_HITBOX
 
-        #     for enemy in enemy_group.sprites():
-        #         if sword_hitbox.colliderect(enemy.rect):
-        #             enemy.get_hit()
-
-        # enemies_collided = pygame.sprite.spritecollide(self.hitbox, enemy_group, dokill=False)
-        # if enemies_collided:
-        #     enemy_group.remove(enemies_collided)
+            self.sword_hitbox = pygame.Rect((0, 0), dim)
+            self.sword_hitbox.center = (
+                self.hitbox.x + offset_x,
+                self.rect.y + offset_y,
+            )
+            self.sword_hitbox_image = pygame.Surface(
+                (self.sword_hitbox.w, self.sword_hitbox.h)
+            )
+            self.sword_hitbox_image.fill(cfg.BLUE)
+            self.sword_hitbox_image.set_alpha(200)
+            for enemy in enemy_group.sprites():
+                if self.sword_hitbox.colliderect(enemy.rect):
+                    enemy.get_hit()
 
     def check_if_within_bounds(self):
         self.out_of_bounds = Vector2(0, 0)
@@ -153,7 +159,8 @@ class Player(pygame.sprite.Sprite):
 
         # Temporary: Blit hitbox to sprite
         self.image = self.animation.current_sprite.copy()
-        self.image.blit(self.hitbox_image, (8, 8))
+        self.image.blit(self.hitbox.image, self.hitbox.offset)
+        self.image.blit(self.sword_hitbox_image, (8, 8))
 
     def update(
         self, delta, control: Control, in_transition, objects_group, enemy_group
@@ -161,7 +168,7 @@ class Player(pygame.sprite.Sprite):
         if not in_transition:
             self.handle_attack_input(control)
             self.handle_move_input(control)
-            self.update_direction(control)
+            self.update_direction()
             self.handle_collision_with_objects(delta, objects_group)
             self.check_collision_with_enemy(enemy_group)
             self.update_animation()

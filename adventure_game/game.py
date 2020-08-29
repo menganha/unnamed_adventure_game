@@ -1,11 +1,13 @@
-import pygame
 import sys
+
+import pygame
+
 import adventure_game.config as cfg
-from adventure_game.player import Player
 from adventure_game.control import Control
-from adventure_game.world import World
-from adventure_game.text import Text
 from adventure_game.enemy import EnemyGroup
+from adventure_game.player import Player
+from adventure_game.text import Text
+from adventure_game.world import World
 
 
 class Game():
@@ -23,12 +25,14 @@ class Game():
         self.font = pygame.font.Font("./assets/font/PressStart2P.ttf", 8)
         self.debug_text = Text(self.font)
         self.delta = 0
+        self.fps = 0
 
     def game_loop(self):
         while not self.exit:
 
             self.delta = self.clock.tick(cfg.FRAMERATE) / 1000
-            self.delta = 1000 / cfg.FRAMERATE
+            # self.delta = self.clock.tick_busy_loop(cfg.FRAMERATE) / 1000
+            self.delta = 1 / cfg.FRAMERATE
 
             # Handle Input
             self.control.handle_input()
@@ -48,11 +52,11 @@ class Game():
                 self.world.solid_objects)
 
             # Render
-            self.debug_text.draw(self.display)
             self.world.draw(self.display)
-            self.display.blit(self.player.red_surface, self.player.position + (8, 8))
+            # self.display.blit(self.player.red_surface, self.player.position + (8, 8))
             self.generic_container.draw(self.display)
             self.enemies.draw(self.display)
+            # self.debug_text.draw(self.display)
             pygame.display.update()
 
         pygame.quit()

@@ -8,17 +8,19 @@ class Control():
         self.moving_up = False
         self.moving_down = False
         self.action = False
+        self.previous_frame_action = False
         self.exit = False
         pygame.joystick.init()
-        self.hasGamepad = pygame.joystick.get_count()
-        if self.hasGamepad:
+        self.has_gamepad = pygame.joystick.get_count()
+        if self.has_gamepad:
             self.gamepad = pygame.joystick.Joystick(0)
             self.gamepad.init()
         else:
             pygame.joystick.quit()
 
     def handle_input(self):
-        if self.hasGamepad:
+        self.previous_frame_action = self.action
+        if self.has_gamepad:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     self.exit = True
@@ -26,7 +28,6 @@ class Control():
             self.moving_left = round(self.gamepad.get_axis(0)) == -1
             self.moving_up = round(self.gamepad.get_axis(1)) == -1
             self.moving_down = round(self.gamepad.get_axis(1)) == 1
-            self.previous_frame_action = self.action
             self.action = self.gamepad.get_button(3)
         else:
             for event in pygame.event.get():

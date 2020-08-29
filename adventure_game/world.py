@@ -112,7 +112,7 @@ class World():
         if self.in_transition:
             if (self.offset_direction.x*self.map_offset.x > 0
                     or self.offset_direction.y*self.map_offset.y > 0):
-                shift = int(delta*cfg.SCROLL_VELOCITY)*self.offset_direction
+                shift = delta*cfg.SCROLL_VELOCITY*self.offset_direction
                 self.other_offset = self.other_offset - shift
                 self.map_offset = self.map_offset - shift
             else:
