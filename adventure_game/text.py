@@ -2,8 +2,17 @@ import pygame
 from adventure_game.config import DIS_WIDTH, DIS_HEIGHT, BLACK
 
 
-class Text():
-    def __init__(self, font: pygame.font.Font, text='', color=BLACK, background=None, alpha=255, tX=0, tY=0):
+class Text:
+    def __init__(
+        self,
+        font: pygame.font.Font,
+        text="",
+        color=BLACK,
+        background=None,
+        alpha=255,
+        tX=0,
+        tY=0,
+    ):
         self.font = font
         self.text = text
         self.color = color
@@ -18,7 +27,7 @@ class Text():
     def center(self, offX=0, offY=0):
         self.tX, self.tY = self.get_coordinates_to_center(
             self.tW, self.tH, DIS_WIDTH, DIS_HEIGHT
-            )
+        )
         self.tX += offX
         self.tY += offY
 
@@ -52,6 +61,6 @@ class Text():
 
     @staticmethod
     def get_coordinates_to_center(objWidth, objHeight, disWidth, disHeight):
-        centerX = round(disWidth/2 - objWidth/2)
-        centerY = round(disHeight/2 - objHeight/2)
+        centerX = round(disWidth / 2 - objWidth / 2)
+        centerY = round(disHeight / 2 - objHeight / 2)
         return centerX, centerY

@@ -6,7 +6,7 @@ from pygame.math import Vector2
 import adventure_game.config as cfg
 from adventure_game.animation import PlayerAnimation
 from adventure_game.control import Control
-from adventure_game.hitbox import Hitbox
+from adventure_game.hitbox import Hitbox, SwordHitbox
 
 
 class Player(pygame.sprite.Sprite):
@@ -15,22 +15,20 @@ class Player(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__()
         self.animation = PlayerAnimation()
+        self.life = 5
         self.image = self.animation.current_sprite
         self.rect = self.image.get_rect()
         self.rect.center = (cfg.DIS_WIDTH // 2, cfg.DIS_HEIGHT // 2)
-        self.hitbox = Hitbox(tuple(ele - self.hitbox_deflation for ele in self.rect.size))
-        self.hitbox.get_offset(self.rect)
-        # Temporary render the hitbox image as a red rectangle for debugging
-        self.hitbox.image = pygame.Surface(self.hitbox.rectangle.size)
-        self.hitbox.image.fill(cfg.RED)
-        self.hitbox.image.set_alpha(100)
-        # ---
-        self.sword_hitbox = pygame.Rect(0, 0, 2, 2)
-        self.sword_hitbox_image = pygame.Surface(
-            (self.sword_hitbox.w, self.sword_hitbox.h)
+        self.hitbox = Hitbox(
+            tuple(ele - self.hitbox_deflation for ele in self.rect.size)
         )
-        self.sword_hitbox_image.fill(cfg.BLUE)
-        self.sword_hitbox_image.set_alpha(100)
+        self.hitbox.get_offset(self.rect.size)
+        self.sword_hitbox = SwordHitbox(12, 40, 3, self.rect.size)
+        self.sword_hitbox.get_offset(self.rect.size)
+        # Temporary render the hitbox image as a red rectangle for debugging
+        self.hitbox.set_image(cfg.RED)
+        self.sword_hitbox.set_image(cfg.BLUE)
+        # ---
         self.velocity = Vector2(0, 0)
         self.direction = 0
         self.position = Vector2(self.rect.topleft)
@@ -82,35 +80,17 @@ class Player(pygame.sprite.Sprite):
         # TODO: only registers hits for one frame. Fix this by setting a
         # condition on cool time when one has hitted an enemy. This is almost
         # done. and then change to self.attacking <= self.atack_length
+        # TODO: set cooldown hit detection for player and death condition
 
-        if self.attacking == self.attack_length:
-            offset_x = 0
-            offset_y = 0
-            if self.direction == 2:
-                dim = (self.hitbox.width, cfg.SWORD_HITBOX)
-                offset_y = -cfg.SWORD_HITBOX
-            if self.direction == 0:
-                dim = (self.hitbox.width, cfg.SWORD_HITBOX)
-                offset_y = self.hitbox.height + cfg.SWORD_HITBOX
-            if self.direction == 1:
-                dim = (cfg.SWORD_HITBOX, self.hitbox.height)
-                offset_x = -cfg.SWORD_HITBOX
-            if self.direction == 3:
-                dim = (cfg.SWORD_HITBOX, self.hitbox.height)
-                offset_x = self.hitbox.width + cfg.SWORD_HITBOX
-
-            self.sword_hitbox = pygame.Rect((0, 0), dim)
-            self.sword_hitbox.center = (
-                self.hitbox.x + offset_x,
-                self.rect.y + offset_y,
-            )
-            self.sword_hitbox_image = pygame.Surface(
-                (self.sword_hitbox.w, self.sword_hitbox.h)
-            )
-            self.sword_hitbox_image.fill(cfg.BLUE)
-            self.sword_hitbox_image.set_alpha(200)
-            for enemy in enemy_group.sprites():
-                if self.sword_hitbox.colliderect(enemy.rect):
+        # Temporary Shit
+        self.sword_hitbox.set_position(self.position, self.direction)
+        self.sword_hitbox.set_image(cfg.BLUE)
+        # --
+        for enemy in enemy_group.sprites():
+            if self.hitbox.rectangle.colliderect(enemy.rect):
+                self.life -= 1
+            if self.attacking == self.attack_length:
+                if self.sword_hitbox.rectangle.colliderect(enemy.rect):
                     enemy.get_hit()
 
     def check_if_within_bounds(self):
@@ -160,7 +140,6 @@ class Player(pygame.sprite.Sprite):
         # Temporary: Blit hitbox to sprite
         self.image = self.animation.current_sprite.copy()
         self.image.blit(self.hitbox.image, self.hitbox.offset)
-        self.image.blit(self.sword_hitbox_image, (8, 8))
 
     def update(
         self, delta, control: Control, in_transition, objects_group, enemy_group

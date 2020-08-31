@@ -23,7 +23,7 @@ class Game():
         self.enemies = EnemyGroup(self.world.current_map)
         self.generic_container = pygame.sprite.Group(self.player)
         self.font = pygame.font.Font("./assets/font/PressStart2P.ttf", 8)
-        self.debug_text = Text(self.font)
+        self.debug_text = Text(self.font, str(self.player.life))
         self.delta = 0
         self.fps = 0
 
@@ -50,13 +50,16 @@ class Game():
                 self.world.current_map,
                 self.world.in_transition,
                 self.world.solid_objects)
+            self.debug_text.text = str(self.player.life)
+            self.debug_text.reRender()
 
             # Render
             self.world.draw(self.display)
             # self.display.blit(self.player.red_surface, self.player.position + (8, 8))
             self.generic_container.draw(self.display)
             self.enemies.draw(self.display)
-            # self.debug_text.draw(self.display)
+            self.display.blit(self.player.sword_hitbox.image, self.player.sword_hitbox.position)
+            self.debug_text.draw(self.display)
             pygame.display.update()
 
         pygame.quit()
