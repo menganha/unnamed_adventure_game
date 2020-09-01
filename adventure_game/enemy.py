@@ -1,32 +1,38 @@
-import pygame
-import adventure_game.config as cfg
-from random import randint
-from pygame.math import Vector2
-from adventure_game.animation import EnemyAnimation
 import json
+from random import randint
+
+import pygame
+from pygame.math import Vector2
+
+import adventure_game.config as cfg
+from adventure_game.animation import EnemyAnimation
+from adventure_game.hitbox import Hitbox
 
 
 class Enemy(pygame.sprite.Sprite):
-    _think_time = 30
+    _think_time = 70
 
     def __init__(self, position):
         super().__init__()
         self.animation = EnemyAnimation.create_jelly_animation()
         self.image = self.animation.current_sprite
         self.rect = self.image.get_rect()
+        self.hitbox = Hitbox(self.rect.size)
         self.position = Vector2(position)
         self.velocity = Vector2((0, 0))
         self.health = 4
         self.direction = 0
         self.rect.topleft = self.position
-        self.blink_time = -1
+        self.blink_time = 0
         self.think_counter = self._think_time
 
-    def get_hit(self):
+    def get_hit(self, direction):
+        self.velocity.x = cfg.VELOCITY * 4 * (-(direction == 1) + (direction == 3))
+        self.velocity.y = cfg.VELOCITY * 4 * (-(direction == 2) + (direction == 0))
         self.blink_time = cfg.BLINK_TIME
         self.health -= 1
 
-    def move(self, delta, physical_objects):
+    def handle_ai(self):
         if self.think_counter == 0:
             self.think_counter = self._think_time
         if self.think_counter == self._think_time:
@@ -34,24 +40,30 @@ class Enemy(pygame.sprite.Sprite):
 
         self.velocity.x = cfg.VELOCITY*0.8 * (-(self.direction == 1) + (self.direction == 3))
         self.velocity.y = cfg.VELOCITY*0.8 * (-(self.direction == 2) + (self.direction == 0))
-        pos = self.position + delta*self.velocity
-        hitbox = self.rect.copy()
-        hitbox.topleft = pos
-        if hitbox.collidelist(physical_objects) != -1:
-            self.velocity.xy = 0, 0
+        self.think_counter -= 1
+
+    def handle_collisions_with_objects(self, delta, physical_objects):
+        position = self.position + delta*self.velocity
+        self.hitbox.set_position(position)
+        if self.hitbox.rectangle.collidelist(physical_objects) != -1:
+            self.velocity[:] = 0, 0
+
+    def move(self, delta):
         self.position += delta*self.velocity
         self.rect.topleft = self.position
-        self.think_counter -= 1
 
     def update(self, delta, physical_objects):
         if self.health == 0:
             self.kill()
-        if self.blink_time == -1:
+        if self.blink_time == 0:
             self.animation.next_frame("walk")
             self.image = self.animation.current_sprite
-            self.move(delta, physical_objects)
-        elif self.blink_time >= 0:
-            if self.blink_time % 10 < 10//2:
+            self.handle_ai()
+        elif self.blink_time > 0:
+            # TODO: Beautify this condition
+            if self.blink_time == 18:
+                self.velocity[:] = 0, 0
+            if self.blink_time % 6 < 3:
                 alpha = 0
             else:
                 alpha = 255
@@ -60,11 +72,14 @@ class Enemy(pygame.sprite.Sprite):
             self.image.fill(color, special_flags=pygame.BLEND_RGBA_MULT)
             self.blink_time -= 1
 
+        self.handle_collisions_with_objects(delta, physical_objects)
+        self.move(delta)
+
 
 class EnemyGroup(pygame.sprite.Group):
-    def __init__(self, map):
+    def __init__(self, current_map):
         super().__init__()
-        self.current_map = map
+        self.current_map = current_map
         self.enemy_positions = []
         self.get_enemy_positions()
         self.create_enemies()
@@ -82,11 +97,11 @@ class EnemyGroup(pygame.sprite.Group):
         for pos in self.enemy_positions:
             self.add(Enemy(pos))
 
-    def update(self, delta,  map, in_transition, physical_objects):
-        if map != self.current_map:
+    def update(self, delta, new_map, in_transition, physical_objects):
+        if new_map != self.current_map:
             self.empty()
             if not in_transition:
-                self.current_map = map
+                self.current_map = new_map
                 self.get_enemy_positions()
                 self.create_enemies()
         else:

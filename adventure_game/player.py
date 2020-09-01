@@ -23,7 +23,7 @@ class Player(pygame.sprite.Sprite):
             tuple(ele - self.hitbox_deflation for ele in self.rect.size)
         )
         self.hitbox.get_offset(self.rect.size)
-        self.sword_hitbox = SwordHitbox(12, 40, 3, self.rect.size)
+        self.sword_hitbox = SwordHitbox(20, 40, 10, self.rect.size)
         self.sword_hitbox.get_offset(self.rect.size)
         # Temporary render the hitbox image as a red rectangle for debugging
         self.hitbox.set_image(cfg.RED)
@@ -91,7 +91,7 @@ class Player(pygame.sprite.Sprite):
                 self.life -= 1
             if self.attacking == self.attack_length:
                 if self.sword_hitbox.rectangle.colliderect(enemy.rect):
-                    enemy.get_hit()
+                    enemy.get_hit(self.direction)
 
     def check_if_within_bounds(self):
         self.out_of_bounds = Vector2(0, 0)
@@ -137,9 +137,7 @@ class Player(pygame.sprite.Sprite):
 
             self.animation.next_frame(frame_name)
 
-        # Temporary: Blit hitbox to sprite
         self.image = self.animation.current_sprite.copy()
-        self.image.blit(self.hitbox.image, self.hitbox.offset)
 
     def update(
         self, delta, control: Control, in_transition, objects_group, enemy_group

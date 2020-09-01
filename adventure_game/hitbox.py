@@ -35,8 +35,8 @@ class Hitbox:
         )
 
     def set_position(self, position):
-        self.position = position
-        self.rectangle.topleft = self.position + self.offset
+        self.position = position + self.offset
+        self.rectangle.topleft = self.position
 
     def set_image(self, color):
         self.image = Surface(self.rectangle.size)

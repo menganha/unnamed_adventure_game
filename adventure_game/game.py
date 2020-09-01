@@ -59,6 +59,7 @@ class Game():
             self.generic_container.draw(self.display)
             self.enemies.draw(self.display)
             self.display.blit(self.player.sword_hitbox.image, self.player.sword_hitbox.position)
+            self.display.blit(self.player.hitbox.image, self.player.hitbox.position)
             self.debug_text.draw(self.display)
             pygame.display.update()
 
