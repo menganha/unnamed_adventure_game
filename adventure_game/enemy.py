@@ -27,10 +27,11 @@ class Enemy(pygame.sprite.Sprite):
         self.think_counter = self._think_time
 
     def get_hit(self, direction):
-        self.velocity.x = cfg.VELOCITY * 4 * (-(direction == 1) + (direction == 3))
-        self.velocity.y = cfg.VELOCITY * 4 * (-(direction == 2) + (direction == 0))
-        self.blink_time = cfg.BLINK_TIME
-        self.health -= 1
+        if self.blink_time == 0:
+            self.velocity.x = cfg.VELOCITY * 4 * (-(direction == 1) + (direction == 3))
+            self.velocity.y = cfg.VELOCITY * 4 * (-(direction == 2) + (direction == 0))
+            self.blink_time = cfg.BLINK_TIME
+            self.health -= 1
 
     def handle_ai(self):
         if self.think_counter == 0:

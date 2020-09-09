@@ -14,7 +14,8 @@ class Game():
     def __init__(self):
         pygame.init()
         pygame.display.set_caption('Untitled Adventure Game')
-        self.display = pygame.display.set_mode((cfg.DIS_WIDTH, cfg.DIS_HEIGHT))
+        self.screen = pygame.display.set_mode((cfg.DIS_WIDTH*2, cfg.DIS_HEIGHT*2))
+        self.display = pygame.Surface((cfg.DIS_WIDTH, cfg.DIS_HEIGHT))
         self.clock = pygame.time.Clock()
         self.exit = False
         self.control = Control()
@@ -61,6 +62,7 @@ class Game():
             self.display.blit(self.player.sword_hitbox.image, self.player.sword_hitbox.position)
             self.display.blit(self.player.hitbox.image, self.player.hitbox.position)
             self.debug_text.draw(self.display)
+            self.screen.blit(pygame.transform.scale(self.display, (cfg.DIS_WIDTH*2, cfg.DIS_HEIGHT*2)), (0, 0))
             pygame.display.update()
 
         pygame.quit()

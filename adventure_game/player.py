@@ -35,6 +35,7 @@ class Player(pygame.sprite.Sprite):
         self.out_of_bounds = Vector2(0, 0)
         self.attacking = 0
         self.attack_length = len(self.animation.animation_data["attack up"])
+        self.cooldown_time = 0
 
     def handle_attack_input(self, control: Control):
         if self.attacking > 0:
@@ -77,21 +78,24 @@ class Player(pygame.sprite.Sprite):
             self.velocity[:] = 0, 0
 
     def check_collision_with_enemy(self, enemy_group: pygame.sprite.Group):
-        # TODO: only registers hits for one frame. Fix this by setting a
-        # condition on cool time when one has hitted an enemy. This is almost
-        # done. and then change to self.attacking <= self.atack_length
-        # TODO: set cooldown hit detection for player and death condition
-
         # Temporary Shit
         self.sword_hitbox.set_position(self.position, self.direction)
         self.sword_hitbox.set_image(cfg.BLUE)
         # --
         for enemy in enemy_group.sprites():
-            if self.hitbox.rectangle.colliderect(enemy.rect):
-                self.life -= 1
-            if self.attacking == self.attack_length:
+            if self.cooldown_time == 0:
+                if self.hitbox.rectangle.colliderect(enemy.rect):
+                    self.cooldown_time = cfg.COOLDOW_TIME_PLAYER
+                    self.life -= 1
+            if self.attacking > 0: #== self.attack_length:
                 if self.sword_hitbox.rectangle.colliderect(enemy.rect):
                     enemy.get_hit(self.direction)
+        if self.cooldown_time >= 28:
+            self.velocity.x = cfg.VELOCITY * 2 * ((self.direction == 1) - (self.direction == 3))
+            self.velocity.y = cfg.VELOCITY * 2 * ((self.direction == 2) - (self.direction == 0))
+            self.cooldown_time -= 1
+        elif self.cooldown_time > 0:
+            self.cooldown_time -= 1
 
     def check_if_within_bounds(self):
         self.out_of_bounds = Vector2(0, 0)
@@ -146,8 +150,8 @@ class Player(pygame.sprite.Sprite):
             self.handle_attack_input(control)
             self.handle_move_input(control)
             self.update_direction()
-            self.handle_collision_with_objects(delta, objects_group)
             self.check_collision_with_enemy(enemy_group)
+            self.handle_collision_with_objects(delta, objects_group)
             self.update_animation()
             self.check_if_within_bounds()
         self.move(delta)
