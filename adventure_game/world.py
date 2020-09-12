@@ -1,15 +1,19 @@
-import pygame
-from pygame.math import Vector2
-import adventure_game.config as cfg
 import json
 import re
 
+import pygame
+from pygame.math import Vector2
 
-class World():
+import adventure_game.config as cfg
+
+
+class World:
     def __init__(self):
         super().__init__()
-        self.sprite_sheet = pygame.image.load("assets/sprites/RPG Nature Tileset.png").convert_alpha()
-        self.current_map = r'data/level-x04-y00.json'
+        self.sprite_sheet = pygame.image.load(
+            "assets/sprites/RPG Nature Tileset.png"
+        ).convert_alpha()
+        self.current_map = r"data/level-x04-y01.json"
         self.in_transition = False
         self.map_offset = Vector2((0, 0))
         self.other_offset = Vector2((0, 0))
@@ -27,7 +31,7 @@ class World():
 
     def load_data(self):
         with open(self.current_map) as f:
-            data = json.load(f)['layers']
+            data = json.load(f)["layers"]
         return data
 
     def get_solid_objects(self):
@@ -36,11 +40,16 @@ class World():
         """
         solid_objects = []
         for layer in self.data:
-            if layer['type'] == 'objectgroup' and 'boundaries' in layer['name']:
+            if layer["type"] == "objectgroup" and "boundaries" in layer["name"]:
                 layer_objects = [
-                    pygame.Rect(obj_dict['x'], obj_dict['y'], obj_dict['width'], obj_dict['height'])
-                    for obj_dict in layer['objects']
-                    ]
+                    pygame.Rect(
+                        obj_dict["x"],
+                        obj_dict["y"] + cfg.UI_HEIGHT,
+                        obj_dict["width"],
+                        obj_dict["height"],
+                    )
+                    for obj_dict in layer["objects"]
+                ]
                 solid_objects.extend(layer_objects)
         return solid_objects
 
@@ -50,9 +59,9 @@ class World():
         """
         unique_tiles = []
         for layer in self.data:
-            if layer['type'] == 'objectgroup':
+            if layer["type"] == "objectgroup":
                 continue
-            unique_tiles.extend(layer['data'])
+            unique_tiles.extend(layer["data"])
 
         unique_tiles = set(unique_tiles)
 
@@ -64,13 +73,15 @@ class World():
         """
         Gets the unique tile surfaces
         """
-        sheetSize = self.sprite_sheet.get_size()
+        sheet_size = self.sprite_sheet.get_size()
         tile_dict = {}
 
         for idx in self.unique_tileset_indeces:
-            ix = (idx-1) % (sheetSize[0]//cfg.TILE_SIZE)
-            iy = (idx-1) // (sheetSize[0]//cfg.TILE_SIZE)
-            rect = pygame.Rect(ix*cfg.TILE_SIZE, iy*cfg.TILE_SIZE, cfg.TILE_SIZE, cfg.TILE_SIZE)
+            ix = (idx - 1) % (sheet_size[0] // cfg.TILE_SIZE)
+            iy = (idx - 1) // (sheet_size[0] // cfg.TILE_SIZE)
+            rect = pygame.Rect(
+                ix * cfg.TILE_SIZE, iy * cfg.TILE_SIZE, cfg.TILE_SIZE, cfg.TILE_SIZE
+            )
             tile = self.sprite_sheet.subsurface(rect)
             tile_dict.update({idx: tile})
         return tile_dict
@@ -79,15 +90,15 @@ class World():
         """
         Blits all tiles into the map image surface
         """
-        width = self.sprite_sheet.get_size()[0]//cfg.TILE_SIZE
+        width = self.sprite_sheet.get_size()[0] // cfg.TILE_SIZE
         for layer in self.data:
-            if layer['type'] == 'objectgroup':
+            if layer["type"] == "objectgroup":
                 continue
-            for idx, tile_idx in enumerate(layer['data']):
+            for idx, tile_idx in enumerate(layer["data"]):
                 if tile_idx == 0:
                     continue
-                x = (idx % width)*cfg.TILE_SIZE
-                y = (idx // width)*cfg.TILE_SIZE
+                x = (idx % width) * cfg.TILE_SIZE
+                y = (idx // width) * cfg.TILE_SIZE + cfg.UI_HEIGHT
                 image = self.tile_dict[tile_idx]
                 destination_surface.blit(image, (x, y))
 
@@ -102,7 +113,9 @@ class World():
 
         if any(out_of_bounds) and not self.in_transition:
             self.offset_direction = out_of_bounds
-            self.map_offset = self.offset_direction.elementwise()*Vector2((cfg.DIS_WIDTH, cfg.DIS_HEIGHT))
+            self.map_offset = self.offset_direction.elementwise() * Vector2(
+                (cfg.DIS_WIDTH, cfg.DIS_HEIGHT - cfg.UI_HEIGHT)
+            )
             self.other_offset = Vector2((0, 0))
             self.current_map = self.next_map(out_of_bounds)
             self.load_map()
@@ -110,9 +123,11 @@ class World():
             self.in_transition = True
 
         if self.in_transition:
-            if (self.offset_direction.x*self.map_offset.x > 0
-                    or self.offset_direction.y*self.map_offset.y > 0):
-                shift = delta*cfg.SCROLL_VELOCITY*self.offset_direction
+            if (
+                self.offset_direction.x * self.map_offset.x > 0
+                or self.offset_direction.y * self.map_offset.y > 0
+            ):
+                shift = delta * cfg.SCROLL_VELOCITY * self.offset_direction
                 self.other_offset = self.other_offset - shift
                 self.map_offset = self.map_offset - shift
             else:

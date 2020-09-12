@@ -109,9 +109,9 @@ class Player(pygame.sprite.Sprite):
             )
         if (
             self.position.y > cfg.DIS_HEIGHT - cfg.SPRITE_SIZE // 2
-            or self.position.y < -cfg.SPRITE_SIZE // 2
+            or self.position.y < cfg.UI_HEIGHT - cfg.SPRITE_SIZE // 2
         ):
-            self.out_of_bounds.y = copysign(1, self.position.y)
+            self.out_of_bounds.y = copysign(1, self.position.y - cfg.UI_HEIGHT)
             self.velocity = (
                 -self.out_of_bounds.elementwise() * cfg.SCROLL_VELOCITY * 0.97
             )

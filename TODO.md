@@ -13,3 +13,7 @@
         - [ ] Introduce new weapons
         - [ ] Introduce currency
 - [ ] Designs at least one dungeon.
+
+# Some details to be aware of
+
+- Enemies hitboxes default to the sprite size of the animation. This is automatic and therefor quite nice. To be more flexible think about defining the hitbox size independently.
