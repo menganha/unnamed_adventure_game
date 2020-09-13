@@ -87,12 +87,16 @@ class Player(pygame.sprite.Sprite):
                 if self.hitbox.rectangle.colliderect(enemy.rect):
                     self.cooldown_time = cfg.COOLDOW_TIME_PLAYER
                     self.life -= 1
-            if self.attacking > 0: #== self.attack_length:
+            if self.attacking > 0:  # == self.attack_length:
                 if self.sword_hitbox.rectangle.colliderect(enemy.rect):
                     enemy.get_hit(self.direction)
         if self.cooldown_time >= 28:
-            self.velocity.x = cfg.VELOCITY * 2 * ((self.direction == 1) - (self.direction == 3))
-            self.velocity.y = cfg.VELOCITY * 2 * ((self.direction == 2) - (self.direction == 0))
+            self.velocity.x = (
+                cfg.VELOCITY * 2 * ((self.direction == 1) - (self.direction == 3))
+            )
+            self.velocity.y = (
+                cfg.VELOCITY * 2 * ((self.direction == 2) - (self.direction == 0))
+            )
             self.cooldown_time -= 1
         elif self.cooldown_time > 0:
             self.cooldown_time -= 1

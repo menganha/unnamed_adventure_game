@@ -10,11 +10,11 @@ from adventure_game.text import Text
 from adventure_game.world import World
 
 
-class Game():
+class Game:
     def __init__(self):
         pygame.init()
-        pygame.display.set_caption('Untitled Adventure Game')
-        self.screen = pygame.display.set_mode((cfg.DIS_WIDTH*2, cfg.DIS_HEIGHT*2))
+        pygame.display.set_caption("Untitled Adventure Game")
+        self.screen = pygame.display.set_mode((cfg.DIS_WIDTH * 2, cfg.DIS_HEIGHT * 2))
         self.display = pygame.Surface((cfg.DIS_WIDTH, cfg.DIS_HEIGHT))
         self.clock = pygame.time.Clock()
         self.exit = False
@@ -32,7 +32,6 @@ class Game():
         while not self.exit:
 
             self.delta = self.clock.tick(cfg.FRAMERATE) / 1000
-            # self.delta = self.clock.tick_busy_loop(cfg.FRAMERATE) / 1000
             self.delta = 1 / cfg.FRAMERATE
 
             # Handle Input
@@ -41,28 +40,37 @@ class Game():
 
             # Update
             self.generic_container.update(
-                self.delta, self.control,
+                self.delta,
+                self.control,
                 self.world.in_transition,
                 self.world.solid_objects,
-                self.enemies)
+                self.enemies,
+            )
             self.world.update(self.delta, self.player.out_of_bounds)
             self.enemies.update(
                 self.delta,
                 self.world.current_map,
                 self.world.in_transition,
-                self.world.solid_objects)
+                self.world.solid_objects,
+            )
             self.debug_text.text = str(self.player.life)
             self.debug_text.reRender()
 
             # Render
             self.world.draw(self.display)
-            # self.display.blit(self.player.red_surface, self.player.position + (8, 8))
             self.generic_container.draw(self.display)
             self.enemies.draw(self.display)
-            self.display.blit(self.player.sword_hitbox.image, self.player.sword_hitbox.position)
+            self.display.blit(
+                self.player.sword_hitbox.image, self.player.sword_hitbox.position
+            )
             self.display.blit(self.player.hitbox.image, self.player.hitbox.position)
             self.debug_text.draw(self.display)
-            self.screen.blit(pygame.transform.scale(self.display, (cfg.DIS_WIDTH*2, cfg.DIS_HEIGHT*2)), (0, 0))
+            self.screen.blit(
+                pygame.transform.scale(
+                    self.display, (cfg.DIS_WIDTH * 2, cfg.DIS_HEIGHT * 2)
+                ),
+                (0, 0),
+            )
             pygame.display.update()
 
         pygame.quit()

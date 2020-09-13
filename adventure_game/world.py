@@ -18,8 +18,8 @@ class World:
         self.map_offset = Vector2((0, 0))
         self.other_offset = Vector2((0, 0))
         self.offset_direction = Vector2((0, 0))
-        self.map_image = pygame.Surface((cfg.DIS_WIDTH, cfg.DIS_HEIGHT))
-        self.map_image_cache = pygame.Surface((cfg.DIS_WIDTH, cfg.DIS_HEIGHT))
+        self.map_image = pygame.Surface((cfg.WORLD_WIDTH, cfg.WORLD_HEIGTH))
+        self.map_image_cache = pygame.Surface((cfg.WORLD_WIDTH, cfg.WORLD_HEIGTH))
         self.load_map()
         self.arrange_world(self.map_image)
 
@@ -30,8 +30,8 @@ class World:
         self.tile_dict = self.get_tile_surfaces()
 
     def load_data(self):
-        with open(self.current_map) as f:
-            data = json.load(f)["layers"]
+        with open(self.current_map) as file:
+            data = json.load(file)["layers"]
         return data
 
     def get_solid_objects(self):
@@ -98,7 +98,7 @@ class World:
                 if tile_idx == 0:
                     continue
                 x = (idx % width) * cfg.TILE_SIZE
-                y = (idx // width) * cfg.TILE_SIZE + cfg.UI_HEIGHT
+                y = (idx // width) * cfg.TILE_SIZE #+ cfg.UI_HEIGHT
                 image = self.tile_dict[tile_idx]
                 destination_surface.blit(image, (x, y))
 
@@ -138,6 +138,6 @@ class World:
                 self.map_image = self.map_image_cache.copy()
 
     def draw(self, display):
-        display.blit(self.map_image, self.other_offset)
+        display.blit(self.map_image, self.other_offset + (0, cfg.UI_HEIGHT))
         if self.in_transition:
-            display.blit(self.map_image_cache, self.map_offset)
+            display.blit(self.map_image_cache, self.map_offset+ (0, cfg.UI_HEIGHT))
