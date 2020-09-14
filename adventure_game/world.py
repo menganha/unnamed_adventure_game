@@ -9,7 +9,6 @@ import adventure_game.config as cfg
 
 class World:
     def __init__(self):
-        super().__init__()
         self.sprite_sheet = pygame.image.load(
             "assets/sprites/RPG Nature Tileset.png"
         ).convert_alpha()
@@ -139,5 +138,6 @@ class World:
 
     def draw(self, display):
         display.blit(self.map_image, self.other_offset + (0, cfg.UI_HEIGHT))
+
         if self.in_transition:
             display.blit(self.map_image_cache, self.map_offset+ (0, cfg.UI_HEIGHT))

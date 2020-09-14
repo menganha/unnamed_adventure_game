@@ -85,8 +85,7 @@ class Player(pygame.sprite.Sprite):
         for enemy in enemy_group.sprites():
             if self.cooldown_time == 0:
                 if self.hitbox.rectangle.colliderect(enemy.rect):
-                    self.cooldown_time = cfg.COOLDOW_TIME_PLAYER
-                    self.life -= 1
+                    self.get_hit()
             if self.attacking > 0:  # == self.attack_length:
                 if self.sword_hitbox.rectangle.colliderect(enemy.rect):
                     enemy.get_hit(self.direction)
@@ -100,6 +99,10 @@ class Player(pygame.sprite.Sprite):
             self.cooldown_time -= 1
         elif self.cooldown_time > 0:
             self.cooldown_time -= 1
+
+    def get_hit(self):
+        self.cooldown_time = cfg.COOLDOW_TIME_PLAYER
+        self.life -= 0.5
 
     def check_if_within_bounds(self):
         self.out_of_bounds = Vector2(0, 0)
