@@ -1,6 +1,8 @@
-# List of tasks to do
+# Design and project planning document
 
-- [ ] Introduce cooldown time for player
+## List of tasks to do
+
+- [X] Introduce cooldown time for player
 - [ ] Introduce path finding for enemys, i.e., to look for you when they see you.
 - [ ] Introduce UI with health, items, etc. This will involve changing the current size of the playable screen and posibly entering some conditions for not redrawing the UI while is not changing.
 - [ ] Improve Sprite Images
@@ -14,6 +16,11 @@
         - [ ] Introduce currency
 - [ ] Designs at least one dungeon.
 
-# Some details to be aware of
+## Some details to be aware of
 
 - Enemies hitboxes default to the sprite size of the animation. This is automatic and therefor quite nice. To be more flexible think about defining the hitbox size independently.
+
+## Current Issues
+
+- [ ] UI Background is not configurable and defaults to black
+- [ ] Change of hearts from 1 to 0.5 is not rendered. Change the hearts to be an integer number, i.e., 2*actual number

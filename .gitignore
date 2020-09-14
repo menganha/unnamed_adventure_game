@@ -4,5 +4,6 @@ __pycache__
 .vscode
 tiled_maps
 *.ase
+*.aseprite
 profile.log
 analyse_profile.py
