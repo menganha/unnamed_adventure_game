@@ -3,8 +3,14 @@
 ## List of tasks to do
 
 - [X] Introduce cooldown time for player
-- [ ] Introduce path finding for enemys, i.e., to look for you when they see you.
+- [ ] Introduce better AI for enemies
+        - [ ] path finding, i.e., to look for you when they see you.
+        - [ ] Either stop or recoil when they hit the player to prevent an enemy to constantly make damage.
+- [ ] Improve the movement, i.e., introduce a threshold between player and solids hitboxes so that the player "smothly" gets pushed away from the obstacle.
 - [ ] Introduce UI with health, items, etc. This will involve changing the current size of the playable screen and posibly entering some conditions for not redrawing the UI while is not changing.
+        - [X] Introduce Life
+        - [ ] Introduce Items
+        - [ ] Introduce Currency
 - [ ] Improve Sprite Images
         - [ ] Introduce death animation (I'm looking something like ninja gaiden)
 - [ ] Introduce dungeon entering logic, i.e., what tiles do load another set of maps.
@@ -23,4 +29,4 @@
 ## Current Issues
 
 - [ ] UI Background is not configurable and defaults to black
-- [ ] Change of hearts from 1 to 0.5 is not rendered. Change the hearts to be an integer number, i.e., 2*actual number
+- [X] Change of hearts from 1 to 0.5 is not rendered. Change the hearts to be an integer number, i.e., 2*actual number
