@@ -18,14 +18,24 @@ class UserInterface:
 
 
 class HeartContainers(pygame.sprite.DirtySprite):
-    def __init__(self, container, max_hearts=5, hearts=5):
+    """
+    Handle the heart sprites in the. A full heart contains 2 heart units.
+    """
+
+    def __init__(self, container, max_hearts=3, heart_units=6):
         super().__init__(container)
         self.heart_image_size = (15, 15)
-        self.full_heart_image = pygame.image.load("assets/sprites/full_heart.png").convert()
-        self.half_heart_image = pygame.image.load("assets/sprites/half_heart.png").convert()
-        self.empty_heart_image = pygame.image.load("assets/sprites/empty_heart.png").convert()
+        self.full_heart_image = pygame.image.load(
+            "assets/sprites/full_heart.png"
+        ).convert()
+        self.half_heart_image = pygame.image.load(
+            "assets/sprites/half_heart.png"
+        ).convert()
+        self.empty_heart_image = pygame.image.load(
+            "assets/sprites/empty_heart.png"
+        ).convert()
         self.max_hearts = max_hearts
-        self.hearts = hearts
+        self.heart_units = heart_units
         self.image = self.get_max_hearts_background_image()
         self.rect = self.image.get_rect()
         self.update(0)
@@ -39,21 +49,27 @@ class HeartContainers(pygame.sprite.DirtySprite):
         return surface
 
     def update(self, player_life):
-        if player_life != self.hearts:
-            self.hearts = player_life
+        if player_life != self.heart_units:
+            self.heart_units = player_life
             self.image = self.get_max_hearts_background_image()
+
+            full_hearts = self.heart_units // 2
+            half_heart = self.heart_units % 2
+
             for heart_idx in range(self.max_hearts):
-                if heart_idx <= int(self.hearts-1):
+                if heart_idx < full_hearts:
                     self.image.blit(
                         self.full_heart_image, (self.heart_image_size[0] * heart_idx, 0)
                     )
-                elif (self.hearts - heart_idx) > 0.4:
-                    # We expect no discretization lower than 1/2 heart
+                elif half_heart:
                     self.image.blit(
                         self.half_heart_image, (self.heart_image_size[0] * heart_idx, 0)
                     )
+                    half_heart = 0
                 else:
                     self.image.blit(
-                        self.empty_heart_image, (self.heart_image_size[0] * heart_idx, 0)
+                        self.empty_heart_image,
+                        (self.heart_image_size[0] * heart_idx, 0),
                     )
+
             self.dirty = 1

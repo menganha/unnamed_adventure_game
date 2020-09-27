@@ -15,7 +15,7 @@ class Player(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__()
         self.animation = PlayerAnimation()
-        self.life = 5
+        self.life = 6
         self.image = self.animation.current_sprite
         self.rect = self.image.get_rect()
         self.rect.center = (cfg.DIS_WIDTH // 2, cfg.DIS_HEIGHT // 2)
@@ -102,7 +102,7 @@ class Player(pygame.sprite.Sprite):
 
     def get_hit(self):
         self.cooldown_time = cfg.COOLDOW_TIME_PLAYER
-        self.life -= 0.5
+        self.life -= 1
 
     def check_if_within_bounds(self):
         self.out_of_bounds = Vector2(0, 0)
