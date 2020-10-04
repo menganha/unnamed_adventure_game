@@ -7,6 +7,7 @@
         - [ ] path finding, i.e., to look for you when they see you.
         - [ ] Either stop or recoil when they hit the player to prevent an enemy to constantly make damage.
 - [ ] Improve the movement, i.e., introduce a threshold between player and solids hitboxes so that the player "smothly" gets pushed away from the obstacle.
+        - [ ] Introduce smooth sliding when touching world obstacle
 - [ ] Introduce UI with health, items, etc. This will involve changing the current size of the playable screen and posibly entering some conditions for not redrawing the UI while is not changing.
         - [X] Introduce Life
         - [ ] Introduce Items

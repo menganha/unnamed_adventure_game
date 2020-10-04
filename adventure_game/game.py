@@ -3,6 +3,7 @@ import sys
 import pygame
 
 import adventure_game.config as cfg
+import adventure_game.utilities as utils
 from adventure_game.control import Control
 from adventure_game.enemy import EnemyGroup
 from adventure_game.player import Player
@@ -15,17 +16,19 @@ class Game:
     def __init__(self):
         pygame.init()
         pygame.display.set_caption("Untitled Adventure Game")
-        self.screen = pygame.display.set_mode((cfg.DIS_WIDTH * 2, cfg.DIS_HEIGHT * 2))
+        self.screen = pygame.display.set_mode(
+            (cfg.DIS_WIDTH * cfg.SCALE, cfg.DIS_HEIGHT * cfg.SCALE)
+        )
         self.display = pygame.Surface((cfg.DIS_WIDTH, cfg.DIS_HEIGHT))
         self.clock = pygame.time.Clock()
+        self.font = pygame.font.Font("./assets/font/PressStart2P.ttf", 8)
         self.exit = False
         self.control = Control()
         self.player = Player()
         self.world = World()
-        self.ui = UserInterface(self.display)
+        self.ui = UserInterface(self.display, self.font)
         self.enemies = EnemyGroup(self.world.current_map)
         self.player_container = pygame.sprite.Group(self.player)
-        self.font = pygame.font.Font("./assets/font/PressStart2P.ttf", 8)
         self.debug_text = Text(self.font, str(self.player.life))
         self.delta = 0
         self.fps = 0
@@ -73,10 +76,7 @@ class Game:
                 (0, 0),
             )
             # TODO -- Improve this mess
-            updated_rectangles = ui_rects
-            for rect in updated_rectangles:
-                rect.w = rect.w * 2
-                rect.h = rect.h * 2
+            updated_rectangles = [utils.scale_rects(rects, cfg.SCALE) for rects in ui_rects]
             updated_rectangles = updated_rectangles + [
                 pygame.Rect(
                     0, cfg.UI_HEIGHT * 2, cfg.WORLD_WIDTH * 2, cfg.WORLD_HEIGTH * 2
