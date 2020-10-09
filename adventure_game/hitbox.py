@@ -1,8 +1,10 @@
 from pygame import Rect, Surface
 from pygame.math import Vector2
+
 # TODO: Include in this classes the parent rectangle size (usually a sprite)
 # where the hitbox would be positioned relative from it on the constructor.
 # The get_offset routine would be also then be part of the constructor.
+
 
 class Hitbox:
     def __init__(self, size: tuple, position: Vector2 = Vector2(0, 0)):
@@ -62,7 +64,7 @@ class SwordHitbox(Hitbox):
 
     def get_offset(self, other_rectangle_size):
         max_dimension = max(self.slash_range, self.depth)
-        super().get_offset(other_rectangle_size, (max_dimension,)*2)
+        super().get_offset(other_rectangle_size, (max_dimension,) * 2)
 
     def set_position(self, position, direction):
         if direction in (0, 2):
@@ -77,7 +79,7 @@ class SwordHitbox(Hitbox):
             relative_position = (
                 self.offset.elementwise() * Vector2(0, 1)
                 + Vector2(self.extent * ((direction == 3) - (direction == 1)), 0)
-                + Vector2((self.parent_size[0] - self.depth)* (direction == 3), 0)
+                + Vector2((self.parent_size[0] - self.depth) * (direction == 3), 0)
             )
         self.position = position + relative_position
         self.rectangle.topleft = self.position
