@@ -17,18 +17,21 @@ class UserInterface:
     def draw(self, target_display):
         return self.container.draw(target_display)
 
+
 class Background:
     """
     Contains all static (non-changing) UI elements
     """
-    def __init__(self,font):
+
+    def __init__(self, font):
         self.surface = pygame.Surface((cfg.UI_WIDTH, cfg.UI_HEIGHT)).convert()
         self.surface.fill(cfg.GRAY)
         self.font = font
 
         life_text = font.render("--LIFE--", False, cfg.WHITE, cfg.GRAY)
 
-        self.surface.blit(life_text, (0,5))
+        self.surface.blit(life_text, (0, 5))
+
 
 class HeartContainers(pygame.sprite.DirtySprite):
     """
