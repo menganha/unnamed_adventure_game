@@ -73,9 +73,10 @@ class Player(pygame.sprite.Sprite):
         self.rect.topleft = self.position
 
     def handle_collision_with_objects(self, delta, physical_objects):
-        self.hitbox.set_position(self.position + delta * self.velocity)
-        if self.hitbox.has_collided(physical_objects):
-            self.velocity[:] = 0, 0
+        for idx, vec in enumerate((Vector2(1, 0), Vector2(0, 1))):
+            self.hitbox.set_position(self.position + delta * (self.velocity.elementwise() * vec))
+            if self.hitbox.has_collided(physical_objects):
+                self.velocity[idx] = 0
 
     def check_collision_with_enemy(self, enemy_group: pygame.sprite.Group):
         # Temporary Shit
