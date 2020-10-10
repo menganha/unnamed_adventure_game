@@ -16,9 +16,7 @@ class Game:
     def __init__(self):
         pygame.init()
         pygame.display.set_caption("Untitled Adventure Game")
-        self.screen = pygame.display.set_mode(
-            (cfg.DIS_WIDTH * cfg.SCALE, cfg.DIS_HEIGHT * cfg.SCALE)
-        )
+        self.screen = pygame.display.set_mode((cfg.DIS_WIDTH * cfg.SCALE, cfg.DIS_HEIGHT * cfg.SCALE))
         self.display = pygame.Surface((cfg.DIS_WIDTH, cfg.DIS_HEIGHT))
         self.clock = pygame.time.Clock()
         self.font = pygame.font.Font("./assets/font/PressStart2P.ttf", 8)
@@ -58,6 +56,7 @@ class Game:
                 self.world.current_map,
                 self.world.in_transition,
                 self.world.solid_objects,
+                self.player
             )
 
             # Render
@@ -65,22 +64,16 @@ class Game:
             ui_rects = self.ui.draw(self.display)
             self.player_container.draw(self.display)
             self.enemies.draw(self.display)
-            self.display.blit(
-                self.player.sword_hitbox.image, self.player.sword_hitbox.position
-            )
+            self.display.blit(self.player.sword_hitbox.image, self.player.sword_hitbox.position)
             self.display.blit(self.player.hitbox.image, self.player.hitbox.position)
             self.screen.blit(
-                pygame.transform.scale(
-                    self.display, (cfg.DIS_WIDTH * 2, cfg.DIS_HEIGHT * 2)
-                ),
+                pygame.transform.scale(self.display, (cfg.DIS_WIDTH * 2, cfg.DIS_HEIGHT * 2)),
                 (0, 0),
             )
             # TODO -- Improve this mess
             updated_rectangles = [utils.scale_rects(rects, cfg.SCALE) for rects in ui_rects]
             updated_rectangles = updated_rectangles + [
-                pygame.Rect(
-                    0, cfg.UI_HEIGHT * 2, cfg.WORLD_WIDTH * 2, cfg.WORLD_HEIGTH * 2
-                )
+                pygame.Rect(0, cfg.UI_HEIGHT * 2, cfg.WORLD_WIDTH * 2, cfg.WORLD_HEIGTH * 2)
             ]
             # --
             pygame.display.update(updated_rectangles)

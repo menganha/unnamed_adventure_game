@@ -12,7 +12,7 @@ class World:
         self.sprite_sheet = pygame.image.load(
             "assets/sprites/RPG Nature Tileset.png"
         ).convert_alpha()
-        self.current_map = r"data/level-x04-y01.json"
+        self.current_map = r"data/level-x04-y00.json"
         self.in_transition = False
         self.map_offset = Vector2((0, 0))
         self.other_offset = Vector2((0, 0))
