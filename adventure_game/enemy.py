@@ -1,5 +1,5 @@
 import json
-from random import randint
+from random import choice, randint
 
 import pygame
 from pygame.math import Vector2
@@ -7,10 +7,23 @@ from pygame.math import Vector2
 import adventure_game.config as cfg
 from adventure_game.animation import EnemyAnimation
 from adventure_game.hitbox import Hitbox
+from adventure_game.player import Player
 
 
 class Enemy(pygame.sprite.Sprite):
-    _think_time = 70
+    THINK_TIME = 70
+    MAX_BLINK_TIME = 35
+    MAX_VISUAL_FIELD = 5000
+    DIRECTION_VECTOR = (
+        Vector2((0, 1)),
+        Vector2((-1, 0)),
+        Vector2(0, -1),
+        Vector2(1, 0),
+        Vector2((1, 1)),
+        Vector2((-1, 1)),
+        Vector2(-1, -1),
+        Vector2(1, 1),
+    )
 
     def __init__(self, position):
         super().__init__()
@@ -24,57 +37,65 @@ class Enemy(pygame.sprite.Sprite):
         self.direction = 0
         self.rect.topleft = self.position
         self.blink_time = 0
-        self.think_counter = self._think_time
+        self.think_counter = self.THINK_TIME
 
-    def get_hit(self, direction):
+    def get_hit(self, direction_idx):
         if self.blink_time == 0:
-            self.velocity.x = cfg.VELOCITY * 4 * (-(direction == 1) + (direction == 3))
-            self.velocity.y = cfg.VELOCITY * 4 * (-(direction == 2) + (direction == 0))
+            self.velocity = cfg.VELOCITY * 4 * self.DIRECTION_VECTOR[direction_idx]
             self.blink_time = cfg.BLINK_TIME
             self.health -= 1
 
-    def handle_ai(self):
-        if self.think_counter == 0:
-            self.think_counter = self._think_time
-        if self.think_counter == self._think_time:
-            self.direction = randint(0, 3)
+    def handle_ai(self, player: Player):
+        distance_to_player = self.position.distance_squared_to(player.position)
+        if distance_to_player < self.MAX_VISUAL_FIELD:
+            vec_difference = player.position - self.position
+            self.direction = max(self.DIRECTION_VECTOR, key=lambda x: x.dot(vec_difference))
+            self.velocity = cfg.VELOCITY * 0.4 * self.direction
+        else:
+            self.velocity[:] = 0, 0
+        # elif self.think_counter == 0:
+        #     self.think_counter = choice((self.THINK_TIME, 5))
 
-        self.velocity.x = cfg.VELOCITY*0.8 * (-(self.direction == 1) + (self.direction == 3))
-        self.velocity.y = cfg.VELOCITY*0.8 * (-(self.direction == 2) + (self.direction == 0))
-        self.think_counter -= 1
+        # if self.think_counter == self.THINK_TIME:
+        #     self.direction = self.DIRECTION_VECTOR[randint(0, 3)]
+
+        # self.velocity = cfg.VELOCITY * 0.5 * self.direction
+        # self.think_counter -= 1
 
     def handle_collisions_with_objects(self, delta, physical_objects):
-        position = self.position + delta*self.velocity
+        position = self.position + delta * self.velocity
         self.hitbox.set_position(position)
         if self.hitbox.rectangle.collidelist(physical_objects) != -1:
             self.velocity[:] = 0, 0
 
     def move(self, delta):
-        self.position += delta*self.velocity
+        self.position += delta * self.velocity
         self.rect.topleft = self.position
 
-    def update(self, delta, physical_objects):
+    def update(self, delta, physical_objects, player: Player):
         if self.health == 0:
             self.kill()
         if self.blink_time == 0:
             self.animation.next_frame("walk")
             self.image = self.animation.current_sprite
-            self.handle_ai()
+            self.handle_ai(player)
         elif self.blink_time > 0:
-            # TODO: Beautify this condition
-            if self.blink_time == 18:
+            if self.blink_time == self.MAX_BLINK_TIME // 2:
                 self.velocity[:] = 0, 0
-            if self.blink_time % 6 < 3:
-                alpha = 0
-            else:
-                alpha = 255
-            color = (255, 255, 255, alpha)
-            self.image = self.animation.current_sprite.copy()
-            self.image.fill(color, special_flags=pygame.BLEND_RGBA_MULT)
+            self.blink()
             self.blink_time -= 1
 
         self.handle_collisions_with_objects(delta, physical_objects)
         self.move(delta)
+
+    def blink(self):
+        if self.blink_time % 6 < 3:
+            alpha = 0
+        else:
+            alpha = 255
+        color = (255, 255, 255, alpha)
+        self.image = self.animation.current_sprite.copy()
+        self.image.fill(color, special_flags=pygame.BLEND_RGBA_MULT)
 
 
 class EnemyGroup(pygame.sprite.Group):
@@ -87,18 +108,18 @@ class EnemyGroup(pygame.sprite.Group):
 
     def get_enemy_positions(self):
         with open(self.current_map) as file:
-            self.data = json.load(file)['layers']
+            self.data = json.load(file)["layers"]
         self.enemy_positions = []
         for layer in self.data:
-            if layer['type'] == 'objectgroup' and 'enemies' in layer['name']:
-                for obj_dict in layer['objects']:
-                    self.enemy_positions.append([obj_dict['x'], obj_dict['y']])
+            if layer["type"] == "objectgroup" and "enemies" in layer["name"]:
+                for obj_dict in layer["objects"]:
+                    self.enemy_positions.append([obj_dict["x"], obj_dict["y"]])
 
     def create_enemies(self):
         for pos in self.enemy_positions:
             self.add(Enemy(pos))
 
-    def update(self, delta, new_map, in_transition, physical_objects):
+    def update(self, delta, new_map, in_transition, physical_objects, player: Player):
         if new_map != self.current_map:
             self.empty()
             if not in_transition:
@@ -106,8 +127,4 @@ class EnemyGroup(pygame.sprite.Group):
                 self.get_enemy_positions()
                 self.create_enemies()
         else:
-            super().update(delta, physical_objects)
-
-        # Define how they move
-        # Define how they react when player is nearby
-        # Check if dead. If so, remove it from the group
+            super().update(delta, physical_objects, player)
