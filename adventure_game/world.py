@@ -1,3 +1,5 @@
+from typing import List
+
 import json
 import re
 
@@ -33,7 +35,7 @@ class World:
             data = json.load(file)["layers"]
         return data
 
-    def get_solid_objects(self):
+    def get_solid_objects(self) -> List[pygame.Rect]:
         """
         Returns a list of rects representing the solid objects which one can collide
         """

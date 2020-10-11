@@ -13,7 +13,10 @@ from adventure_game.player import Player
 class Enemy(pygame.sprite.Sprite):
     THINK_TIME = 70
     MAX_BLINK_TIME = 35
-    MAX_VISUAL_FIELD = 5000
+    MAX_VISUAL_FIELD = 6000
+    MAX_VELOCITY = cfg.VELOCITY * 0.5
+    MAX_FRAME_WAIT = 10
+    IDLE_TIME = 25
     DIRECTION_VECTOR = (
         Vector2((0, 1)),
         Vector2((-1, 0)),
@@ -32,15 +35,19 @@ class Enemy(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.hitbox = Hitbox(self.rect.size)
         self.position = Vector2(position)
-        self.velocity = Vector2((0, 0))
+        self.velocity = Vector2(0, 0)
         self.health = 4
-        self.direction = 0
+        self.direction = self.DIRECTION_VECTOR[randint(0, 3)]
         self.rect.topleft = self.position
         self.blink_time = 0
         self.think_counter = self.THINK_TIME
+        self.force_frame_count = self.MAX_FRAME_WAIT
+        self.idle_counter = 0
+        self.hit_sound = pygame.mixer.Sound('assets/sounds/hit.wav')
 
     def get_hit(self, direction_idx):
         if self.blink_time == 0:
+            self.hit_sound.play()
             self.velocity = cfg.VELOCITY * 4 * self.DIRECTION_VECTOR[direction_idx]
             self.blink_time = cfg.BLINK_TIME
             self.health -= 1
@@ -49,8 +56,14 @@ class Enemy(pygame.sprite.Sprite):
         distance_to_player = self.position.distance_squared_to(player.position)
         if distance_to_player < self.MAX_VISUAL_FIELD:
             vec_difference = player.position - self.position
-            self.direction = max(self.DIRECTION_VECTOR, key=lambda x: x.dot(vec_difference))
-            self.velocity = cfg.VELOCITY * 0.4 * self.direction
+            desired_direction = max(self.DIRECTION_VECTOR, key=lambda x: x.dot(vec_difference))
+            if desired_direction != self.direction:
+                self.force_frame_count -= 1
+                if self.force_frame_count == 0:
+                    self.force_frame_count = self.MAX_FRAME_WAIT
+                    self.direction = desired_direction
+
+            self.velocity = self.MAX_VELOCITY * self.direction
         else:
             self.velocity[:] = 0, 0
         # elif self.think_counter == 0:
@@ -63,10 +76,13 @@ class Enemy(pygame.sprite.Sprite):
         # self.think_counter -= 1
 
     def handle_collisions_with_objects(self, delta, physical_objects):
-        position = self.position + delta * self.velocity
-        self.hitbox.set_position(position)
-        if self.hitbox.rectangle.collidelist(physical_objects) != -1:
-            self.velocity[:] = 0, 0
+        for idx, vec in enumerate((Vector2(1, 0), Vector2(0, 1))):
+            self.hitbox.set_position(self.position + delta * (self.velocity.elementwise() * vec))
+            if self.hitbox.has_collided(physical_objects):
+                self.velocity[idx] = 0
+
+    def stay_idle(self):
+        self.idle_counter = self.IDLE_TIME
 
     def move(self, delta):
         self.position += delta * self.velocity
@@ -84,6 +100,9 @@ class Enemy(pygame.sprite.Sprite):
                 self.velocity[:] = 0, 0
             self.blink()
             self.blink_time -= 1
+        if self.idle_counter > 0:
+            self.idle_counter -= 1
+            self.velocity[:] = 0, 0
 
         self.handle_collisions_with_objects(delta, physical_objects)
         self.move(delta)

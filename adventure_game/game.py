@@ -8,13 +8,15 @@ from adventure_game.control import Control
 from adventure_game.enemy import EnemyGroup
 from adventure_game.player import Player
 from adventure_game.text import Text
-from adventure_game.world import World
 from adventure_game.user_interface import UserInterface
+from adventure_game.world import World
 
 
 class Game:
     def __init__(self):
+        pygame.mixer.pre_init(frequency=44100, size=-16, channels=2, buffer=512)
         pygame.init()
+        pygame.mixer.init()
         pygame.display.set_caption("Untitled Adventure Game")
         self.screen = pygame.display.set_mode((cfg.DIS_WIDTH * cfg.SCALE, cfg.DIS_HEIGHT * cfg.SCALE))
         self.display = pygame.Surface((cfg.DIS_WIDTH, cfg.DIS_HEIGHT))
@@ -52,11 +54,7 @@ class Game:
                 self.enemies,
             )
             self.enemies.update(
-                self.delta,
-                self.world.current_map,
-                self.world.in_transition,
-                self.world.solid_objects,
-                self.player
+                self.delta, self.world.current_map, self.world.in_transition, self.world.solid_objects, self.player
             )
 
             # Render
