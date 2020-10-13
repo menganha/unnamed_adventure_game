@@ -25,9 +25,7 @@ class Text:
         self.alpha_change = 1
 
     def center(self, offX=0, offY=0):
-        self.tX, self.tY = self.get_coordinates_to_center(
-            self.tW, self.tH, DIS_WIDTH, DIS_HEIGHT
-        )
+        self.tX, self.tY = self.get_coordinates_to_center(self.tW, self.tH, DIS_WIDTH, DIS_HEIGHT)
         self.tX += offX
         self.tY += offY
 

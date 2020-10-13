@@ -33,13 +33,13 @@
          "name":"boundaries",
          "objects":[
                 {
-                 "height":32,
+                 "height":16,
                  "id":9,
                  "name":"",
                  "rotation":0,
                  "type":"",
                  "visible":true,
-                 "width":96,
+                 "width":32,
                  "x":0,
                  "y":160
                 }, 
@@ -94,9 +94,87 @@
                  "rotation":0,
                  "type":"",
                  "visible":true,
-                 "width":536,
+                 "width":544,
                  "x":48,
                  "y":432
+                }, 
+                {
+                 "height":32,
+                 "id":18,
+                 "name":"",
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":32,
+                 "x":0,
+                 "y":0
+                }, 
+                {
+                 "height":16,
+                 "id":20,
+                 "name":"",
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":16,
+                 "x":200,
+                 "y":104
+                }, 
+                {
+                 "height":16,
+                 "id":26,
+                 "name":"",
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":32,
+                 "x":64,
+                 "y":160
+                }, 
+                {
+                 "height":16,
+                 "id":27,
+                 "name":"",
+                 "properties":[
+                        {
+                         "name":"text",
+                         "type":"string",
+                         "value":"Great weapon down below"
+                        }],
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":32,
+                 "x":32,
+                 "y":160
+                }, 
+                {
+                 "height":16,
+                 "id":28,
+                 "name":"",
+                 "properties":[
+                        {
+                         "name":"text",
+                         "type":"string",
+                         "value":"BEWARE! Dangerous Beast Ahead"
+                        }],
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":16,
+                 "x":584,
+                 "y":160
+                }, 
+                {
+                 "height":16,
+                 "id":29,
+                 "name":"",
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":16,
+                 "x":552,
+                 "y":8
                 }],
          "opacity":1,
          "type":"objectgroup",
@@ -105,7 +183,7 @@
          "y":0
         }],
  "nextlayerid":5,
- "nextobjectid":18,
+ "nextobjectid":30,
  "orientation":"orthogonal",
  "renderorder":"right-down",
  "tiledversion":"1.4.2",

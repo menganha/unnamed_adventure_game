@@ -18,32 +18,32 @@ class Enemy(pygame.sprite.Sprite):
     MAX_FRAME_WAIT = 10
     IDLE_TIME = 25
     DIRECTION_VECTOR = (
-        Vector2((0, 1)),
-        Vector2((-1, 0)),
+        Vector2(0, 1),
+        Vector2(-1, 0),
         Vector2(0, -1),
         Vector2(1, 0),
-        Vector2((1, 1)),
-        Vector2((-1, 1)),
+        Vector2(1, 1),
+        Vector2(-1, 1),
         Vector2(-1, -1),
         Vector2(1, 1),
     )
 
-    def __init__(self, position):
+    def __init__(self, position, animation, health):
         super().__init__()
-        self.animation = EnemyAnimation.create_jelly_animation()
+        self.animation = animation
         self.image = self.animation.current_sprite
         self.rect = self.image.get_rect()
         self.hitbox = Hitbox(self.rect.size)
         self.position = Vector2(position)
         self.velocity = Vector2(0, 0)
-        self.health = 4
+        self.health = health
         self.direction = self.DIRECTION_VECTOR[randint(0, 3)]
         self.rect.topleft = self.position
         self.blink_time = 0
         self.think_counter = self.THINK_TIME
         self.force_frame_count = self.MAX_FRAME_WAIT
         self.idle_counter = 0
-        self.hit_sound = pygame.mixer.Sound('assets/sounds/hit.wav')
+        self.hit_sound = pygame.mixer.Sound("assets/sounds/hit.wav")
 
     def get_hit(self, direction_idx):
         if self.blink_time == 0:
@@ -116,27 +116,43 @@ class Enemy(pygame.sprite.Sprite):
         self.image = self.animation.current_sprite.copy()
         self.image.fill(color, special_flags=pygame.BLEND_RGBA_MULT)
 
+    @classmethod
+    def create_enemy_jelly(cls, position):
+        return cls(position, EnemyAnimation.create_jelly_animation(), health=4)
+
+    @classmethod
+    def create_enemy_dragon(cls, position):
+        return cls(position, EnemyAnimation.create_dragon_animation(), health=10)
+
+    # TODO: Think about inheritance instead of these ugly fabric methods
 
 class EnemyGroup(pygame.sprite.Group):
     def __init__(self, current_map):
         super().__init__()
         self.current_map = current_map
-        self.enemy_positions = []
+        self.enemy_list = []
         self.get_enemy_positions()
         self.create_enemies()
 
     def get_enemy_positions(self):
         with open(self.current_map) as file:
             self.data = json.load(file)["layers"]
-        self.enemy_positions = []
+        self.enemy_list = []
         for layer in self.data:
             if layer["type"] == "objectgroup" and "enemies" in layer["name"]:
                 for obj_dict in layer["objects"]:
-                    self.enemy_positions.append([obj_dict["x"], obj_dict["y"]])
+                    if 'properties' in obj_dict:
+                        kind = obj_dict['properties'][0]['value']
+                    else:
+                        kind = 'jelly'
+                    self.enemy_list.append({'pos': (obj_dict["x"], obj_dict["y"]), 'kind': kind})
 
     def create_enemies(self):
-        for pos in self.enemy_positions:
-            self.add(Enemy(pos))
+        for enemy in self.enemy_list:
+            if enemy['kind'] == 'dragon':
+                self.add(Enemy.create_enemy_dragon(enemy['pos']))
+            else:
+                self.add(Enemy.create_enemy_jelly(enemy['pos']))
 
     def update(self, delta, new_map, in_transition, physical_objects, player: Player):
         if new_map != self.current_map:
