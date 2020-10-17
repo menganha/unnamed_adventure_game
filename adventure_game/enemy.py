@@ -126,6 +126,7 @@ class Enemy(pygame.sprite.Sprite):
 
     # TODO: Think about inheritance instead of these ugly fabric methods
 
+
 class EnemyGroup(pygame.sprite.Group):
     def __init__(self, current_map):
         super().__init__()
@@ -136,9 +137,9 @@ class EnemyGroup(pygame.sprite.Group):
 
     def get_enemy_positions(self):
         with open(self.current_map) as file:
-            self.data = json.load(file)["layers"]
+            data = json.load(file)["layers"]
         self.enemy_list = []
-        for layer in self.data:
+        for layer in data:
             if layer["type"] == "objectgroup" and "enemies" in layer["name"]:
                 for obj_dict in layer["objects"]:
                     if 'properties' in obj_dict:

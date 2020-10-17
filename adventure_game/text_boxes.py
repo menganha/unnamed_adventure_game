@@ -1,5 +1,5 @@
-from adventure_game import config as cfg
 import pygame
+from adventure_game import config as cfg
 
 
 class TextBox(pygame.sprite.Sprite):

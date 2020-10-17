@@ -26,6 +26,7 @@ class Game:
         self.control = Control()
         self.player = Player()
         self.world = World()
+        self.bullet_container = pygame.sprite.Group()
         self.ui = UserInterface(self.display, self.font)
         self.enemies = EnemyGroup(self.world.current_map)
         self.player_container = pygame.sprite.Group(self.player)
@@ -52,16 +53,19 @@ class Game:
                 self.world.in_transition,
                 self.world.solid_objects,
                 self.enemies,
+                self.bullet_container
             )
             self.enemies.update(
                 self.delta, self.world.current_map, self.world.in_transition, self.world.solid_objects, self.player
             )
+            self.bullet_container.update(self.delta, self.world.solid_objects)
 
             # Render
             self.world.draw(self.display)
             ui_rects = self.ui.draw(self.display)
             self.player_container.draw(self.display)
             self.enemies.draw(self.display)
+            self.bullet_container.draw(self.display)
             self.display.blit(self.player.sword_hitbox.image, self.player.sword_hitbox.position)
             self.display.blit(self.player.hitbox.image, self.player.hitbox.position)
             self.screen.blit(

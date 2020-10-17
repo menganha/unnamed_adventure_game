@@ -1,4 +1,5 @@
 from math import copysign
+import copy
 
 import pygame
 from pygame.math import Vector2
@@ -7,13 +8,17 @@ import adventure_game.config as cfg
 from adventure_game.animation import PlayerAnimation
 from adventure_game.control import Control
 from adventure_game.hitbox import Hitbox, SwordHitbox
+# from adventure_game.bullet import BulletContainer, Bullet
+from adventure_game.proyectile import Proyectile
+from adventure_game.action import Action
 
 
 class Player(pygame.sprite.Sprite):
-    hitbox_deflation = 16
+    HITBOX_DEFLATION = 16
+    SHOOT_COOLDOWN = 10
     DIRECTION_VECTOR = (
-        Vector2((0, 1)),
-        Vector2((-1, 0)),
+        Vector2(0, 1),
+        Vector2(-1, 0),
         Vector2(0, -1),
         Vector2(1, 0),
     )
@@ -25,7 +30,7 @@ class Player(pygame.sprite.Sprite):
         self.image = self.animation.current_sprite
         self.rect = self.image.get_rect()
         self.rect.center = (cfg.DIS_WIDTH // 2, cfg.DIS_HEIGHT // 2)
-        self.hitbox = Hitbox(tuple(ele - self.hitbox_deflation for ele in self.rect.size))
+        self.hitbox = Hitbox(tuple(ele - self.HITBOX_DEFLATION for ele in self.rect.size))
         self.hitbox.get_offset(self.rect.size)
         self.sword_hitbox = SwordHitbox(20, 40, 10, self.rect.size)
         self.sword_hitbox.get_offset(self.rect.size)
@@ -37,28 +42,29 @@ class Player(pygame.sprite.Sprite):
         self.direction = 0
         self.position = Vector2(self.rect.topleft)
         self.out_of_bounds = Vector2(0, 0)
-        self.attack_frame_count = 0
-        self.attack_length = len(self.animation.animation_data["attack up"])
         self.cooldown_time = 0
         self.under_control = True
+        self.shoot_action = Action(self.SHOOT_COOLDOWN)
+        self.attack_action = Action(len(self.animation.animation_data["attack up"]))
 
-    def handle_input(self, control):
+    def handle_input(self, control, bullet_container):
         if self.under_control:
             self.velocity[:] = 0, 0
             self.handle_move_input(control)
-            self.handle_attack_input(control)
+            self.handle_action_input(control, bullet_container)
             self.update_direction()
         else:
             pass
 
-    def handle_attack_input(self, control: Control):
-        if self.attack_frame_count > 0:
-            self.attack_frame_count -= 1
-        if control.action and self.attack_frame_count == 0 and not control.previous_frame_action:
-            self.attack_frame_count = self.attack_length
+    def handle_action_input(self, control: Control, bullet_container):
+        if control.attack and self.attack_action.is_idle() and not control.previous_frame_action:
+            self.attack_action.start()
+        elif control.shoot and self.shoot_action.is_idle() and not control.previous_frame_action:
+            self.shoot_action.start()
+            Proyectile(self.rect.center, 100 * self.DIRECTION_VECTOR[self.direction], self.direction,  bullet_container)
 
     def handle_move_input(self, control: Control):
-        if self.attack_frame_count > 0:
+        if self.attack_action.in_progress():
             return
         if control.moving_up:
             self.velocity.y = -cfg.VELOCITY
@@ -91,7 +97,7 @@ class Player(pygame.sprite.Sprite):
             if self.hitbox.has_collided(physical_objects):
                 self.velocity[idx] = 0
 
-    def check_collision_with_enemy(self, enemy_group: pygame.sprite.Group):
+    def check_collision_with_enemy(self, enemy_group: pygame.sprite.Group, bullet_container):
         # Temporary Shit
         self.sword_hitbox.set_position(self.position, self.direction)
         self.sword_hitbox.set_image(cfg.BLUE)
@@ -101,9 +107,13 @@ class Player(pygame.sprite.Sprite):
                 if self.hitbox.rectangle.colliderect(enemy.rect):
                     self.get_hit(enemy.position)
                     enemy.stay_idle()
-            if self.attack_frame_count > 0:  # == self.attack_length:
+            if self.attack_action.in_progress():
                 if self.sword_hitbox.rectangle.colliderect(enemy.rect):
                     enemy.get_hit(self.direction)
+            for arrow in bullet_container.sprites():
+                if arrow.hitbox.rectangle.colliderect(enemy.rect):
+                    enemy.get_hit(self.direction)
+                    arrow.kill()
         if self.cooldown_time >= 26:
             self.cooldown_time -= 1
         elif self.cooldown_time > 0:
@@ -143,7 +153,7 @@ class Player(pygame.sprite.Sprite):
 
             self.animation.next_frame(frame_name)
 
-        if self.attack_frame_count > 0:
+        if self.attack_action.in_progress():
             if self.direction == 2:
                 frame_name = "attack up"
             elif self.direction == 0:
@@ -157,10 +167,20 @@ class Player(pygame.sprite.Sprite):
 
         self.image = self.animation.current_sprite.copy()
 
-    def update(self, delta, control: Control, in_transition, objects_group, enemy_group):
+    def update(
+        self,
+        delta,
+        control: Control,
+        in_transition: bool,
+        objects_group,
+        enemy_group,
+        bullet_container,
+    ):
         if not in_transition:
-            self.handle_input(control)
-            self.check_collision_with_enemy(enemy_group)
+            self.shoot_action.update()
+            self.attack_action.update()
+            self.handle_input(control, bullet_container)
+            self.check_collision_with_enemy(enemy_group, bullet_container)
             self.handle_collision_with_objects(delta, objects_group)
             self.update_animation()
             self.check_if_within_bounds()

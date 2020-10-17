@@ -1,7 +1,8 @@
+.*
+!.gitignore
 *.zip
 gfx
 __pycache__
-.vscode
 tiled_maps
 *.ase
 *.aseprite
