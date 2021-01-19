@@ -6,6 +6,7 @@ import adventure_game.config as cfg
 import adventure_game.utilities as utils
 from adventure_game.control import Control
 from adventure_game.enemy import EnemyGroup
+from adventure_game.proyectile_container import ProyectileContainer
 from adventure_game.player import Player
 from adventure_game.text import Text
 from adventure_game.user_interface import UserInterface
@@ -26,7 +27,7 @@ class Game:
         self.control = Control()
         self.player = Player()
         self.world = World()
-        self.bullet_container = pygame.sprite.Group()
+        self.bullet_container = ProyectileContainer()
         self.ui = UserInterface(self.display, self.font)
         self.enemies = EnemyGroup(self.world.current_map)
         self.player_container = pygame.sprite.Group(self.player)
@@ -69,13 +70,13 @@ class Game:
             self.display.blit(self.player.sword_hitbox.image, self.player.sword_hitbox.position)
             self.display.blit(self.player.hitbox.image, self.player.hitbox.position)
             self.screen.blit(
-                pygame.transform.scale(self.display, (cfg.DIS_WIDTH * 2, cfg.DIS_HEIGHT * 2)),
+                pygame.transform.scale(self.display, (cfg.DIS_WIDTH * cfg.SCALE, cfg.DIS_HEIGHT * cfg.SCALE)),
                 (0, 0),
             )
             # TODO -- Improve this mess
             updated_rectangles = [utils.scale_rects(rects, cfg.SCALE) for rects in ui_rects]
             updated_rectangles = updated_rectangles + [
-                pygame.Rect(0, cfg.UI_HEIGHT * 2, cfg.WORLD_WIDTH * 2, cfg.WORLD_HEIGTH * 2)
+                pygame.Rect(0, cfg.UI_HEIGHT * cfg.SCALE, cfg.WORLD_WIDTH * cfg.SCALE, cfg.WORLD_HEIGTH * cfg.SCALE)
             ]
             # --
             pygame.display.update(updated_rectangles)

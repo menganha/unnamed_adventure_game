@@ -1,13 +1,19 @@
+from __future__ import annotations
+
 import json
-from random import choice, randint
+from random import randint
+from typing import TYPE_CHECKING
 
 import pygame
 from pygame.math import Vector2
 
 import adventure_game.config as cfg
 from adventure_game.animation import EnemyAnimation
+from adventure_game.direction import Direction
 from adventure_game.hitbox import Hitbox
-from adventure_game.player import Player
+
+if TYPE_CHECKING:
+    from adventure_game.player import Player
 
 
 class Enemy(pygame.sprite.Sprite):
@@ -45,10 +51,10 @@ class Enemy(pygame.sprite.Sprite):
         self.idle_counter = 0
         self.hit_sound = pygame.mixer.Sound("assets/sounds/hit.wav")
 
-    def get_hit(self, direction_idx):
+    def get_hit(self, direction: Direction):
         if self.blink_time == 0:
             self.hit_sound.play()
-            self.velocity = cfg.VELOCITY * 4 * self.DIRECTION_VECTOR[direction_idx]
+            self.velocity = cfg.VELOCITY * 4 * direction.value
             self.blink_time = cfg.BLINK_TIME
             self.health -= 1
 
@@ -70,9 +76,9 @@ class Enemy(pygame.sprite.Sprite):
         #     self.think_counter = choice((self.THINK_TIME, 5))
 
         # if self.think_counter == self.THINK_TIME:
-        #     self.direction = self.DIRECTION_VECTOR[randint(0, 3)]
+        #     self.direction.py = self.DIRECTION_VECTOR[randint(0, 3)]
 
-        # self.velocity = cfg.VELOCITY * 0.5 * self.direction
+        # self.velocity = cfg.VELOCITY * 0.5 * self.direction.py
         # self.think_counter -= 1
 
     def handle_collisions_with_objects(self, delta, physical_objects):

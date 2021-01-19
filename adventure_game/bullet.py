@@ -15,8 +15,7 @@ class Bullet:
         self.position.update(self.position + (delta * self.velocity).elementwise()**2)
 
     def draw(self, display):
-        pos = tuple(int(coordinate) for coordinate in self.position)
-        pygame.draw.circle(display, cfg.WHITE, pos, self.size)
+        pygame.draw.circle(display, cfg.WHITE, self.position, self.size)
 
     def out_ouf_bounds(self):
         return (
@@ -45,3 +44,6 @@ class BulletContainer:
     def draw(self, display):
         for bullet in self.group.values():
             bullet.draw(display)
+
+    def __iter__(self):
+        return iter(list(self.group))

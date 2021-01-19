@@ -17,7 +17,8 @@ class Animation:
         self.current_key = list(animation_data.keys())[0]
         self.current_sprite = self.surfaces_dict[self.current_key][0]
 
-    def _check_sprite_sheet_data(self, sprite_sheet_data):
+    @staticmethod
+    def _check_sprite_sheet_data(sprite_sheet_data):
         if "sprite_size" not in sprite_sheet_data:
             raise ValueError(
                 "The sprite sheet data dictionary does not contain the key sprite_size"
