@@ -1,7 +1,6 @@
-from typing import List
-
 import json
 import re
+from typing import List
 
 import pygame
 from pygame.math import Vector2
@@ -21,6 +20,7 @@ class World:
         self.offset_direction = Vector2((0, 0))
         self.map_image = pygame.Surface((cfg.WORLD_WIDTH, cfg.WORLD_HEIGTH))
         self.map_image_cache = pygame.Surface((cfg.WORLD_WIDTH, cfg.WORLD_HEIGTH))
+        self.rect = pygame.Rect(0, cfg.UI_HEIGHT, cfg.WORLD_WIDTH, cfg.WORLD_HEIGTH)
         self.load_map()
         self.arrange_world(self.map_image)
 
@@ -99,7 +99,7 @@ class World:
                 if tile_idx == 0:
                     continue
                 x = (idx % width) * cfg.TILE_SIZE
-                y = (idx // width) * cfg.TILE_SIZE #+ cfg.UI_HEIGHT
+                y = (idx // width) * cfg.TILE_SIZE  # + cfg.UI_HEIGHT
                 image = self.tile_dict[tile_idx]
                 destination_surface.blit(image, (x, y))
 
@@ -125,8 +125,8 @@ class World:
 
         if self.in_transition:
             if (
-                self.offset_direction.x * self.map_offset.x > 0
-                or self.offset_direction.y * self.map_offset.y > 0
+                    self.offset_direction.x * self.map_offset.x > 0
+                    or self.offset_direction.y * self.map_offset.y > 0
             ):
                 shift = delta * cfg.SCROLL_VELOCITY * self.offset_direction
                 self.other_offset = self.other_offset - shift
@@ -138,8 +138,10 @@ class World:
                 self.in_transition = False
                 self.map_image = self.map_image_cache.copy()
 
-    def draw(self, display):
+    def draw(self, display) -> pygame.Rect:
         display.blit(self.map_image, self.other_offset + (0, cfg.UI_HEIGHT))
 
         if self.in_transition:
-            display.blit(self.map_image_cache, self.map_offset+ (0, cfg.UI_HEIGHT))
+            display.blit(self.map_image_cache, self.map_offset + (0, cfg.UI_HEIGHT))
+
+        return self.rect.copy()  # Best solution one could find to be compatible with the UI

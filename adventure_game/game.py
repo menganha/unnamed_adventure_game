@@ -1,4 +1,5 @@
 import sys
+from typing import List
 
 import pygame
 
@@ -6,8 +7,8 @@ import adventure_game.config as cfg
 import adventure_game.utilities as utils
 from adventure_game.control import Control
 from adventure_game.enemy import EnemyGroup
-from adventure_game.proyectile_container import ProyectileContainer
 from adventure_game.player import Player
+from adventure_game.proyectile_container import ProyectileContainer
 from adventure_game.text import Text
 from adventure_game.user_interface import UserInterface
 from adventure_game.world import World
@@ -37,49 +38,50 @@ class Game:
 
     def game_loop(self):
         while not self.exit:
-
             self.delta = self.clock.tick(cfg.FRAMERATE) / 1000
             self.delta = 1 / cfg.FRAMERATE
 
-            # Handle Input
-            self.control.handle_input()
-            self.exit = self.control.exit
-
-            # Update
-            self.world.update(self.delta, self.player.out_of_bounds)
-            self.ui.update(self.player.life)
-            self.player_container.update(
-                self.delta,
-                self.control,
-                self.world.in_transition,
-                self.world.solid_objects,
-                self.enemies,
-                self.bullet_container
-            )
-            self.enemies.update(
-                self.delta, self.world.current_map, self.world.in_transition, self.world.solid_objects, self.player
-            )
-            self.bullet_container.update(self.delta, self.world.solid_objects)
-
-            # Render
-            self.world.draw(self.display)
-            ui_rects = self.ui.draw(self.display)
-            self.player_container.draw(self.display)
-            self.enemies.draw(self.display)
-            self.bullet_container.draw(self.display)
-            self.display.blit(self.player.sword_hitbox.image, self.player.sword_hitbox.position)
-            self.display.blit(self.player.hitbox.image, self.player.hitbox.position)
-            self.screen.blit(
-                pygame.transform.scale(self.display, (cfg.DIS_WIDTH * cfg.SCALE, cfg.DIS_HEIGHT * cfg.SCALE)),
-                (0, 0),
-            )
-            # TODO -- Improve this mess
-            updated_rectangles = [utils.scale_rects(rects, cfg.SCALE) for rects in ui_rects]
-            updated_rectangles = updated_rectangles + [
-                pygame.Rect(0, cfg.UI_HEIGHT * cfg.SCALE, cfg.WORLD_WIDTH * cfg.SCALE, cfg.WORLD_HEIGTH * cfg.SCALE)
-            ]
-            # --
-            pygame.display.update(updated_rectangles)
+            self._process_input()
+            self._update_objects()
+            self._render_to_screen()
 
         pygame.quit()
         sys.exit(0)
+
+    def _process_input(self):
+        self.control.handle_input()
+        self.exit = self.control.exit
+
+    def _update_objects(self):
+        self.world.update(self.delta, self.player.out_of_bounds)
+        self.ui.update(self.player.life)
+        self.player_container.update(self.delta, self.control, self.world.in_transition, self.world.solid_objects,
+                                     self.enemies, self.bullet_container)
+        self.enemies.update(self.delta, self.world.current_map, self.world.in_transition, self.world.solid_objects,
+                            self.player)
+        self.bullet_container.update(self.delta, self.world.solid_objects)
+
+    def _render_to_screen(self):
+        world_rect = self.world.draw(self.display)
+        ui_rects = self.ui.draw(self.display)
+        self.player_container.draw(self.display)
+        self.enemies.draw(self.display)
+        self.bullet_container.draw(self.display)
+        self._debug_blit()
+        pygame.transform.scale(self.display, (cfg.DIS_WIDTH * cfg.SCALE, cfg.DIS_HEIGHT * cfg.SCALE), self.screen)
+
+        updated_rectangles = self._scale_rects(world_rect, *ui_rects)
+        pygame.display.update(updated_rectangles)
+
+    def _debug_blit(self):
+        """
+        Blits things that are only used for testing purposes
+        """
+        self.display.blit(self.player.sword_hitbox.image, self.player.sword_hitbox.position)
+        self.display.blit(self.player.hitbox.image, self.player.hitbox.position)
+
+    @staticmethod
+    def _scale_rects(*list_of_rects: pygame.Rect) -> List[pygame.Rect]:
+        scaled_rectangles = []
+        scaled_rectangles.extend(utils.scale_rect(rect) for rect in list_of_rects)
+        return scaled_rectangles

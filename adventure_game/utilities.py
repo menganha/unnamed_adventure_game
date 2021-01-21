@@ -4,7 +4,7 @@ Utility functions which don't belong to other particular classes
 import pygame
 
 
-def scale_rects(rectangle: pygame.Rect, scale=2):
+def scale_rect(rectangle: pygame.Rect, scale=2):
     rectangle.x = rectangle.x*scale
     rectangle.y = rectangle.y*scale
     rectangle.w = rectangle.w*scale

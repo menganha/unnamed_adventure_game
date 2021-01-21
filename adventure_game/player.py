@@ -50,6 +50,17 @@ class Player(pygame.sprite.Sprite):
         self.sword_hitbox.set_image(cfg.BLUE)
         # ---
 
+    def update(self, delta, control: Control, in_transition: bool, objects_group, enemy_group, bullet_container):
+        if not in_transition:
+            self.shoot_action.update()
+            self.attack_action.update()
+            self.handle_input(control, bullet_container)
+            self.check_collision_with_enemy(enemy_group, bullet_container)
+            self.handle_collision_with_objects(delta, objects_group)
+            self.update_animation()
+            self.check_if_within_bounds()
+        self.move(delta)
+
     def handle_input(self, control, bullet_container):
         if self.under_control:
             self.velocity[:] = 0, 0
@@ -61,9 +72,9 @@ class Player(pygame.sprite.Sprite):
 
     def handle_action_input(self, control: Control, bullet_container):
         if control.attack and self.attack_action.is_idle() and not control.previous_frame_action:
-            self.attack_action.start()
+            self.attack_action.restart()
         elif control.shoot and self.shoot_action.is_idle() and not control.previous_frame_action:
-            self.shoot_action.start()
+            self.shoot_action.restart()
             Proyectile(self.rect.center, self.direction, abs_velocity=100, container=bullet_container)
 
     def handle_move_input(self, control: Control):
@@ -176,14 +187,3 @@ class Player(pygame.sprite.Sprite):
             self.animation.next_frame(frame_name)
 
         self.image = self.animation.current_sprite.copy()
-
-    def update(self, delta, control: Control, in_transition: bool, objects_group, enemy_group, bullet_container):
-        if not in_transition:
-            self.shoot_action.update()
-            self.attack_action.update()
-            self.handle_input(control, bullet_container)
-            self.check_collision_with_enemy(enemy_group, bullet_container)
-            self.handle_collision_with_objects(delta, objects_group)
-            self.update_animation()
-            self.check_if_within_bounds()
-        self.move(delta)

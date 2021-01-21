@@ -3,6 +3,7 @@ Represent a common pattern appearing in actions that take several frames to comp
 a cooldown time
 """
 
+
 class Action:
     def __init__(self, cooldown_time: int):
         self.counter = 0
@@ -18,5 +19,5 @@ class Action:
         if self.in_progress():
             self.counter -= 1
 
-    def start(self):
+    def restart(self):
         self.counter = self.cooldown_time
