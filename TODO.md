@@ -2,6 +2,10 @@
 
 ## List of tasks to do
 
+- [ ] Clean Code
+    - [ ] Clean Hitboxes code
+    - [ ] Change Player class to be a dirty sprite
+    - [ ] Separate the interface between control and the player
 - [X] Introduce cooldown time for player
 - [ ] Introduce better AI for enemies
     - [ ] path finding, i.e., to look for you when they see you.

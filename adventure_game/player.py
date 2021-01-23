@@ -15,7 +15,7 @@ from adventure_game.action import Action
 
 
 class Player(pygame.sprite.Sprite):
-    HITBOX_DEFLATION = 16
+    HITBOX_DEFLATION = -16
     SHOOT_COOLDOWN = 10
 
     def __init__(self):
@@ -27,7 +27,7 @@ class Player(pygame.sprite.Sprite):
         self.velocity = Vector2(0, 0)
         self.direction = Direction.DOWN
         self.position = Vector2((cfg.DIS_WIDTH // 2, cfg.DIS_HEIGHT // 2))
-        self.rect.topleft = self.position
+        self.rect.center = self.position
         self.out_of_bounds = Vector2(0, 0)
         self.cooldown_time = 0
         self.under_control = True
@@ -38,10 +38,7 @@ class Player(pygame.sprite.Sprite):
         self.set_up_hitboxes()
 
     def set_up_hitboxes(self):
-        self.hitbox = Hitbox()
-        self.hitbox.rect = self.rect.inflate((-self.HITBOX_DEFLATION, -self.HITBOX_DEFLATION))
-        self.hitbox.get_offset2(self.rect)
-        self.hitbox.position = self.position
+        self.hitbox = Hitbox(self.rect, self.HITBOX_DEFLATION, self.HITBOX_DEFLATION)
         # self.hitbox.get_offset(self.rect.size)
         self.sword_hitbox = SwordHitbox(20, 40, 10, self.rect.size)
         self.sword_hitbox.get_offset(self.rect.size)
@@ -55,7 +52,7 @@ class Player(pygame.sprite.Sprite):
             self.shoot_action.update()
             self.attack_action.update()
             self.handle_input(control, bullet_container)
-            self.check_collision_with_enemy(enemy_group, bullet_container)
+            self.handle_collision_with_enemy(enemy_group, bullet_container)
             self.handle_collision_with_objects(delta, objects_group)
             self.update_animation()
             self.check_if_within_bounds()
@@ -80,13 +77,13 @@ class Player(pygame.sprite.Sprite):
     def handle_move_input(self, control: Control):
         if self.attack_action.in_progress():
             return
-        if control.moving_up:
+        if control.up:
             self.velocity.y = -cfg.VELOCITY
-        if control.moving_down:
+        if control.down:
             self.velocity.y = cfg.VELOCITY
-        if control.moving_left:
+        if control.left:
             self.velocity.x = -cfg.VELOCITY
-        if control.moving_right:
+        if control.right:
             self.velocity.x = cfg.VELOCITY
 
         if self.velocity.elementwise() != 0:
@@ -116,7 +113,7 @@ class Player(pygame.sprite.Sprite):
             if self.hitbox.has_collided(physical_objects):
                 self.velocity[idx] = 0
 
-    def check_collision_with_enemy(self, enemy_group: EnemyGroup, proyectile_container: pygame.sprite.Group):
+    def handle_collision_with_enemy(self, enemy_group: EnemyGroup, proyectile_container: pygame.sprite.Group):
         # Temporary Shit
         self.sword_hitbox.set_position(self.position, self.direction)
         self.sword_hitbox.set_image(cfg.BLUE)

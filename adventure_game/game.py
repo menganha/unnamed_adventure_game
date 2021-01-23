@@ -49,8 +49,8 @@ class Game:
         sys.exit(0)
 
     def _process_input(self):
-        self.control.handle_input()
-        self.exit = self.control.exit
+        self.control.fetch_input()
+        self.exit = self.control.close_window
 
     def _update_objects(self):
         self.world.update(self.delta, self.player.out_of_bounds)
@@ -73,15 +73,15 @@ class Game:
         updated_rectangles = self._scale_rects(world_rect, *ui_rects)
         pygame.display.update(updated_rectangles)
 
+    @staticmethod
+    def _scale_rects(*list_of_rects: pygame.Rect) -> List[pygame.Rect]:
+        scaled_rectangles = []
+        scaled_rectangles.extend(utils.scale_rect(rect) for rect in list_of_rects)
+        return scaled_rectangles
+
     def _debug_blit(self):
         """
         Blits things that are only used for testing purposes
         """
         self.display.blit(self.player.sword_hitbox.image, self.player.sword_hitbox.position)
         self.display.blit(self.player.hitbox.image, self.player.hitbox.position)
-
-    @staticmethod
-    def _scale_rects(*list_of_rects: pygame.Rect) -> List[pygame.Rect]:
-        scaled_rectangles = []
-        scaled_rectangles.extend(utils.scale_rect(rect) for rect in list_of_rects)
-        return scaled_rectangles
