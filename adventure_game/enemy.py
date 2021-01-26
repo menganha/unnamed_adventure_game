@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import json
 from random import randint
 from typing import TYPE_CHECKING
 
@@ -39,12 +38,12 @@ class Enemy(pygame.sprite.Sprite):
         self.animation = animation
         self.image = self.animation.current_sprite
         self.rect = self.image.get_rect()
-        self.hitbox = Hitbox(self.rect.size)
+        self.hitbox = Hitbox(self.rect)
         self.position = Vector2(position)
         self.velocity = Vector2(0, 0)
         self.health = health
         self.direction = self.DIRECTION_VECTOR[randint(0, 3)]
-        self.rect.topleft = self.position
+        self.rect.center = self.position
         self.blink_time = 0
         self.think_counter = self.THINK_TIME
         self.force_frame_count = self.MAX_FRAME_WAIT
@@ -81,10 +80,10 @@ class Enemy(pygame.sprite.Sprite):
         # self.velocity = cfg.VELOCITY * 0.5 * self.direction.py
         # self.think_counter -= 1
 
-    def handle_collisions_with_objects(self, delta, physical_objects):
+    def handle_collisions_with_objects(self, delta: float, physical_objects):
         for idx, vec in enumerate((Vector2(1, 0), Vector2(0, 1))):
-            self.hitbox.set_position(self.position + delta * (self.velocity.elementwise() * vec))
-            if self.hitbox.has_collided(physical_objects):
+            self.hitbox.move_with_respect_to_parent(self.position + delta * (self.velocity.elementwise() * vec))
+            if self.hitbox.has_collided_with_rects(*physical_objects):
                 self.velocity[idx] = 0
 
     def stay_idle(self):
@@ -92,7 +91,7 @@ class Enemy(pygame.sprite.Sprite):
 
     def move(self, delta):
         self.position += delta * self.velocity
-        self.rect.topleft = self.position
+        self.rect.center = self.position
 
     def update(self, delta, physical_objects, player: Player):
         if self.health == 0:
@@ -122,6 +121,8 @@ class Enemy(pygame.sprite.Sprite):
         self.image = self.animation.current_sprite.copy()
         self.image.fill(color, special_flags=pygame.BLEND_RGBA_MULT)
 
+    # TODO: Think about inheritance or a generator class
+    #   instead of these ugly fabric methods
     @classmethod
     def create_enemy_jelly(cls, position):
         return cls(position, EnemyAnimation.create_jelly_animation(), health=4)
@@ -129,44 +130,3 @@ class Enemy(pygame.sprite.Sprite):
     @classmethod
     def create_enemy_dragon(cls, position):
         return cls(position, EnemyAnimation.create_dragon_animation(), health=10)
-
-    # TODO: Think about inheritance instead of these ugly fabric methods
-
-
-class EnemyGroup(pygame.sprite.Group):
-    def __init__(self, current_map):
-        super().__init__()
-        self.current_map = current_map
-        self.enemy_list = []
-        self.get_enemy_positions()
-        self.create_enemies()
-
-    def get_enemy_positions(self):
-        with open(self.current_map) as file:
-            data = json.load(file)["layers"]
-        self.enemy_list = []
-        for layer in data:
-            if layer["type"] == "objectgroup" and "enemies" in layer["name"]:
-                for obj_dict in layer["objects"]:
-                    if 'properties' in obj_dict:
-                        kind = obj_dict['properties'][0]['value']
-                    else:
-                        kind = 'jelly'
-                    self.enemy_list.append({'pos': (obj_dict["x"], obj_dict["y"]), 'kind': kind})
-
-    def create_enemies(self):
-        for enemy in self.enemy_list:
-            if enemy['kind'] == 'dragon':
-                self.add(Enemy.create_enemy_dragon(enemy['pos']))
-            else:
-                self.add(Enemy.create_enemy_jelly(enemy['pos']))
-
-    def update(self, delta, new_map, in_transition, physical_objects, player: Player):
-        if new_map != self.current_map:
-            self.empty()
-            if not in_transition:
-                self.current_map = new_map
-                self.get_enemy_positions()
-                self.create_enemies()
-        else:
-            super().update(delta, physical_objects, player)

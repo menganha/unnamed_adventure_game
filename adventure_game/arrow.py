@@ -1,29 +1,36 @@
+from typing import List, Tuple
+
 import pygame
 from pygame.math import Vector2
 
 from adventure_game import config as cfg
-from adventure_game.hitbox import Hitbox
-from adventure_game.proyectile_container import ProyectileContainer
 from adventure_game.direction import Direction
+from adventure_game.enemy_group import EnemyGroup
+from adventure_game.hitbox import Hitbox
 
 
-class Proyectile(pygame.sprite.Sprite):
+class Arrow(pygame.sprite.Sprite):
+    PROYECTILE_VELOCITY = 100
 
-    def __init__(self, position: tuple, direction: Direction, abs_velocity: int, container: ProyectileContainer):
+    def __init__(self, position: Tuple[int, int], direction: Direction, raw_image: pygame.Surface):
         super().__init__()
         self.position = Vector2(position)
-        self.velocity = abs_velocity * direction.value
-        self.image = self._align_image_with_direction(direction, container.proyectile_image)
+        self.velocity = self.PROYECTILE_VELOCITY * direction.value
+        self.direction = direction
+        self.image = self._align_image_with_direction(direction, raw_image)
         self.rect = self.image.get_rect()
-        self.hitbox = Hitbox((16, 16), self.rect.center)
-        container.add(self)
+        self.hitbox = Hitbox(self.rect)
 
-    def update(self, delta: float, physical_objects):
+    def update(self, delta: float, physical_obstacles: List[pygame.Rect], enemy_group: EnemyGroup):
         self.position.update(self.position + (delta * self.velocity).elementwise() ** 3)
         self.rect.center = self.position
         self.hitbox.rect.center = self.position
-        if self.is_out_ouf_bounds() or self.hitbox.has_collided(physical_objects):
+        if self.is_out_ouf_bounds() or self.hitbox.has_collided_with_rects(*physical_obstacles):
             self.kill()
+            return
+        for enemy in enemy_group:
+            if self.hitbox.has_collided_with(enemy.hitbox):
+                enemy.get_hit(self.direction)
 
     def is_out_ouf_bounds(self) -> bool:
         return (self.position.x > cfg.DIS_WIDTH
@@ -33,6 +40,9 @@ class Proyectile(pygame.sprite.Sprite):
 
     @staticmethod
     def _align_image_with_direction(direction: Direction, raw_image: pygame.Surface) -> pygame.Surface:
+        """
+        Considers the the direction of the raw projectile image is to the right
+        """
         if direction == Direction.DOWN:
             image = pygame.transform.rotate(raw_image, 270)
         elif direction == Direction.LEFT:

@@ -1,10 +1,11 @@
-"""
-Represent a common pattern appearing in actions that take several frames to complete and cannot be repeated until
-a cooldown time
-"""
 
 
 class Action:
+    """
+    Represent a common pattern appearing in actions that take several frames to complete and cannot be repeated until
+    a cooldown time
+    """
+
     def __init__(self, cooldown_time: int):
         self.counter = 0
         self.cooldown_time = cooldown_time
