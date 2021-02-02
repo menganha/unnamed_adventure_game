@@ -1,28 +1,33 @@
 import json
-import re
-from typing import List
+from typing import Dict, List
 
 import pygame
 from pygame.math import Vector2
 
 import adventure_game.config as cfg
+from adventure_game.direction import Direction
 
 
 class World:
+    """
+    Represent the current world map
+    """
+    UI_OFFSET = Vector2(0, cfg.UI_HEIGHT)
+
     def __init__(self):
-        self.sprite_sheet = pygame.image.load(
-            "assets/sprites/RPG Nature Tileset.png"
-        ).convert_alpha()
-        self.current_map = r"data/level-x04-y00.json"
-        self.in_transition = False
-        self.map_offset = Vector2((0, 0))
-        self.other_offset = Vector2((0, 0))
-        self.offset_direction = Vector2((0, 0))
+        self.sprite_sheet = pygame.image.load("assets/sprites/RPG Nature Tileset.png").convert_alpha()
+        self.map_data_file = r"data/level-x04-y00.json"
+        self.offset = Vector2(0, 0)
+        self.offset_cache = Vector2(0, cfg.WORLD_HEIGTH)
         self.map_image = pygame.Surface((cfg.WORLD_WIDTH, cfg.WORLD_HEIGTH))
         self.map_image_cache = pygame.Surface((cfg.WORLD_WIDTH, cfg.WORLD_HEIGTH))
-        self.rect = pygame.Rect(0, cfg.UI_HEIGHT, cfg.WORLD_WIDTH, cfg.WORLD_HEIGTH)
+        self.map_image_rect = pygame.Rect(0, cfg.UI_HEIGHT, cfg.WORLD_WIDTH, cfg.WORLD_HEIGTH)
+        self.data = None
+        self.solid_objects = None
+        self.unique_tileset_indeces = None
+        self.tile_dict = None
         self.load_map()
-        self.arrange_world(self.map_image)
+        self.arrange_world()
 
     def load_map(self):
         self.data = self.load_data()
@@ -31,7 +36,7 @@ class World:
         self.tile_dict = self.get_tile_surfaces()
 
     def load_data(self):
-        with open(self.current_map) as file:
+        with open(self.map_data_file) as file:
             data = json.load(file)["layers"]
         return data
 
@@ -43,34 +48,25 @@ class World:
         for layer in self.data:
             if layer["type"] == "objectgroup" and "boundaries" in layer["name"]:
                 layer_objects = [
-                    pygame.Rect(
-                        obj_dict["x"],
-                        obj_dict["y"] + cfg.UI_HEIGHT,
-                        obj_dict["width"],
-                        obj_dict["height"],
-                    )
+                    pygame.Rect(obj_dict["x"], obj_dict["y"] + cfg.UI_HEIGHT, obj_dict["width"], obj_dict["height"])
                     for obj_dict in layer["objects"]
                 ]
                 solid_objects.extend(layer_objects)
         return solid_objects
 
     def get_relevant_tiles_id(self):
-        """
-        Get list of unique tiles id's for a map
-        """
-        unique_tiles = []
+        """Get list of unique tiles id's for a map"""
+        unique_tiles = set()
         for layer in self.data:
             if layer["type"] == "objectgroup":
                 continue
-            unique_tiles.extend(layer["data"])
-
-        unique_tiles = set(unique_tiles)
+            unique_tiles = unique_tiles.union(set(layer["data"]))
 
         if 0 in unique_tiles:  # 0 refers to no tile
             unique_tiles.remove(0)
         return list(unique_tiles)
 
-    def get_tile_surfaces(self):
+    def get_tile_surfaces(self) -> Dict[str, pygame.Surface]:
         """
         Gets the unique tile surfaces
         """
@@ -80,17 +76,21 @@ class World:
         for idx in self.unique_tileset_indeces:
             ix = (idx - 1) % (sheet_size[0] // cfg.TILE_SIZE)
             iy = (idx - 1) // (sheet_size[0] // cfg.TILE_SIZE)
-            rect = pygame.Rect(
-                ix * cfg.TILE_SIZE, iy * cfg.TILE_SIZE, cfg.TILE_SIZE, cfg.TILE_SIZE
-            )
+            rect = pygame.Rect(ix * cfg.TILE_SIZE,
+                               iy * cfg.TILE_SIZE, cfg.TILE_SIZE, cfg.TILE_SIZE)
             tile = self.sprite_sheet.subsurface(rect)
             tile_dict.update({idx: tile})
         return tile_dict
 
-    def arrange_world(self, destination_surface):
+    def arrange_world(self, in_cache=False):
         """
-        Blits all tiles into the map image surface
+        Blits all tiles into the map image surface. It can also be chosen to arrange the map on the cache surface
         """
+        if not in_cache:
+            destination_surface = self.map_image
+        else:
+            destination_surface = self.map_image_cache
+
         width = self.sprite_sheet.get_size()[0] // cfg.TILE_SIZE
         for layer in self.data:
             if layer["type"] == "objectgroup":
@@ -103,45 +103,14 @@ class World:
                 image = self.tile_dict[tile_idx]
                 destination_surface.blit(image, (x, y))
 
-    def next_map(self, out_of_bounds: Vector2):
-        match = re.match(r"data/level-x0(\d+)-y0(\d+)\.json", self.current_map)
-        x = int(match.group(1)) + int(out_of_bounds.x)
-        y = int(match.group(2)) - int(out_of_bounds.y)
+    def move(self, delta: float, velocity: float, direction: Direction):
+        self.offset += delta * velocity * direction.value
 
-        return "data/level-x0{:d}-y0{:d}.json".format(x, y)
+    def draw(self, display: pygame.Surface) -> pygame.Rect:
+        map_coordinates = self.offset + self.UI_OFFSET
+        cache_map_coordinates = self.offset_cache + self.offset + self.UI_OFFSET
 
-    def update(self, delta, out_of_bounds: Vector2):
+        display.blit(self.map_image, map_coordinates[:])
+        display.blit(self.map_image_cache, cache_map_coordinates[:])
 
-        if any(out_of_bounds) and not self.in_transition:
-            self.offset_direction = out_of_bounds
-            self.map_offset = self.offset_direction.elementwise() * Vector2(
-                (cfg.DIS_WIDTH, cfg.DIS_HEIGHT - cfg.UI_HEIGHT)
-            )
-            self.other_offset = Vector2((0, 0))
-            self.current_map = self.next_map(out_of_bounds)
-            self.load_map()
-            self.arrange_world(self.map_image_cache)
-            self.in_transition = True
-
-        if self.in_transition:
-            if (
-                    self.offset_direction.x * self.map_offset.x > 0
-                    or self.offset_direction.y * self.map_offset.y > 0
-            ):
-                shift = delta * cfg.SCROLL_VELOCITY * self.offset_direction
-                self.other_offset = self.other_offset - shift
-                self.map_offset = self.map_offset - shift
-            else:
-                self.map_offset = Vector2((0, 0))
-                self.other_offset = Vector2((0, 0))
-                self.offset_direction = Vector2((0, 0))
-                self.in_transition = False
-                self.map_image = self.map_image_cache.copy()
-
-    def draw(self, display) -> pygame.Rect:
-        display.blit(self.map_image, self.other_offset + (0, cfg.UI_HEIGHT))
-
-        if self.in_transition:
-            display.blit(self.map_image_cache, self.map_offset + (0, cfg.UI_HEIGHT))
-
-        return self.rect.copy()  # Best solution one could find to be compatible with the UI
+        return self.map_image_rect.copy()  # Best solution one could find to be compatible with the UI

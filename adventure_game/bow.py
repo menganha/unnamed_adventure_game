@@ -14,19 +14,19 @@ class Bow:
     """
     SHOOT_COOLDOWN = 10
 
-    def __init__(self, parent_rect: pygame.Rect):
+    def __init__(self, parent_rect: pygame.Rect, quiver: pygame.sprite.Group):
         self.parent_rect = parent_rect
         self.action = Action(self.SHOOT_COOLDOWN)
-        self.container = pygame.sprite.Group()
+        self.quiver = quiver
         self.proyectile_image = pygame.image.load('assets/sprites/arrow.png').convert_alpha()
 
     def attack(self, direction: Direction):
         if self.action.in_progress():
             return
         arrow = Arrow(self.parent_rect.center, direction, self.proyectile_image)
-        self.container.add(arrow)
+        self.quiver.add(arrow)
         self.action.restart()
 
-    def update(self, delta: float, physical_obstacles: List[pygame.Rect], enemy_group: EnemyGroup):
+    def update(self, delta: float, physical_obstacles: List[pygame.Rect]):
         self.action.update()
-        self.container.update(delta, physical_obstacles, enemy_group)
+        # self.quiver.update(delta, physical_obstacles)

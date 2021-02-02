@@ -42,6 +42,7 @@ class Background:
         life_text = font.render("--GOLD--", False, cfg.WHITE, cfg.BLACK)
         self.surface.blit(life_text, (UserInterface.SIDE_MARGIN + 300, 4))
 
+
 class HeartContainers(pygame.sprite.DirtySprite):
     """
     Handle the heart sprites in the. A full heart contains 2 heart units.
