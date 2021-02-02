@@ -1,4 +1,3 @@
-from math import copysign
 from typing import List
 
 import pygame
@@ -7,6 +6,7 @@ from pygame.math import Vector2
 import adventure_game.config as cfg
 from adventure_game.action import Action
 from adventure_game.animation import PlayerAnimation
+from adventure_game.arrow import Arrow
 from adventure_game.bow import Bow
 from adventure_game.control import Control
 from adventure_game.direction import Direction
@@ -20,8 +20,9 @@ class Player(pygame.sprite.Sprite):
     HITBOX_DEFLATION = -16
     DAMAGE_MOMENTUM = 2.5
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, group=pygame.sprite.Group()):
+        super().__init__(group)
+        self.group = group
         self.animation = PlayerAnimation()
         self.life = 10
         self.image = self.animation.current_sprite
@@ -34,19 +35,16 @@ class Player(pygame.sprite.Sprite):
         self.cooldown = Action(cfg.COOLDOWN_TIME_PLAYER)
         self.hitbox = Hitbox(self.rect, self.HITBOX_DEFLATION, self.HITBOX_DEFLATION)
         self.sword = Sword(self.rect, attack_duration=len(self.animation.animation_data["attack up"]))
-        self.bow = Bow(self.rect)
+        self.bow = Bow(self.rect, group)
 
-    def update(self, delta: float, control: Control, in_transition: bool, objects_group: List[pygame.Rect],
-               enemy_group: EnemyGroup):
-        if not in_transition:
-            self.bow.update(delta, objects_group, enemy_group)
-            self.sword.update(enemy_group)
-            self.cooldown.update()
-            self.handle_input(control)
-            self.handle_collision_with_enemy(enemy_group)
-            self.handle_collision_with_objects(delta, objects_group)
-            self.update_animation()
-            self.check_if_within_bounds()
+    def update(self, delta: float, control: Control, objects_group: List[pygame.Rect], enemy_group: EnemyGroup):
+        self.bow.update(delta, objects_group)
+        self.sword.update()
+        self.cooldown.update()
+        self.handle_input(control)
+        self.handle_collision_with_enemy(enemy_group)
+        self.handle_collision_with_objects(delta, objects_group)
+        self.update_animation()
         self.move(delta)
 
     def handle_input(self, control: Control):
@@ -103,6 +101,8 @@ class Player(pygame.sprite.Sprite):
             if self.cooldown.is_idle() and self.hitbox.rect.colliderect(enemy.rect):
                 self.get_hit(enemy.position)
                 enemy.stay_idle()
+            if self.sword.has_hit(enemy):
+                enemy.get_hit(self.direction)
 
     def move(self, delta: float):
         self.position += delta * self.velocity
@@ -114,18 +114,6 @@ class Player(pygame.sprite.Sprite):
         vec_difference = self.position - enemy_position
         direction = Direction.closest_direction(vec_difference)
         self.velocity = cfg.VELOCITY * self.DAMAGE_MOMENTUM * direction.value
-
-    def check_if_within_bounds(self):
-        self.out_of_bounds = Vector2(0, 0)
-        if self.position.x > cfg.DIS_WIDTH - cfg.SPRITE_SIZE // 2 or self.position.x < -cfg.SPRITE_SIZE // 2:
-            self.out_of_bounds.x = copysign(1, self.position.x)
-            self.velocity = self.out_of_bounds.elementwise() * -cfg.SCROLL_VELOCITY * 0.97
-        if (
-                self.position.y > cfg.DIS_HEIGHT - cfg.SPRITE_SIZE // 2
-                or self.position.y < cfg.UI_HEIGHT - cfg.SPRITE_SIZE // 2
-        ):
-            self.out_of_bounds.y = copysign(1, self.position.y - cfg.UI_HEIGHT)
-            self.velocity = self.out_of_bounds.elementwise() * -cfg.SCROLL_VELOCITY * 0.97
 
     def update_animation(self):
         if not self.velocity.elementwise() == 0:

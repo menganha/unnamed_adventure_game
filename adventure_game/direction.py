@@ -12,3 +12,13 @@ class Direction(Enum):
     @classmethod
     def closest_direction(cls, vector: Vector2):
         return max(list(cls), key=lambda x: x.value.dot(vector))
+
+    def opposite(self):
+        if self == Direction.UP:
+            return Direction.DOWN
+        elif self == Direction.DOWN:
+            return Direction.UP
+        elif self == Direction.LEFT:
+            return Direction.RIGHT
+        else:
+            return Direction.LEFT

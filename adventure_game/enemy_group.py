@@ -5,15 +5,15 @@ from adventure_game.enemy import Enemy
 
 
 class EnemyGroup(pygame.sprite.Group):
-    def __init__(self, current_map):
+    def __init__(self, map_data_file: str):
         super().__init__()
-        self.current_map = current_map
+        self.map_data_file = map_data_file
         self.enemy_list = []
-        self.get_enemy_positions()
+        self.get_enemy_positions(map_data_file)
         self.create_enemies()
 
-    def get_enemy_positions(self):
-        with open(self.current_map) as file:
+    def get_enemy_positions(self, map_data_file: str):
+        with open(map_data_file) as file:
             data = json.load(file)["layers"]
         self.enemy_list = []
         for layer in data:
@@ -26,20 +26,8 @@ class EnemyGroup(pygame.sprite.Group):
                     self.enemy_list.append({'pos': (obj_dict["x"], obj_dict["y"]), 'kind': kind})
 
     def create_enemies(self):
-        # TODO: Move this method to a creator/director class
         for enemy in self.enemy_list:
             if enemy['kind'] == 'dragon':
                 self.add(Enemy.create_enemy_dragon(enemy['pos']))
             else:
                 self.add(Enemy.create_enemy_jelly(enemy['pos']))
-
-    def update(self, delta, new_map, in_transition, physical_objects, player):
-        # TODO: This cross-reference is ugly
-        if new_map != self.current_map:
-            self.empty()
-            if not in_transition:
-                self.current_map = new_map
-                self.get_enemy_positions()
-                self.create_enemies()
-        else:
-            super().update(delta, physical_objects, player)
