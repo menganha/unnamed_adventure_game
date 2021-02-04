@@ -1,5 +1,3 @@
-
-
 class Action:
     """
     Represent a common pattern appearing in actions that take several frames to complete and cannot be repeated until
