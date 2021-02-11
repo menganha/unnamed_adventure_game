@@ -4,10 +4,8 @@ import pygame
 from pygame.math import Vector2
 
 from adventure_game import config as cfg
-from adventure_game.control import Control
 from adventure_game.direction import Direction
 from adventure_game.enemy import Enemy
-from adventure_game.enemy_group import EnemyGroup
 from adventure_game.hitbox import Hitbox
 
 
@@ -23,17 +21,12 @@ class Arrow(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.hitbox = Hitbox(self.rect)
 
-    def update(self, delta: float, control: Control, physical_obstacles: List[pygame.Rect], enemy_group: EnemyGroup):
+    def update(self, delta: float, physical_obstacles: List[pygame.Rect]):
         self.position.update(self.position + (delta * self.velocity).elementwise() ** 3)
         self.rect.center = self.position
         self.hitbox.rect.center = self.position
         if self.is_out_ouf_bounds() or self.hitbox.has_collided_with_rects(*physical_obstacles):
             self.kill()
-            return
-        for enemy in enemy_group:
-            if self.has_hit(enemy):
-                enemy.get_hit(self.direction)
-                self.kill()
 
     def has_hit(self, enemy: Enemy):
         if self.hitbox.has_collided_with(enemy.hitbox):

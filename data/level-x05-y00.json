@@ -1,4 +1,12 @@
 { "compressionlevel":-1,
+ "editorsettings":
+    {
+     "export":
+        {
+         "format":"json",
+         "target":"level-x05-y00.json"
+        }
+    },
  "height":14,
  "infinite":false,
  "layers":[
@@ -44,6 +52,7 @@
          "y":0
         }, 
         {
+         "color":"#aa0000",
          "draworder":"topdown",
          "id":4,
          "name":"boundaries",
@@ -82,7 +91,7 @@
                  "y":0
                 }, 
                 {
-                 "height":152,
+                 "height":160,
                  "id":6,
                  "name":"",
                  "rotation":0,
@@ -125,7 +134,7 @@
  "nextobjectid":8,
  "orientation":"orthogonal",
  "renderorder":"right-down",
- "tiledversion":"1.4.2",
+ "tiledversion":"1.5.0",
  "tileheight":32,
  "tilesets":[
         {
@@ -134,6 +143,6 @@
         }],
  "tilewidth":32,
  "type":"map",
- "version":1.4,
+ "version":1.5,
  "width":20
 }

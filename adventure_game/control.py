@@ -2,21 +2,29 @@ import pygame
 
 
 class Control:
+    """
+    Control Input
+    """
+
     def __init__(self):
         self.right = False
         self.left = False
         self.up = False
         self.down = False
         self.attack = False
+        self.attack_locked = False
         self.shoot = False
-        self.previous_frame_action = False
+        self.shoot_locked = False
         self.close_window = False
         self.has_gamepad = False
         self.gamepad = None
         self.check_if_gamepad()
 
     def fetch_input(self):
-        self.previous_frame_action = self.attack or self.shoot
+        if self.attack_locked:
+            self.attack = False
+        if self.shoot_locked:
+            self.shoot = False
         if self.has_gamepad:
             self._handle_gamepad()
         else:
@@ -55,10 +63,12 @@ class Control:
                     self.left = True
                 if event.key == pygame.K_RIGHT:
                     self.right = True
-                if event.key == pygame.K_SPACE:
+                if not self.attack_locked and event.key == pygame.K_SPACE:
                     self.attack = True
-                if event.key == pygame.K_x:
+                    self.attack_locked = True
+                if not self.shoot_locked and event.key == pygame.K_x:
                     self.shoot = True
+                    self.shoot_locked = True
             if event.type == pygame.KEYUP:
                 if event.key == pygame.K_UP:
                     self.up = False
@@ -70,5 +80,7 @@ class Control:
                     self.right = False
                 if event.key == pygame.K_SPACE:
                     self.attack = False
+                    self.attack_locked = False
                 if event.key == pygame.K_x:
                     self.shoot = False
+                    self.shoot_locked = False

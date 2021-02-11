@@ -1,4 +1,5 @@
 from enum import Enum
+from random import randrange
 
 from pygame.math import Vector2
 
@@ -12,6 +13,10 @@ class Direction(Enum):
     @classmethod
     def closest_direction(cls, vector: Vector2):
         return max(list(cls), key=lambda x: x.value.dot(vector))
+
+    @classmethod
+    def random_direction(cls):
+        return list(cls)[randrange(4)]
 
     def opposite(self):
         if self == Direction.UP:

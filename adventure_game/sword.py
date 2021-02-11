@@ -1,11 +1,10 @@
-# TODO: Make a abstract "Weapon" class from which the Sword and other weapons can be inherited from
 import pygame
 
 from adventure_game.action import Action
+from adventure_game.config import BLUE
 from adventure_game.direction import Direction
 from adventure_game.enemy import Enemy
-from adventure_game.enemy_group import EnemyGroup
-from adventure_game.config import BLUE
+from adventure_game.player_sprite import PlayerSprite
 
 
 class Sword:
@@ -13,8 +12,7 @@ class Sword:
     Main sword weapon.
     """
 
-    def __init__(self, parent_rect: pygame.Rect, depth: int = 20, slash_range: int = 40, extent: int = 10,
-                 attack_duration: int = 20):
+    def __init__(self, parent_rect: pygame.Rect, depth: int = 20, slash_range: int = 40, extent: int = 10):
         # TODO: These Default parameters should be set in the configuration file
         self.parent_rect = parent_rect
         self.depth = depth
@@ -24,7 +22,7 @@ class Sword:
         self.vertical_rect = pygame.Rect(0, 0, self.depth, self.slash_range)
         self.current_rect = self.horizontal_rect
         self.image = None
-        self.action = Action(attack_duration)
+        self.action = Action(PlayerSprite.ATTACK_FRAME_DURATION * PlayerSprite.FRAME_NUMBER)
         self._update_current_rect_and_direction(Direction.DOWN)
 
     def attack(self, direction: Direction):

@@ -1,4 +1,12 @@
 { "compressionlevel":-1,
+ "editorsettings":
+    {
+     "export":
+        {
+         "format":"json",
+         "target":"level-x04-y00.json"
+        }
+    },
  "height":14,
  "infinite":false,
  "layers":[
@@ -55,7 +63,7 @@
                  "y":32
                 }, 
                 {
-                 "height":160,
+                 "height":128,
                  "id":14,
                  "name":"",
                  "rotation":0,
@@ -63,7 +71,7 @@
                  "visible":true,
                  "width":64,
                  "x":0,
-                 "y":224
+                 "y":256
                 }, 
                 {
                  "height":128,
@@ -94,7 +102,7 @@
                  "rotation":0,
                  "type":"",
                  "visible":true,
-                 "width":544,
+                 "width":536,
                  "x":48,
                  "y":432
                 }, 
@@ -154,9 +162,9 @@
                  "name":"",
                  "properties":[
                         {
-                         "name":"text",
+                         "name":"BEWARE! Dangerous Beast Ahead",
                          "type":"string",
-                         "value":"BEWARE! Dangerous Beast Ahead"
+                         "value":""
                         }],
                  "rotation":0,
                  "type":"",
@@ -174,7 +182,29 @@
                  "visible":true,
                  "width":16,
                  "x":552,
-                 "y":8
+                 "y":16
+                }, 
+                {
+                 "height":168,
+                 "id":30,
+                 "name":"",
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":8,
+                 "x":632,
+                 "y":0
+                }, 
+                {
+                 "height":208,
+                 "id":31,
+                 "name":"",
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":8,
+                 "x":632,
+                 "y":240
                 }],
          "opacity":1,
          "type":"objectgroup",
@@ -183,10 +213,10 @@
          "y":0
         }],
  "nextlayerid":5,
- "nextobjectid":30,
+ "nextobjectid":37,
  "orientation":"orthogonal",
  "renderorder":"right-down",
- "tiledversion":"1.4.2",
+ "tiledversion":"1.5.0",
  "tileheight":32,
  "tilesets":[
         {
@@ -195,6 +225,6 @@
         }],
  "tilewidth":32,
  "type":"map",
- "version":1.4,
+ "version":1.5,
  "width":20
 }

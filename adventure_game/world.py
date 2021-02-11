@@ -70,6 +70,7 @@ class World:
         """
         Gets the unique tile surfaces
         """
+        # TODO: Think about how to reuse the sprite_sheet class!!!
         sheet_size = self.sprite_sheet.get_size()
         tile_dict = {}
 

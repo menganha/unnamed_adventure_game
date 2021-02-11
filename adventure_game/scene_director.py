@@ -13,7 +13,7 @@ class SceneDirector:
     """
     Manages all the changes necessary for transitioning into a new map chunk
     """
-    VELOCITY_PLUS = 0.03
+    VELOCITY_PLUS = 0.09
 
     def __init__(self, player: Player, world: World, enemy_group: EnemyGroup):
         self.player = player
@@ -48,14 +48,13 @@ class SceneDirector:
             self.transition_direction = Direction.RIGHT
         elif self.player.position.x < 0:
             self.transition_direction = Direction.LEFT
-        elif self.player.position.y > cfg.WORLD_HEIGTH:
+        elif self.player.position.y > cfg.WORLD_HEIGTH + cfg.UI_HEIGHT:
             self.transition_direction = Direction.DOWN
         elif self.player.position.y < cfg.UI_HEIGHT:
             self.transition_direction = Direction.UP
 
     def _scroll_player(self, delta: float):
         self.player.velocity = - cfg.SCROLL_VELOCITY * (1 - self.VELOCITY_PLUS) * self.player.direction.value
-        self.player.update_animation()
         self.player.move(delta)
 
     def _scroll_map(self, delta: float):
@@ -72,8 +71,7 @@ class SceneDirector:
                                                                                           cfg.WORLD_HEIGTH)
 
     def _load_enemies(self):
-        self.enemy_group.get_enemy_positions(self.world.map_data_file)
-        self.enemy_group.create_enemies()
+        self.enemy_group.create_enemies(self.world.map_data_file)
 
     def _get_next_map_data_file(self):
         match = re.match(r'data/level-x0(\d+)-y0(\d+)\.json', self.world.map_data_file)

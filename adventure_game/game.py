@@ -8,7 +8,6 @@ import adventure_game.utilities as utils
 from adventure_game.control import Control
 from adventure_game.enemy_group import EnemyGroup
 from adventure_game.player import Player
-from adventure_game.text import Text
 from adventure_game.user_interface import UserInterface
 from adventure_game.world import World
 from adventure_game.scene_director import SceneDirector
@@ -54,14 +53,14 @@ class Game:
 
     def _update_objects(self):
         self.ui.update(self.player.life)
-        self.player.group.update(self.delta, self.control, self.world.solid_objects, self.enemies)
-        self.enemies.update(self.delta, self.world.solid_objects, self.player)
+        self.player.update(self.delta, self.control, self.world.solid_objects, self.enemies)
+        self.enemies.update(self.delta, self.world.solid_objects, self.player.position)
 
     def _render_to_screen(self):
         world_rect = self.world.draw(self.display)
         ui_rects = self.ui.draw(self.display)
-        self.player.group.draw(self.display)
-        self.enemies.draw(self.display)
+        self.player.sprite_group.draw(self.display)
+        self.enemies.sprite_group.draw(self.display)
         self._debug_blit()
         pygame.transform.scale(self.display, (cfg.DIS_WIDTH * cfg.SCALE, cfg.DIS_HEIGHT * cfg.SCALE), self.screen)
 
