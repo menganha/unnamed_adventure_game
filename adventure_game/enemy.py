@@ -1,53 +1,46 @@
 # TODO: Create an independent AI class
-from __future__ import annotations
-
-
 import pygame
 from pygame.math import Vector2
 
 import adventure_game.config as cfg
 from adventure_game.direction import Direction
 from adventure_game.hitbox import Hitbox
+from adventure_game.state import State
 from adventure_game.action import Action
 from adventure_game.entity_sprite import EnititySprite
 
 
-
 class Enemy:
     THINK_TIME = 70
-    INVISIBLE_TIME = 25
+    INVISIBLE_TIME = 12
     MAX_VISUAL_FIELD = 6000
-    MAX_VELOCITY = cfg.VELOCITY * 0.5
-    MAX_FRAME_WAIT = 10
-    IDLE_TIME = 25
+    FRAMES_TO_WAIT = 10
+    IDLE_FRAMES = 25
+    DAMAGE_VELOCITY = 6 * cfg.FRAMERATE
 
-    def __init__(self, position: Vector2, direction: Direction, life: int, sprite: EnititySprite):
+    def __init__(self, position: Vector2, direction: Direction, abs_velocity: int, life: int, sprite: EnititySprite):
         self.group = None
         self.life = life
         self.position = Vector2(position)
         self.velocity = Vector2(0, 0)
+        self.abs_velocity = abs_velocity
         self.direction = direction
         self.sprite = sprite
         self.state = sprite.state
         self.hitbox = Hitbox(sprite.rect)
         self.cooldown = Action(self.INVISIBLE_TIME)
         # self.think_counter = self.THINK_TIME
-        self.force_frame_count = self.MAX_FRAME_WAIT # TODO: Move to AI
-        self.idle_counter = 0 # TODO: Move to Action
+        self.force_frame = Action(self.FRAMES_TO_WAIT)  # TODO: Move to AI. Frames to delay the change of direction
+        self.idle = Action(self.IDLE_FRAMES)  # TODO: Move to Action
         self.hit_sound = pygame.mixer.Sound("assets/sounds/hit.wav")
 
     def update(self, delta, physical_objects, player_position: Vector2):
         self.cooldown.update()
-        if self.cooldown.is_idle():
-        #     self.animation.next_frame("walk")
-        #     self.image = self.animation.current_sprite
+        self.idle.update()
+        if self.idle.in_progress():
+            self.velocity[:] = 0, 0
+        elif self.cooldown.is_idle():
             self.handle_ai(player_position)
-        # elif self.cooldown.in_progress():
-        #     self.blink()
-        #     self.cooldown.update()
-        # if self.idle_counter > 0:
-        #     self.idle_counter -= 1
-        #     self.velocity[:] = 0, 0
         self.handle_collisions_with_objects(delta, physical_objects)
         self.move(delta)
 
@@ -55,7 +48,7 @@ class Enemy:
         if self.cooldown.is_idle():
             self.cooldown.restart()
             self.hit_sound.play()
-            self.velocity = cfg.VELOCITY * 2 * direction.value
+            self.velocity = self.DAMAGE_VELOCITY * direction.value
             self.life -= 1
             if self.life == 0:
                 self.kill()
@@ -66,13 +59,14 @@ class Enemy:
             vec_difference = player_position - self.position
             desired_direction = Direction.closest_direction(vec_difference)
             if desired_direction != self.direction:
-                self.force_frame_count -= 1
-                if self.force_frame_count == 0:
-                    self.force_frame_count = self.MAX_FRAME_WAIT
+                self.force_frame.update()
+                if self.force_frame.is_idle():
+                    self.force_frame.restart()
                     self.direction = desired_direction
-
-            self.velocity = self.MAX_VELOCITY * self.direction.value
+            self.velocity = self.abs_velocity * self.direction.value
+            self.state = State.WALK
         else:
+            self.state = State.IDLE
             self.velocity[:] = 0, 0
         # elif self.think_counter == 0:
         #     self.think_counter = choice((self.THINK_TIME, 5))
@@ -90,7 +84,8 @@ class Enemy:
                 self.velocity[idx] = 0
 
     def stay_idle(self):
-        self.idle_counter = self.IDLE_TIME
+        self.idle.restart()
+        self.state = State.IDLE
 
     def move(self, delta):
         self.position.update(self.position + delta * self.velocity)
@@ -103,8 +98,6 @@ class Enemy:
         """Add to an enemy group"""
         self.group = group
 
-
-
     # def blink(self):
     #     self.image = self.animation.current_sprite.copy()
     #     if self.cooldown.counter % 7 > 4:
@@ -113,6 +106,6 @@ class Enemy:
     #         self.image.fill(cfg.BLUE, special_flags=pygame.BLEND_RGBA_MULT)
     #     else:
     #         self.image.fill(cfg.GREEN, special_flags=pygame.BLEND_RGBA_MULT)
-        #     alpha = 255
-        # color = (255, 255, 255, alpha)
-        # self.image.blit(self.image, self.image.get_rect(), special_flags=pygame.BLEND_RGBA_MULT)
+    #     alpha = 255
+    # color = (255, 255, 255, alpha)
+    # self.image.blit(self.image, self.image.get_rect(), special_flags=pygame.BLEND_RGBA_MULT)

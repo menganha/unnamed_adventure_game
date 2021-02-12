@@ -15,10 +15,11 @@ class PlayerSprite(EnititySprite):
     """
     Represents the player sprite image
     """
-    FRAME_NUMBER = 5
+    FRAME_NUMBER = 6
+    ATTACK_FRAME_NUMBER = 5
     SPRITE_SIZE = (32, 32)
     IDLE_FRAME_DURATION = 15
-    WALK_FRAME_DURATION = 12
+    WALK_FRAME_DURATION = 10
     ATTACK_FRAME_DURATION = 3
 
     def __init__(self, initial_position: Vector2, initial_direction: Direction, state: State,
@@ -29,7 +30,7 @@ class PlayerSprite(EnititySprite):
 
         idle_animation_data = AnimationData(self.FRAME_NUMBER, self.IDLE_FRAME_DURATION)
         walk_animation_data = AnimationData(self.FRAME_NUMBER, self.WALK_FRAME_DURATION)
-        attack_animation_data = AnimationData(self.FRAME_NUMBER, self.ATTACK_FRAME_DURATION)
+        attack_animation_data = AnimationData(self.ATTACK_FRAME_NUMBER, self.ATTACK_FRAME_DURATION)
 
         animation_set = {
             State.IDLE: Animation(idle_sprite_sheet, idle_animation_data),

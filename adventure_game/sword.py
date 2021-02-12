@@ -22,7 +22,7 @@ class Sword:
         self.vertical_rect = pygame.Rect(0, 0, self.depth, self.slash_range)
         self.current_rect = self.horizontal_rect
         self.image = None
-        self.action = Action(PlayerSprite.ATTACK_FRAME_DURATION * PlayerSprite.FRAME_NUMBER)
+        self.action = Action(PlayerSprite.ATTACK_FRAME_DURATION * PlayerSprite.ATTACK_FRAME_NUMBER)
         self._update_current_rect_and_direction(Direction.DOWN)
 
     def attack(self, direction: Direction):
