@@ -12,7 +12,6 @@ class MovementSystem(esper.Processor):
 
     def process(self):
         for ent, (vel, rend, pos) in self.world.get_components(Velocity, Renderable, Position):
-
             # If it has a hitbox then check for collisions
             hitbox = self.world.try_component(ent, HitBox)
             if hitbox:

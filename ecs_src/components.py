@@ -1,6 +1,7 @@
 import pygame
 from dataclasses import dataclass as component
 from dataclasses import field, InitVar
+from typing import Callable
 
 
 @component
@@ -42,3 +43,9 @@ class HitBox:
 
     def __post_init__(self, x_pos: int, y_pos: int, width: int, height: int):
         self.rect = pygame.Rect(x_pos, y_pos, width, height)
+
+
+@component
+class Input:
+    process: Callable[[int], None]  # Function on entity
+

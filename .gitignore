@@ -8,3 +8,5 @@ tiled_maps
 *.aseprite
 profile.log
 analyse_profile.py
+*tmx
+*tsx
