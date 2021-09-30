@@ -1,9 +1,11 @@
-import pygame
-from ecs_src import esper
-from ecs_src.components import Renderable, Position, Velocity
-from ecs_src.render_processor import RenderProcessor
-from ecs_src.movement_processor import MovementProcessor
+import logging
 
+import pygame
+
+from ecs_src import esper
+from ecs_src.components import Renderable, Position, Velocity, HitBox, Life
+from ecs_src.movement_system import MovementSystem
+from ecs_src.render_system import RenderSystem
 
 FPS = 60
 RESOLUTION = 640, 480
@@ -11,36 +13,50 @@ RESOLUTION = 640, 480
 
 def run():
     pygame.init()
-    window = pygame.display.set_mode(RESOLUTION, flags=pygame.SCALED)
+    window = pygame.display.set_mode(RESOLUTION)#, flags=pygame.SCALED)
     pygame.display.set_caption('Unnamed Adventure Game')
     clock = pygame.time.Clock()
-    BLUE = pygame.Color(50, 153, 213)
-    WHITE = pygame.Color(255, 255, 255)
+    c_blue = pygame.Color(50, 153, 213)
+    c_white = pygame.Color(255, 255, 255)
+    c_green = pygame.Color(0, 255, 0)
     pygame.key.set_repeat(1, 1)
+
+    logging.basicConfig(level=logging.INFO)
 
     # Initialize Esper world, and create a "player" Entity with a few Components.
     world = esper.World()
+
     player = world.create_entity()
-    world.add_component(player, Velocity(x=0, y=0))
-
     player_surface = pygame.Surface((16, 16))
-    player_surface.fill(BLUE)
+    player_surface.fill(c_blue)
 
-    world.add_component(player, Renderable(image=player_surface))
+    world.add_component(player, Velocity(x=0, y=0))
     world.add_component(player, Position(x=100, y=100))
+    world.add_component(player, Renderable(image=player_surface))
+    world.add_component(player, HitBox(100, 100, player_surface.get_width(), player_surface.get_height()))
+    world.add_component(player, Life(100))
+
+    # Add a solid tile
+    solid_tile = world.create_entity()
+    tile_surface = pygame.Surface((30, 30))
+    tile_surface.fill(c_green)
+    world.add_component(solid_tile, Position(x=40, y=45))
+    world.add_component(solid_tile, Renderable(image=tile_surface))
+    world.add_component(solid_tile, HitBox(40, 45, tile_surface.get_width(), tile_surface.get_height()))
 
     # Another motionless Entity:
     enemy_surface = pygame.Surface((10, 10))
-    enemy_surface.fill(WHITE)
+    enemy_surface.fill(c_white)
     enemy = world.create_entity()
+    world.add_component(enemy, Renderable(image=enemy_surface))
     world.add_component(enemy, Renderable(image=enemy_surface))
     world.add_component(enemy, Position(x=400, y=100))
 
     # Create some Processor instances, and assign them to be processed.
-    render_processor = RenderProcessor(window=window)
-    movement_processor = MovementProcessor(min_x=0, max_x=RESOLUTION[0], min_y=0, max_y=RESOLUTION[1])
-    world.add_processor(render_processor)
+    render_processor = RenderSystem(window=window)
+    movement_processor = MovementSystem(min_x=0, max_x=RESOLUTION[0], min_y=0, max_y=RESOLUTION[1])
     world.add_processor(movement_processor)
+    world.add_processor(render_processor)
 
     running = True
     while running:

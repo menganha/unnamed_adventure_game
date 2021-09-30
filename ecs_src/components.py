@@ -1,6 +1,6 @@
 import pygame
 from dataclasses import dataclass as component
-from dataclasses import field
+from dataclasses import field, InitVar
 
 
 @component
@@ -28,5 +28,17 @@ class Position:
 
 
 @component
+class Life:
+    value: int = 10
+
+
+@component
 class HitBox:
-    rect: pygame.Rect
+    x_pos: InitVar[int]
+    y_pos: InitVar[int]
+    width: InitVar[int]
+    height: InitVar[int]
+    rect: pygame.Rect = field(init=False)
+
+    def __post_init__(self, x_pos: int, y_pos: int, width: int, height: int):
+        self.rect = pygame.Rect(x_pos, y_pos, width, height)

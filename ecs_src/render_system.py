@@ -4,7 +4,7 @@ from ecs_src import esper
 from ecs_src.components import Renderable, Position
 
 
-class RenderProcessor(esper.Processor):
+class RenderSystem(esper.Processor):
     def __init__(self, window, clear_color=(0, 0, 0)):
         super().__init__()
         self.window = window

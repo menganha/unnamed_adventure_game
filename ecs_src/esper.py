@@ -142,7 +142,7 @@ class World:
         """Check if a specific entity exists.
         Empty entities(with no components) and dead entities(destroyed
         by delete_entity) will not count as existent ones.
-        :param entity: The Entity ID to check existance for.
+        :param entity: The Entity ID to check existence for.
         :return: True if the entity exists, False otherwise.
         """
         return entity in self._entities and entity not in self._dead_entities
@@ -193,7 +193,7 @@ class World:
 
     def add_component(self, entity: int, component_instance: _C, type_alias: _Optional[_Type[_C]] = None) -> None:
         """Add a new Component instance to an Entity.
-        Add a Component instance to an Entiy. If a Component of the same type
+        Add a Component instance to an Entity. If a Component of the same type
         is already assigned to the Entity, it will be replaced. By default,
         the Component's class type is used for internal categorization. You
         can optionally provide a custom `type_alias`, for cases where you
