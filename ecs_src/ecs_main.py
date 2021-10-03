@@ -15,7 +15,7 @@ import maps
 
 def run():
     pygame.init()
-    window = pygame.display.set_mode(Config.RESOLUTION)
+    window = pygame.display.set_mode(Config.RESOLUTION, flags=pygame.SCALED)
     pygame.display.set_caption('Unnamed Adventure Game')
     clock = pygame.time.Clock()
     c_blue = pygame.Color(50, 153, 213)
@@ -43,16 +43,16 @@ def run():
         if keyboard.is_key_released(pygame.K_UP) or keyboard.is_key_released(pygame.K_DOWN):
             world.component_for_entity(player_entity, Velocity).y = 0
         if keyboard.is_key_down(pygame.K_DOWN):
-            world.component_for_entity(player_entity, Velocity).y = 3
+            world.component_for_entity(player_entity, Velocity).y = 2
         if keyboard.is_key_down(pygame.K_UP):
-            world.component_for_entity(player_entity, Velocity).y = -3
+            world.component_for_entity(player_entity, Velocity).y = -2
 
         if keyboard.is_key_released(pygame.K_LEFT) or keyboard.is_key_released(pygame.K_RIGHT):
             world.component_for_entity(player_entity, Velocity).x = 0
         if keyboard.is_key_down(pygame.K_LEFT):
-            world.component_for_entity(player_entity, Velocity).x = -3
+            world.component_for_entity(player_entity, Velocity).x = -2
         if keyboard.is_key_down(pygame.K_RIGHT):
-            world.component_for_entity(player_entity, Velocity).x = +3
+            world.component_for_entity(player_entity, Velocity).x = +2
 
     world.add_component(player, Velocity(x=0, y=0))
     world.add_component(player, Position(x=20, y=20))
@@ -64,7 +64,7 @@ def run():
     map_entity = world.create_entity()
     map_surface = maps.create_map_image('ecs_data/overworld_map.tmx')
     world.add_component(map_entity, Position(x=0, y=0))
-    world.add_component(map_entity, Renderable(image=map_surface))
+    world.add_component(map_entity, Renderable(image=map_surface, depth=3))
 
     # Add camera entity
     camera_entity = world.create_entity()

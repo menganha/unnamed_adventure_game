@@ -15,10 +15,12 @@ class Velocity:
 class Renderable:
     image: pygame.Surface
     depth: int = 0
-    rect: pygame.Rect = field(init=False)
+    width: int = field(init=False)
+    height: int = field(init=False)
 
     def __post_init__(self):
-        self.rect = self.image.get_rect()
+        self.width = self.image.get_width()
+        self.height = self.image.get_height()
 
 
 @component

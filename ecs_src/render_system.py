@@ -14,8 +14,7 @@ class RenderSystem(esper.Processor):
     def process(self):
         self.window.fill(self.clear_color)
         camera_pos = self.world.component_for_entity(self.camera_entity, Position)
-        for ent, (rend, pos) in self.world.get_components(Renderable, Position):
+        for ent, (rend, pos) in sorted(self.world.get_components(Renderable, Position),
+                                       key=lambda x: x[1][0].depth, reverse=True):
             self.window.blit(rend.image, (pos.x + camera_pos.x, pos.y + camera_pos.y))
         pygame.display.flip()
-
-
