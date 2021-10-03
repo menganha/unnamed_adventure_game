@@ -7,15 +7,15 @@ from ecs_src.components import Renderable, Position, Velocity, HitBox, Input
 from ecs_src.movement_system import MovementSystem
 from ecs_src.render_system import RenderSystem
 from ecs_src.input_system import InputSystem
+from ecs_src.camera_system import CameraSystem
 from ecs_src.keyboard import Keyboard
-
-FPS = 60
-RESOLUTION = 640, 480
+from ecs_src.config import Config
+import maps
 
 
 def run():
     pygame.init()
-    window = pygame.display.set_mode(RESOLUTION)
+    window = pygame.display.set_mode(Config.RESOLUTION)
     pygame.display.set_caption('Unnamed Adventure Game')
     clock = pygame.time.Clock()
     c_blue = pygame.Color(50, 153, 213)
@@ -23,7 +23,7 @@ def run():
     c_green = pygame.Color(0, 255, 0)
     pygame.key.set_repeat(1, 1)
 
-    # Initialize Loggins
+    # Initialize Logging
     logging.basicConfig(level=logging.INFO)
 
     # initialize keyboard
@@ -55,10 +55,20 @@ def run():
             world.component_for_entity(player_entity, Velocity).x = +3
 
     world.add_component(player, Velocity(x=0, y=0))
-    world.add_component(player, Position(x=100, y=100))
-    world.add_component(player, Renderable(image=player_surface))
-    world.add_component(player, HitBox(100, 100, player_surface.get_width(), player_surface.get_height()))
+    world.add_component(player, Position(x=20, y=20))
+    world.add_component(player, HitBox(20, 20, player_surface.get_width(), player_surface.get_height()))
     world.add_component(player, Input(input_processing))
+    world.add_component(player, Renderable(image=player_surface))
+
+    # Add map entity
+    map_entity = world.create_entity()
+    map_surface = maps.create_map_image('ecs_data/overworld_map.tmx')
+    world.add_component(map_entity, Position(x=0, y=0))
+    world.add_component(map_entity, Renderable(image=map_surface))
+
+    # Add camera entity
+    camera_entity = world.create_entity()
+    world.add_component(camera_entity, Position(x=0, y=0))
 
     # Add a solid tile
     solid_tile = world.create_entity()
@@ -77,11 +87,14 @@ def run():
     world.add_component(enemy, Position(x=400, y=100))
 
     # Create some Processor instances, and assign them to be processed.
-    render_processor = RenderSystem(window=window)
+
+    render_processor = RenderSystem(window=window, camera_entity=camera_entity)
     input_processor = InputSystem()
-    movement_processor = MovementSystem(min_x=0, max_x=RESOLUTION[0], min_y=0, max_y=RESOLUTION[1])
+    movement_processor = MovementSystem(min_x=0, max_x=Config.RESOLUTION[0], min_y=0, max_y=Config.RESOLUTION[1])
+    camera_processor = CameraSystem(camera_entity, entity_followed=player)
     world.add_processor(input_processor)
     world.add_processor(movement_processor)
+    world.add_processor(camera_processor)
     world.add_processor(render_processor)
 
     running = True
@@ -91,7 +104,7 @@ def run():
                 running = False
 
         world.process()
-        clock.tick(FPS)
+        clock.tick(Config.FPS)
 
 
 if __name__ == "__main__":

@@ -11,8 +11,8 @@ class MovementSystem(esper.Processor):
         self.max_y = max_y
 
     def process(self):
-        for ent, (vel, rend, pos) in self.world.get_components(Velocity, Renderable, Position):
-            # If it has a hitbox then check for collisions
+        for ent, (vel, rend, pos) in self.world.get_components(Velocity, Renderable, Position):  # Should I also loop over the renderables here?
+            # If it has a hitbox then check for collisions otherwise just move
             hitbox = self.world.try_component(ent, HitBox)
             if hitbox:
                 hitbox.rect.x += vel.x
@@ -33,8 +33,8 @@ class MovementSystem(esper.Processor):
                 pos.x += vel.x
                 pos.y += vel.y
 
-            # TODO: Fix condition. Still has some problems
-            pos.x = max(self.min_x, pos.x)
-            pos.y = max(self.min_y, pos.y)
-            pos.x = min(self.max_x - hitbox.rect.w, pos.x)
-            pos.y = min(self.max_y - hitbox.rect.h, pos.y)
+            # # TODO: Fix condition. Still has some problems
+            # pos.x = max(self.min_x, pos.x)
+            # pos.y = max(self.min_y, pos.y)
+            # pos.x = min(self.max_x - hitbox.rect.w, pos.x)
+            # pos.y = min(self.max_y - hitbox.rect.h, pos.y)

@@ -1,7 +1,8 @@
-import pygame
 from dataclasses import dataclass as component
 from dataclasses import field, InitVar
 from typing import Callable
+
+import pygame
 
 
 @component
@@ -14,12 +15,10 @@ class Velocity:
 class Renderable:
     image: pygame.Surface
     depth: int = 0
-    w: int = field(init=False)
-    h: int = field(init=False)
+    rect: pygame.Rect = field(init=False)
 
     def __post_init__(self):
-        self.w = self.image.get_width()
-        self.h = self.image.get_height()
+        self.rect = self.image.get_rect()
 
 
 @component
@@ -48,4 +47,3 @@ class HitBox:
 @component
 class Input:
     process: Callable[[int], None]  # Function on entity
-

@@ -1,20 +1,21 @@
 import pygame
 
-from ecs_src import esper
-from ecs_src.components import Renderable, Position
+from . import esper
+from .components import Renderable, Position
 
 
 class RenderSystem(esper.Processor):
-    def __init__(self, window, clear_color=(0, 0, 0)):
+    def __init__(self, window, camera_entity: int, clear_color=(0, 0, 0)):
         super().__init__()
         self.window = window
+        self.camera_entity = camera_entity
         self.clear_color = clear_color
 
     def process(self):
-        # Clear the window:
         self.window.fill(self.clear_color)
-        # This will iterate over every Entity that has this Component, and blit it:
+        camera_pos = self.world.component_for_entity(self.camera_entity, Position)
         for ent, (rend, pos) in self.world.get_components(Renderable, Position):
-            self.window.blit(rend.image, (pos.x, pos.y))
-        # Flip the framebuffers
+            self.window.blit(rend.image, (pos.x + camera_pos.x, pos.y + camera_pos.y))
         pygame.display.flip()
+
+
