@@ -2,15 +2,15 @@ import logging
 
 import pygame
 
-from ecs_src import esper
-from ecs_src.components import Renderable, Position, Velocity, HitBox, Input
-from ecs_src.movement_system import MovementSystem
-from ecs_src.render_system import RenderSystem
-from ecs_src.input_system import InputSystem
-from ecs_src.camera_system import CameraSystem
-from ecs_src.keyboard import Keyboard
-from ecs_src.config import Config
+import esper
 import maps
+from camera_system import CameraSystem
+from components import Renderable, Position, Velocity, HitBox, Input
+from config import Config
+from input_system import InputSystem
+from keyboard import Keyboard
+from movement_system import MovementSystem
+from render_system import RenderSystem
 
 
 def run():

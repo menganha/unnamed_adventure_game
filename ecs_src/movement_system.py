@@ -1,5 +1,5 @@
-from ecs_src import esper
-from ecs_src.components import Velocity, Renderable, Position, HitBox
+import esper
+from components import Velocity, Renderable, Position, HitBox
 
 
 class MovementSystem(esper.Processor):
@@ -11,7 +11,8 @@ class MovementSystem(esper.Processor):
         self.max_y = max_y
 
     def process(self):
-        for ent, (vel, rend, pos) in self.world.get_components(Velocity, Renderable, Position):  # Should I also loop over the renderables here?
+        for ent, (vel, rend, pos) in self.world.get_components(Velocity, Renderable, Position):
+            # TODO: Should I also loop over the renderables here?
             # If it has a hitbox then check for collisions otherwise just move
             hitbox = self.world.try_component(ent, HitBox)
             if hitbox:

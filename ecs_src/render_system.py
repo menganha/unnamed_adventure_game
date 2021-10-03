@@ -1,7 +1,7 @@
 import pygame
 
-from . import esper
-from .components import Renderable, Position
+import esper
+from components import Renderable, Position
 
 
 class RenderSystem(esper.Processor):

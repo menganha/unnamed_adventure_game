@@ -1,5 +1,5 @@
-from ecs_src import esper
-from ecs_src.components import Input
+import esper
+from components import Input
 
 
 class InputSystem(esper.Processor):

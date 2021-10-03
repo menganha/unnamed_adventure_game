@@ -1,6 +1,6 @@
-from . import esper
-from .components import Position, Renderable
-from .config import Config
+import esper
+from components import Position, Renderable
+from config import Config
 
 
 class CameraSystem(esper.Processor):
