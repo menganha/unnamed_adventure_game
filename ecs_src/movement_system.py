@@ -1,5 +1,5 @@
 import esper
-from components import Velocity, Renderable, Position, HitBox
+from components import Velocity, Position, HitBox
 
 
 class MovementSystem(esper.Processor):
@@ -11,13 +11,15 @@ class MovementSystem(esper.Processor):
         self.max_y = max_y
 
     def process(self):
-        for ent, (vel, rend, pos) in self.world.get_components(Velocity, Renderable, Position):
-            # TODO: Should I also loop over the renderables here?
-            # If it has a hitbox then check for collisions otherwise just move
+        """
+         If it has a hitbox then check for collisions and modify the entity's velocity otherwise just move
+        """
+        for ent, (vel, pos) in self.world.get_components(Velocity, Position):
+
             hitbox = self.world.try_component(ent, HitBox)
             if hitbox:
-                hitbox.rect.x += vel.x
-                hitbox.rect.y += vel.y
+                hitbox.rect.x = pos.x + vel.x
+                hitbox.rect.y = pos.y + vel.y
                 rects = [hb.rect for hb_ent, hb in self.world.get_component(HitBox) if hb_ent != ent]
                 index = hitbox.rect.collidelist(rects)
                 if index != -1:
@@ -26,13 +28,13 @@ class MovementSystem(esper.Processor):
                         test_rect.x -= vel.x * direction[0]
                         test_rect.y -= vel.y * direction[1]
                         if not test_rect.colliderect(rects[index]):
-                            hitbox.rect = test_rect
+                            vel.x *= direction[1]
+                            vel.y *= direction[0]
+                            hitbox.rect.x = pos.x + vel.x
+                            hitbox.rect.y = pos.y + vel.y
                             break
-                pos.x = hitbox.rect.x - hitbox.x_offset
-                pos.y = hitbox.rect.y - hitbox.y_offset
-            else:
-                pos.x += vel.x
-                pos.y += vel.y
+            pos.x += vel.x
+            pos.y += vel.y
 
             # # TODO: Fix condition. Still has some problems
             # pos.x = max(self.min_x, pos.x)

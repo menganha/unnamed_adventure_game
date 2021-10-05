@@ -1,5 +1,6 @@
 from dataclasses import dataclass as component
 from dataclasses import field, InitVar
+from animation_stripe import AnimationStripe
 from typing import Callable
 from direction import Direction
 
@@ -62,11 +63,30 @@ class MeleeWeapon:
     power: int = 5
     active_frames: int = 20
     offset: int = 0
-    rect_h: pygame.Rect = field(init=False)  # Rect for the horizontal direction hitbox
-    rect_v: pygame.Rect = field(init=False)  # Rect for the vertical direction hitbox
+    rect_h: pygame.Rect = field(init=False)  # Horizontal direction hitbox
+    rect_v: pygame.Rect = field(init=False)  # Vertical direction hitbox
     frame_counter: int = field(init=False)  # If frame_counter == active_frames, the weapon is on idle
 
     def __post_init__(self, range_front: int, range_side: int):
         self.rect_h = pygame.Rect(0, 0, range_front, range_side)
         self.rect_v = pygame.Rect(0, 0, range_side, range_front)
         self.frame_counter = self.active_frames
+
+
+@component
+class Animation:
+    """
+    Needs at least to get one animation stripe (idle_down) if we add this component.
+    No need of "left" animation strip as one can mirror the "right" one
+    """
+    idle_down: AnimationStripe
+    idle_up: AnimationStripe = None
+    idle_right: AnimationStripe = None
+
+    move_down: AnimationStripe = None
+    move_up: AnimationStripe = None
+    move_right: AnimationStripe = None
+
+    attack_down: AnimationStripe = None
+    attack_up: AnimationStripe = None
+    attack_right: AnimationStripe = None

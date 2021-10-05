@@ -4,14 +4,17 @@ import pygame
 
 import esper
 import maps
+from pathlib import Path
 from camera_system import CameraSystem
-from components import Renderable, Position, Velocity, HitBox, Input, MeleeWeapon, Health
+from components import Renderable, Position, Velocity, HitBox, Input, MeleeWeapon, Health, Animation
+from animation_stripe import AnimationStripe
 from config import Config
 from input_system import InputSystem
 from keyboard import Keyboard
 from movement_system import MovementSystem
 from render_system import RenderSystem
 from combat_system import CombatSystem
+from animation_system import AnimationSystem
 from direction import Direction
 
 
@@ -93,19 +96,24 @@ def run():
     enemy_surface = pygame.Surface((10, 10))
     enemy_surface.fill(c_white)
     enemy = world.create_entity()
-    world.add_component(enemy, Renderable(image=enemy_surface))
+    enemy_idle_down_image_path = Path('assets', 'sprites', 'enemy', 'jelly_idle.png')
+    enemy_idle_animation = AnimationStripe(enemy_idle_down_image_path, sprite_width=16, delay=15)
+    world.add_component(enemy, Renderable(image=enemy_idle_animation[0]))
     world.add_component(enemy, Position(x=400, y=100))
     world.add_component(enemy, HitBox(400, 100, enemy_surface.get_width(), enemy_surface.get_height()))
+    world.add_component(enemy, Animation(enemy_idle_animation))
     world.add_component(enemy, Health())
 
     # Create some Processor instances, and assign them to be processed.
 
     render_processor = RenderSystem(window=window, camera_entity=camera_entity)
     input_processor = InputSystem()
+    animation_system = AnimationSystem()
     movement_processor = MovementSystem(min_x=0, max_x=Config.RESOLUTION[0], min_y=0, max_y=Config.RESOLUTION[1])
     camera_processor = CameraSystem(camera_entity, entity_followed=player)
     combat_system = CombatSystem()
     world.add_processor(input_processor)
+    world.add_processor(animation_system)
     world.add_processor(combat_system)
     world.add_processor(movement_processor)
     world.add_processor(camera_processor)
