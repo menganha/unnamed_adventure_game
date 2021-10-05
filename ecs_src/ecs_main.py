@@ -23,8 +23,6 @@ def run():
     window = pygame.display.set_mode(Config.RESOLUTION, flags=pygame.SCALED)
     pygame.display.set_caption('Unnamed Adventure Game')
     clock = pygame.time.Clock()
-    c_blue = pygame.Color(50, 153, 213)
-    c_white = pygame.Color(255, 255, 255)
     c_green = pygame.Color(0, 255, 0)
     pygame.key.set_repeat(1, 1)
 
@@ -39,10 +37,12 @@ def run():
 
     # Define player entity
     player = world.create_entity()
-    player_surface = pygame.Surface((16, 16))
-    player_surface.fill(c_blue)
 
     def input_processing(controlled_entity: int):
+        """
+        Note: If moving in two directions at the same time, e.g., up and right, the renderable direction
+        attribute will always be the one in the vertical direction, i.e, up
+        """
         keyboard.process_input()
 
         if keyboard.is_key_released(pygame.K_UP) or keyboard.is_key_released(pygame.K_DOWN):
@@ -67,12 +67,26 @@ def run():
             world.component_for_entity(controlled_entity, MeleeWeapon).frame_counter = 0
 
     world.add_component(player, Velocity(x=0, y=0))
-    world.add_component(player, Position(x=20, y=20))
-    world.add_component(player, HitBox(20, 20, player_surface.get_width(), player_surface.get_height()))
+    world.add_component(player, Position(x=16, y=16))
     world.add_component(player, Input(input_processing))
-    world.add_component(player, Renderable(image=player_surface))
     world.add_component(player, Health())
     world.add_component(player, MeleeWeapon(offset=16))
+
+    # Player Animations
+    image_path = Path('assets', 'sprites', 'player', 'idle_up.png')
+    idle_up_animation = AnimationStripe(image_path, sprite_width=32, delay=15)
+    image_path = Path('assets', 'sprites', 'player', 'idle_down.png')
+    idle_down_animation = AnimationStripe(image_path, sprite_width=32, delay=15)
+    image_path = Path('assets', 'sprites', 'player', 'idle_left.png')
+    idle_left_animation = AnimationStripe(image_path, sprite_width=32, delay=15)
+
+    world.add_component(player, Renderable(image=idle_down_animation[0]))
+    world.add_component(player, Animation(idle_down=idle_down_animation,
+                                          idle_up=idle_up_animation,
+                                          idle_left=idle_left_animation))
+
+    world.add_component(player, HitBox(16, 16, idle_down_animation[0].get_width(),
+                                       idle_down_animation[0].get_height()))
 
     # Add map entity
     map_entity = world.create_entity()
@@ -93,14 +107,12 @@ def run():
     world.add_component(solid_tile, HitBox(40, 45, tile_surface.get_width(), tile_surface.get_height()))
 
     # Another motionless enemy entity:
-    enemy_surface = pygame.Surface((10, 10))
-    enemy_surface.fill(c_white)
     enemy = world.create_entity()
     enemy_idle_down_image_path = Path('assets', 'sprites', 'enemy', 'jelly_idle.png')
     enemy_idle_animation = AnimationStripe(enemy_idle_down_image_path, sprite_width=16, delay=15)
     world.add_component(enemy, Renderable(image=enemy_idle_animation[0]))
-    world.add_component(enemy, Position(x=400, y=100))
-    world.add_component(enemy, HitBox(400, 100, enemy_surface.get_width(), enemy_surface.get_height()))
+    world.add_component(enemy, Position(x=400, y=160))
+    world.add_component(enemy, HitBox(400, 160, 16, 16))
     world.add_component(enemy, Animation(enemy_idle_animation))
     world.add_component(enemy, Health())
 

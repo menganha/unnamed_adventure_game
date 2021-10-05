@@ -4,6 +4,10 @@ import esper
 from components import MeleeWeapon, Health, HitBox, Position, Renderable
 from direction import Direction
 
+"""
+BIG TODO:  We have to think how to decoouple the direction values from the renderable. It doesn't 
+smell good. Is it possible to take it away at all? we can derive it from the current velocity values isn't it?
+"""
 
 class CombatSystem(esper.Processor):
 

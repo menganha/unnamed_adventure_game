@@ -81,12 +81,27 @@ class Animation:
     """
     idle_down: AnimationStripe
     idle_up: AnimationStripe = None
-    idle_right: AnimationStripe = None
+    idle_left: AnimationStripe = None
+    idle_right: AnimationStripe = field(init=False)
 
     move_down: AnimationStripe = None
     move_up: AnimationStripe = None
-    move_right: AnimationStripe = None
+    move_left: AnimationStripe = None
+    move_right: AnimationStripe = field(init=False)
 
     attack_down: AnimationStripe = None
     attack_up: AnimationStripe = None
-    attack_right: AnimationStripe = None
+    attack_left: AnimationStripe = None
+    attack_right: AnimationStripe = field(init=False)
+
+    def __post_init__(self):
+        if self.idle_left:
+            self.idle_right = AnimationStripe.get_flipped_stripe(self.idle_left, flip_x=True, flip_y=False)
+        if self.move_left:
+            self.move_right = AnimationStripe.get_flipped_stripe(self.move_left, flip_x=True, flip_y=False)
+        if self.attack_left:
+            self.attack_right = AnimationStripe.get_flipped_stripe(self.attack_left, flip_x=True, flip_y=False)
+
+
+
+
