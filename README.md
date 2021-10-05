@@ -1,5 +1,15 @@
 # Unnamed Adventure Game
 
-Exercise to learn how to make a more advanced game (more complex than a simple snake clone) and additionaly to practice good coding standards.
+A simple top down adventure game demo.
 
 All assets in this game are open source.
+
+## How to run it
+
+Just run the `main.py` script from the main folder
+    `python main.py`
+
+## Requirements
+
+- Python > 3.6
+- PyGame

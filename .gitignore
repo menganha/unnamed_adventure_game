@@ -1,10 +1,7 @@
 .*
 !.gitignore
-*.zip
-gfx
 __pycache__
 tiled_maps
 *.ase
 *.aseprite
-profile.log
-analyse_profile.py
+TODO.md
