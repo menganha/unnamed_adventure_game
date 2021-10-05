@@ -28,8 +28,8 @@ class MovementSystem(esper.Processor):
                         if not test_rect.colliderect(rects[index]):
                             hitbox.rect = test_rect
                             break
-                pos.x = hitbox.rect.x
-                pos.y = hitbox.rect.y
+                pos.x = hitbox.rect.x - hitbox.x_offset
+                pos.y = hitbox.rect.y - hitbox.y_offset
             else:
                 pos.x += vel.x
                 pos.y += vel.y

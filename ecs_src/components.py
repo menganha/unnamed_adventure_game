@@ -40,6 +40,8 @@ class HitBox:
     y_pos: InitVar[int]
     width: InitVar[int]
     height: InitVar[int]
+    x_offset: int = 0
+    y_offset: int = 0
     rect: pygame.Rect = field(init=False)
 
     def __post_init__(self, x_pos: int, y_pos: int, width: int, height: int):
