@@ -18,8 +18,8 @@ class MovementSystem(esper.Processor):
 
             hitbox = self.world.try_component(ent, HitBox)
             if hitbox:
-                hitbox.rect.x = pos.x + vel.x
-                hitbox.rect.y = pos.y + vel.y
+                hitbox.rect.x = pos.x + vel.x + hitbox.x_offset
+                hitbox.rect.y = pos.y + vel.y + hitbox.y_offset
                 rects = [hb.rect for hb_ent, hb in self.world.get_component(HitBox) if hb_ent != ent]
                 index = hitbox.rect.collidelist(rects)
                 if index != -1:
@@ -30,8 +30,8 @@ class MovementSystem(esper.Processor):
                         if not test_rect.colliderect(rects[index]):
                             vel.x *= direction[1]
                             vel.y *= direction[0]
-                            hitbox.rect.x = pos.x + vel.x
-                            hitbox.rect.y = pos.y + vel.y
+                            hitbox.rect.x = pos.x + vel.x + hitbox.x_offset
+                            hitbox.rect.y = pos.y + vel.y + hitbox.y_offset
                             break
             pos.x += vel.x
             pos.y += vel.y
