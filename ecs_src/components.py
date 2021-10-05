@@ -76,8 +76,8 @@ class MeleeWeapon:
 @component
 class Animation:
     """
-    Needs at least to get one animation stripe (idle_down) if we add this component.
-    No need of "left" animation strip as one can mirror the "right" one
+    Needs at least to get one animation stripe (idle_down) to instantiate this component.
+    No need of "left" animation strip as we mirror the "right" one
     """
     idle_down: AnimationStripe
     idle_up: AnimationStripe = None
@@ -101,7 +101,3 @@ class Animation:
             self.move_right = AnimationStripe.get_flipped_stripe(self.move_left, flip_x=True, flip_y=False)
         if self.attack_left:
             self.attack_right = AnimationStripe.get_flipped_stripe(self.attack_left, flip_x=True, flip_y=False)
-
-
-
-

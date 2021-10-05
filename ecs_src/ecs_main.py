@@ -1,21 +1,21 @@
 import logging
+from pathlib import Path
 
 import pygame
 
 import esper
 import maps
-from pathlib import Path
-from camera_system import CameraSystem
-from components import Renderable, Position, Velocity, HitBox, Input, MeleeWeapon, Health, Animation
 from animation_stripe import AnimationStripe
+from animation_system import AnimationSystem
+from camera_system import CameraSystem
+from combat_system import CombatSystem
+from components import Renderable, Position, Velocity, HitBox, Input, MeleeWeapon, Health, Animation
 from config import Config
+from direction import Direction
 from input_system import InputSystem
 from keyboard import Keyboard
 from movement_system import MovementSystem
 from render_system import RenderSystem
-from combat_system import CombatSystem
-from animation_system import AnimationSystem
-from direction import Direction
 
 
 def run():
@@ -66,11 +66,14 @@ def run():
         if keyboard.is_key_pressed(pygame.K_SPACE):
             world.component_for_entity(controlled_entity, MeleeWeapon).frame_counter = 0
 
+        if keyboard.is_key_pressed(pygame.K_q):
+            Config.DEBUG_MODE = not Config.DEBUG_MODE
+
     world.add_component(player, Velocity(x=0, y=0))
     world.add_component(player, Position(x=16, y=16))
     world.add_component(player, Input(input_processing))
     world.add_component(player, Health())
-    world.add_component(player, MeleeWeapon(offset=16))
+    world.add_component(player, MeleeWeapon(range_front=8, offset=16))
 
     # Player Animations
     image_path = Path('assets', 'sprites', 'player', 'idle_up.png')
