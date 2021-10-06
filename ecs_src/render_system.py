@@ -1,7 +1,7 @@
 import pygame
 
 import esper
-from components import Renderable, Position, HitBox, MeleeWeapon
+from components import Renderable, Position, HitBox, MeleeWeapon, Health
 from config import Config as CFG
 
 
@@ -17,7 +17,12 @@ class RenderSystem(esper.Processor):
         camera_pos = self.world.component_for_entity(self.camera_entity, Position)
         for ent, (rend, pos) in sorted(self.world.get_components(Renderable, Position),
                                        key=lambda x: x[1][0].depth, reverse=True):
-            self.window.blit(rend.image, (pos.x + camera_pos.x, pos.y + camera_pos.y))
+            health = self.world.try_component(ent, Health)
+            if health and health.frame_counter > 0:
+                flags = pygame.BLEND_MULT
+            else:
+                flags = 0
+            self.window.blit(rend.image, (pos.x + camera_pos.x, pos.y + camera_pos.y), special_flags=flags)
 
         # On debug mode then render all hitboxes
         if CFG.DEBUG_MODE:

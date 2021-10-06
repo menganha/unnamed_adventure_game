@@ -35,6 +35,8 @@ class Position:
 @component
 class Health:
     points: int = 10
+    cooldown_frames: int = 20
+    frame_counter: int = field(init=False, default=0)
 
 
 @component

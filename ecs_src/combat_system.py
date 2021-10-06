@@ -24,11 +24,17 @@ class CombatSystem(esper.Processor):
             index = weapon_hitbox.collidelist([hb.rect for _, (hb, _) in components])
             if index != -1:
                 entity_hit, (_, health) = components[index]
-                health.points -= weapon.power
+                if health.frame_counter == 0:
+                    health.frame_counter = health.cooldown_frames
+                    health.points -= weapon.power
+                # health.frame_counter -= 1
                 if health.points == 0:
                     self.world.delete_entity(entity_hit)
-                continue
             weapon.frame_counter -= 1
+
+        for ent, (health) in self.world.get_component(Health):
+            if health.frame_counter > 0:
+                health.frame_counter -= 1
 
     @staticmethod
     def __get_weapon_hitbox(position: Position, renderable: Renderable, weapon: MeleeWeapon) -> pygame.Rect:
