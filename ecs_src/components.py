@@ -43,12 +43,12 @@ class HitBox:
     y_pos: InitVar[int]
     width: InitVar[int]
     height: InitVar[int]
-    x_offset: int = 0
-    y_offset: int = 0
+    scale_offset: int = 0
     rect: pygame.Rect = field(init=False)
 
     def __post_init__(self, x_pos: int, y_pos: int, width: int, height: int):
         self.rect = pygame.Rect(x_pos, y_pos, width, height)
+        self.rect.inflate_ip(self.scale_offset, self.scale_offset)
 
 
 @component
@@ -77,7 +77,7 @@ class MeleeWeapon:
 class Animation:
     """
     Needs at least to get one animation stripe (idle_down) to instantiate this component.
-    No need of "left" animation strip as we mirror the "right" one
+    No need of "left" animation stripe as we just flip the "right" one
     """
     idle_down: AnimationStripe
     idle_up: AnimationStripe = None

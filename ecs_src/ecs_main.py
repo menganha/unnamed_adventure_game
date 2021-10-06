@@ -70,26 +70,25 @@ def run():
             Config.DEBUG_MODE = not Config.DEBUG_MODE
 
     world.add_component(player, Velocity(x=0, y=0))
-    world.add_component(player, Position(x=16, y=16))
+    world.add_component(player, Position(x=100, y=100))
     world.add_component(player, Input(input_processing))
     world.add_component(player, Health())
     world.add_component(player, MeleeWeapon(range_front=8, offset=16))
 
     # Player Animations
-    image_path = Path('assets', 'sprites', 'player', 'idle_up.png')
-    idle_up_animation = AnimationStripe(image_path, sprite_width=32, delay=15)
-    image_path = Path('assets', 'sprites', 'player', 'idle_down.png')
-    idle_down_animation = AnimationStripe(image_path, sprite_width=32, delay=15)
-    image_path = Path('assets', 'sprites', 'player', 'idle_left.png')
-    idle_left_animation = AnimationStripe(image_path, sprite_width=32, delay=15)
+    kwargs = {}
+    for typ in ['idle', 'move']:
+        for direction in ['up', 'down', 'left']:
+            img_path = Path('assets', 'sprites', 'player', f'{typ}_{direction}.png')
+            kwargs.update({f'{typ}_{direction}': AnimationStripe(img_path, sprite_width=32, delay=15)})
 
-    world.add_component(player, Renderable(image=idle_down_animation[0]))
-    world.add_component(player, Animation(idle_down=idle_down_animation,
-                                          idle_up=idle_up_animation,
-                                          idle_left=idle_left_animation))
+    world.add_component(player, Renderable(image=kwargs['idle_down'][0]))
+    world.add_component(player, Animation(**kwargs))
 
-    world.add_component(player, HitBox(16, 16, idle_down_animation[0].get_width(),
-                                       idle_down_animation[0].get_height()))
+    sprite_width = kwargs['idle_down'][0].get_width()
+    sprite_height = kwargs['idle_down'][0].get_height()
+    scale_offset = - int(sprite_width * 0.50)
+    world.add_component(player, HitBox(3, 3, sprite_width, sprite_height, scale_offset))
 
     # Add map entity
     map_entity = world.create_entity()
