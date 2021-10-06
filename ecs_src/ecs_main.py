@@ -48,23 +48,24 @@ def run():
         if keyboard.is_key_released(pygame.K_UP) or keyboard.is_key_released(pygame.K_DOWN):
             world.component_for_entity(controlled_entity, Velocity).y = 0
         if keyboard.is_key_down(pygame.K_DOWN):
-            world.component_for_entity(controlled_entity, Velocity).y = 2
+            world.component_for_entity(controlled_entity, Velocity).y = 1
             world.component_for_entity(controlled_entity, Renderable).direction = Direction.SOUTH
         if keyboard.is_key_down(pygame.K_UP):
-            world.component_for_entity(controlled_entity, Velocity).y = -2
+            world.component_for_entity(controlled_entity, Velocity).y = -1
             world.component_for_entity(controlled_entity, Renderable).direction = Direction.NORTH
 
         if keyboard.is_key_released(pygame.K_LEFT) or keyboard.is_key_released(pygame.K_RIGHT):
             world.component_for_entity(controlled_entity, Velocity).x = 0
         if keyboard.is_key_down(pygame.K_LEFT):
-            world.component_for_entity(controlled_entity, Velocity).x = -2
+            world.component_for_entity(controlled_entity, Velocity).x = -1
             world.component_for_entity(controlled_entity, Renderable).direction = Direction.WEST
         if keyboard.is_key_down(pygame.K_RIGHT):
-            world.component_for_entity(controlled_entity, Velocity).x = +2
+            world.component_for_entity(controlled_entity, Velocity).x = +1
             world.component_for_entity(controlled_entity, Renderable).direction = Direction.EAST
 
         if keyboard.is_key_pressed(pygame.K_SPACE):
-            world.component_for_entity(controlled_entity, MeleeWeapon).frame_counter = 0
+            weapon = world.component_for_entity(controlled_entity, MeleeWeapon)
+            weapon.frame_counter = weapon.active_frames
 
         if keyboard.is_key_pressed(pygame.K_q):
             Config.DEBUG_MODE = not Config.DEBUG_MODE
@@ -73,14 +74,15 @@ def run():
     world.add_component(player, Position(x=100, y=100))
     world.add_component(player, Input(input_processing))
     world.add_component(player, Health())
-    world.add_component(player, MeleeWeapon(range_front=8, offset=16))
+    world.add_component(player, MeleeWeapon(range_front=8, range_side=16, offset=8))
 
     # Player Animations
     kwargs = {}
-    for typ in ['idle', 'move']:
+    for typ in ['idle', 'move', 'attack']:
         for direction in ['up', 'down', 'left']:
             img_path = Path('assets', 'sprites', 'player', f'{typ}_{direction}.png')
-            kwargs.update({f'{typ}_{direction}': AnimationStripe(img_path, sprite_width=32, delay=15)})
+            delay = 4 if typ == 'attack' else 7
+            kwargs.update({f'{typ}_{direction}': AnimationStripe(img_path, sprite_width=32, delay=delay)})
 
     world.add_component(player, Renderable(image=kwargs['idle_down'][0]))
     world.add_component(player, Animation(**kwargs))

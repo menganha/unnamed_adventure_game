@@ -44,8 +44,10 @@ class AnimationStripe:
 
     @classmethod
     def get_flipped_stripe(cls, animation_stripe: 'AnimationStripe', flip_x: bool, flip_y: bool):
-        return cls(animation_stripe.image_path,
-                   animation_stripe.sprite_width,
-                   animation_stripe.delay,
-                   flip_x,
-                   flip_y)
+        flipped_animation_stripe = cls(animation_stripe.image_path,
+                                       animation_stripe.sprite_width,
+                                       animation_stripe.delay,
+                                       flip_x,
+                                       flip_y)
+        flipped_animation_stripe.strip.reverse()  # reverse the animation order
+        return flipped_animation_stripe

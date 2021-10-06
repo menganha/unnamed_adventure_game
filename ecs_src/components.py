@@ -58,19 +58,18 @@ class Input:
 
 @component
 class MeleeWeapon:
-    range_front: InitVar[int] = 16
-    range_side: InitVar[int] = 16
+    range_front: InitVar[int]
+    range_side: InitVar[int]
     power: int = 5
     active_frames: int = 20
     offset: int = 0
     rect_h: pygame.Rect = field(init=False)  # Horizontal direction hitbox
     rect_v: pygame.Rect = field(init=False)  # Vertical direction hitbox
-    frame_counter: int = field(init=False)  # If frame_counter == active_frames, the weapon is on idle
+    frame_counter: int = field(init=False, default=0)  # If frame_counter == 0 the weapon is on idle
 
     def __post_init__(self, range_front: int, range_side: int):
         self.rect_h = pygame.Rect(0, 0, range_front, range_side)
         self.rect_v = pygame.Rect(0, 0, range_side, range_front)
-        self.frame_counter = self.active_frames
 
 
 @component

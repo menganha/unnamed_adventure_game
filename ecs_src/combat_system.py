@@ -9,12 +9,13 @@ BIG TODO:  We have to think how to decoouple the direction values from the rende
 smell good. Is it possible to take it away at all? we can derive it from the current velocity values isn't it?
 """
 
+
 class CombatSystem(esper.Processor):
 
     def process(self):
         for ent, (weapon, pos, rend) in self.world.get_components(MeleeWeapon, Position, Renderable):
             # TODO: Should all entities with a weapon have a renderable? how to impose this?
-            if weapon.frame_counter == weapon.active_frames:
+            if weapon.frame_counter == 0:
                 continue
 
             components = [(target_ent, tup) for (target_ent, tup) in self.world.get_components(HitBox, Health)
@@ -24,11 +25,10 @@ class CombatSystem(esper.Processor):
             if index != -1:
                 entity_hit, (_, health) = components[index]
                 health.points -= weapon.power
-                weapon.frame_counter = weapon.active_frames
                 if health.points == 0:
                     self.world.delete_entity(entity_hit)
                 continue
-            weapon.frame_counter += 1
+            weapon.frame_counter -= 1
 
     @staticmethod
     def __get_weapon_hitbox(position: Position, renderable: Renderable, weapon: MeleeWeapon) -> pygame.Rect:
