@@ -7,6 +7,7 @@ import esper
 import maps
 from animation_stripe import AnimationStripe
 from animation_system import AnimationSystem
+from physics_system import PhysicsSystem
 from camera_system import CameraSystem
 from combat_system import CombatSystem
 from components import Renderable, Position, Velocity, HitBox, Input, MeleeWeapon, Health, Animation
@@ -104,9 +105,9 @@ def run():
 
     # Add a solid tile
     solid_tile = world.create_entity()
-    tile_surface = pygame.Surface((30, 30))
+    tile_surface = pygame.Surface((32, 32))
     tile_surface.fill(c_green)
-    world.add_component(solid_tile, Position(x=40, y=45))
+    world.add_component(solid_tile, Position(x=48, y=48))
     world.add_component(solid_tile, Renderable(image=tile_surface))
     world.add_component(solid_tile, HitBox(40, 45, tile_surface.get_width(), tile_surface.get_height()))
 
@@ -128,10 +129,12 @@ def run():
     movement_processor = MovementSystem(min_x=0, max_x=Config.RESOLUTION[0], min_y=0, max_y=Config.RESOLUTION[1])
     camera_processor = CameraSystem(camera_entity, entity_followed=player)
     combat_system = CombatSystem()
+    physics_system = PhysicsSystem()
     world.add_processor(input_processor)
     world.add_processor(animation_system)
     world.add_processor(combat_system)
     world.add_processor(movement_processor)
+    world.add_processor(physics_system)
     world.add_processor(camera_processor)
     world.add_processor(render_processor)
 
