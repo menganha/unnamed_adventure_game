@@ -8,7 +8,7 @@ If you like to try the game just run
 
     python run_game.py
 
-on the main folder.
+from the main folder.
 
 ## Requirements
 
