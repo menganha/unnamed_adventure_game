@@ -1,15 +1,17 @@
 # Unnamed Adventure Game
 
-A simple top down adventure game demo.
+A zelda-like adventure game. 
 
-All assets in this game are open source.
+This is still a work in progress.
 
-## How to run it
+If you like to try the game just run
 
-Just run the `main.py` script from the main folder
-    `python main.py`
+    python run_game.py
+
+on the main folder.
 
 ## Requirements
 
-- Python > 3.6
-- PyGame
+* python >= 3.6
+* pygame
+* pyTMX
