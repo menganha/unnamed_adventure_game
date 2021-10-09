@@ -1,12 +1,7 @@
-.*
-!.gitignore
-*.zip
-gfx
+.venv
+.idea
 __pycache__
-tiled_maps
 *.ase
 *.aseprite
-profile.log
-analyse_profile.py
-*tmx
-*tsx
+*.tiled-project
+*.tiled-session

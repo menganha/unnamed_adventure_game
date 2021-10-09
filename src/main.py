@@ -94,7 +94,7 @@ def run():
 
     # Add map entity
     map_entity = world.create_entity()
-    map_surface = maps.create_map_image('ecs_data/overworld_map.tmx')
+    map_surface = maps.create_map_image('data/overworld_map.tmx')
     world.add_component(map_entity, Position(x=0, y=0))
     world.add_component(map_entity, Renderable(image=map_surface, depth=3))
 
@@ -143,8 +143,3 @@ def run():
 
         world.process()
         clock.tick(Config.FPS)
-
-
-if __name__ == "__main__":
-    run()
-    pygame.quit()
