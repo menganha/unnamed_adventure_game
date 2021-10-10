@@ -1,23 +1,20 @@
 import esper
-from components import Animation, Renderable, Velocity, MeleeWeapon
+import event_manager
+from components import Animation, Renderable, Velocity
 from direction import Direction
 
 
 class AnimationSystem(esper.Processor):
 
+    def __init__(self):
+        super().__init__()
+        self.is_attacking = False
+        event_manager.subscribe('attack', self.on_attack)
+
     def process(self):
         for ent, (anim, rend) in self.world.get_components(Animation, Renderable):
-            query = self.world.try_components(ent, Velocity, MeleeWeapon)
-            if query:
-                vel, wpn = query
-            else:
-                vel = wpn = None
 
-            if wpn and (wpn.frame_counter > 0):  # Check if it's attacking
-                attacking = True
-            else:
-                attacking = False
-
+            vel = self.world.try_component(ent, Velocity)
             if vel and (vel.x or vel.y):  # Check if its moving
                 moving = True
             else:
@@ -25,28 +22,28 @@ class AnimationSystem(esper.Processor):
 
             try:
                 if rend.direction == Direction.NORTH:
-                    if attacking:
+                    if self.is_attacking:
                         rend.image = anim.attack_up.next()
                     elif moving:
                         rend.image = anim.move_up.next()
                     else:
                         rend.image = anim.idle_up.next()
                 elif rend.direction == Direction.SOUTH:
-                    if attacking:
+                    if self.is_attacking:
                         rend.image = anim.attack_down.next()
                     elif moving:
                         rend.image = anim.move_down.next()
                     else:
                         rend.image = anim.idle_down.next()
                 elif rend.direction == Direction.WEST:
-                    if attacking:
+                    if self.is_attacking:
                         rend.image = anim.attack_left.next()
                     elif moving:
                         rend.image = anim.move_left.next()
                     else:
                         rend.image = anim.idle_left.next()
                 else:
-                    if attacking:
+                    if self.is_attacking:
                         rend.image = anim.attack_right.next()
                     elif moving:
                         rend.image = anim.move_right.next()
@@ -55,3 +52,6 @@ class AnimationSystem(esper.Processor):
 
             except AttributeError:  # When no other animation is available default to idle_down
                 rend.image = anim.idle_down.next()
+
+    def on_attack(self):
+        self.is_attacking = not self.is_attacking

@@ -1,6 +1,6 @@
 import esper
 import event_manager
-from components import Velocity, Position, HitBox
+from components import Velocity, Position, HitBox, Weapon
 
 # TODO: Consider joining velocity and position under the same component.
 
@@ -22,15 +22,21 @@ class MovementSystem(esper.Processor):
             pos.x += vel.x
             pos.y += vel.y
 
-            # # TODO: Fix condition. Still has some problems
+            #  TODO: Fix condition. Still has some problems
             # pos.x = max(self.min_x, pos.x)
             # pos.y = max(self.min_y, pos.y)
             # pos.x = min(self.max_x - hitbox.rect.w, pos.x)
             # pos.y = min(self.max_y - hitbox.rect.h, pos.y)
 
-    def handle_collision(self, ent_a: int, hitbox_a: HitBox, ent_b: int, hitbox_b: HitBox):
+    def handle_collision(self, ent_a: int, ent_b: int):
         """ Revert directions of collided objects """
 
+        # Do not handle Weapon collisions
+        if self.world.has_component(ent_a, Weapon) or self.world.has_component(ent_b, Weapon):
+            return
+
+        hitbox_a = self.world.component_for_entity(ent_a, HitBox)
+        hitbox_b = self.world.component_for_entity(ent_b, HitBox)
         if self.world.has_components(ent_a, Velocity):
             hb_object = hitbox_b
             hb_subject = hitbox_a

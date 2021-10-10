@@ -1,4 +1,3 @@
-import logging
 from pathlib import Path
 
 import pygame
@@ -7,31 +6,23 @@ import esper
 import maps
 from animation_stripe import AnimationStripe
 from animation_system import AnimationSystem
-from physics_system import PhysicsSystem
 from camera_system import CameraSystem
 from combat_system import CombatSystem
-from components import Renderable, Position, Velocity, HitBox, Input, MeleeWeapon, Health, Animation
+from components import Renderable, Position, Velocity, HitBox, Input, Health, Animation
 from config import Config
-from direction import Direction
 from input_system import InputSystem
-from keyboard import Keyboard
 from movement_system import MovementSystem
+from physics_system import PhysicsSystem
 from render_system import RenderSystem
 
 
 def run():
     pygame.init()
     window = pygame.display.set_mode(Config.RESOLUTION, flags=pygame.SCALED)
-    pygame.display.set_caption('Unnamed Adventure Game')
+    # pygame.display.set_caption('Unnamed Adventure Game')
     clock = pygame.time.Clock()
     c_green = pygame.Color(0, 255, 0)
     pygame.key.set_repeat(1, 1)
-
-    # Initialize Logging
-    logging.basicConfig(level=logging.INFO)
-
-    # initialize keyboard
-    keyboard = Keyboard()
 
     # Initialize Esper world, and create a "player" Entity with a few Components.
     world = esper.World()
@@ -39,43 +30,11 @@ def run():
     # Define player entity
     player = world.create_entity()
 
-    def input_processing(controlled_entity: int):
-        """
-        Note: If moving in two directions at the same time, e.g., up and right, the renderable direction
-        attribute will always be the one in the vertical direction, i.e, up
-        """
-        keyboard.process_input()
-
-        if keyboard.is_key_released(pygame.K_UP) or keyboard.is_key_released(pygame.K_DOWN):
-            world.component_for_entity(controlled_entity, Velocity).y = 0
-        if keyboard.is_key_down(pygame.K_DOWN):
-            world.component_for_entity(controlled_entity, Velocity).y = 1
-            world.component_for_entity(controlled_entity, Renderable).direction = Direction.SOUTH
-        if keyboard.is_key_down(pygame.K_UP):
-            world.component_for_entity(controlled_entity, Velocity).y = -1
-            world.component_for_entity(controlled_entity, Renderable).direction = Direction.NORTH
-
-        if keyboard.is_key_released(pygame.K_LEFT) or keyboard.is_key_released(pygame.K_RIGHT):
-            world.component_for_entity(controlled_entity, Velocity).x = 0
-        if keyboard.is_key_down(pygame.K_LEFT):
-            world.component_for_entity(controlled_entity, Velocity).x = -1
-            world.component_for_entity(controlled_entity, Renderable).direction = Direction.WEST
-        if keyboard.is_key_down(pygame.K_RIGHT):
-            world.component_for_entity(controlled_entity, Velocity).x = +1
-            world.component_for_entity(controlled_entity, Renderable).direction = Direction.EAST
-
-        if keyboard.is_key_pressed(pygame.K_SPACE):
-            weapon = world.component_for_entity(controlled_entity, MeleeWeapon)
-            weapon.frame_counter = weapon.active_frames
-
-        if keyboard.is_key_pressed(pygame.K_q):
-            Config.DEBUG_MODE = not Config.DEBUG_MODE
-
     world.add_component(player, Velocity(x=0, y=0))
-    world.add_component(player, Position(x=100, y=100))
-    world.add_component(player, Input(input_processing))
+    world.add_component(player, Position(x=350, y=160))
+    world.add_component(player, Input())
     world.add_component(player, Health())
-    world.add_component(player, MeleeWeapon(range_front=8, range_side=16, offset=8))
+    # world.add_component(player, MeleeWeapon(range_front=8, range_side=16, offset=8))
 
     # Player Animations
     kwargs = {}
@@ -123,13 +82,13 @@ def run():
 
     # Create some Processor instances, and assign them to be processed.
 
-    render_processor = RenderSystem(window=window, camera_entity=camera_entity)
     input_processor = InputSystem()
+    physics_system = PhysicsSystem()
+    render_processor = RenderSystem(window=window, camera_entity=camera_entity)
     animation_system = AnimationSystem()
     movement_processor = MovementSystem(min_x=0, max_x=Config.RESOLUTION[0], min_y=0, max_y=Config.RESOLUTION[1])
     camera_processor = CameraSystem(camera_entity, entity_followed=player)
-    combat_system = CombatSystem()
-    physics_system = PhysicsSystem()
+    combat_system = CombatSystem(player_entity=player)
     world.add_processor(input_processor)
     world.add_processor(animation_system)
     world.add_processor(combat_system)

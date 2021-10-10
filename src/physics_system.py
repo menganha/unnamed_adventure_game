@@ -18,6 +18,5 @@ class PhysicsSystem(esper.Processor):
                                 if ent != other_ent]
             index = hitbox.rect.collidelist([hb.rect for _, hb in other_components])
             if index != -1:
-                event_manager.post_event('collision',
-                                         ent, hitbox,
-                                         other_components[index][0], other_components[index][1])
+                other_ent = other_components[index][0]
+                event_manager.post_event('collision', ent, other_ent)

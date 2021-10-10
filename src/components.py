@@ -1,10 +1,10 @@
 from dataclasses import dataclass as component
 from dataclasses import field, InitVar
-from animation_stripe import AnimationStripe
-from typing import Callable
-from direction import Direction
 
 import pygame
+
+from animation_stripe import AnimationStripe
+from direction import Direction
 
 
 @component
@@ -35,7 +35,7 @@ class Position:
 @component
 class Health:
     points: int = 10
-    cooldown_frames: int = 20
+    cool_down_frames: int = 20
     frame_counter: int = field(init=False, default=0)
 
 
@@ -55,23 +55,23 @@ class HitBox:
 
 @component
 class Input:
-    process: Callable[[int], None]  # Function on entity
+    # if != 0 it will block any input from being registered
+    block_counter: int = field(init=False, default=0)
 
 
 @component
-class MeleeWeapon:
-    range_front: InitVar[int]
-    range_side: InitVar[int]
-    power: int = 5
-    active_frames: int = 20
-    offset: int = 0
-    rect_h: pygame.Rect = field(init=False)  # Horizontal direction hitbox
-    rect_v: pygame.Rect = field(init=False)  # Vertical direction hitbox
-    frame_counter: int = field(init=False, default=0)  # If frame_counter == 0 the weapon is on idle
+class Enemy:
+    """ Tags enemies an represent the value when hitting them """
+    damage: int = 5
 
-    def __post_init__(self, range_front: int, range_side: int):
-        self.rect_h = pygame.Rect(0, 0, range_front, range_side)
-        self.rect_v = pygame.Rect(0, 0, range_side, range_front)
+
+@component
+class Weapon:
+    range_front: int
+    range_side: int
+    offset: int
+    damage: int = 5
+    life_time: int = 20  # In frames. -1 means is infinite
 
 
 @component

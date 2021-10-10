@@ -1,7 +1,7 @@
 import pygame
 
 import esper
-from components import Renderable, Position, HitBox, MeleeWeapon, Health
+from components import Renderable, Position, HitBox, Health
 from config import Config as CFG
 
 
@@ -19,7 +19,7 @@ class RenderSystem(esper.Processor):
                                        key=lambda x: x[1][0].depth, reverse=True):
             health = self.world.try_component(ent, Health)
             if health and health.frame_counter > 0:
-                flags = pygame.BLEND_MULT
+                flags = pygame.BLEND_RGBA_ADD
             else:
                 flags = 0
             self.window.blit(rend.image, (pos.x + camera_pos.x, pos.y + camera_pos.y), special_flags=flags)
@@ -30,15 +30,5 @@ class RenderSystem(esper.Processor):
                 hb_surface = pygame.Surface((hitbox.rect.w, hitbox.rect.h), flags=pygame.SRCALPHA)
                 hb_surface.fill(CFG.C_GREEN)
                 self.window.blit(hb_surface, (hitbox.rect.x + camera_pos.x, hitbox.rect.y + camera_pos.y))
-
-                weapon = self.world.try_component(ent, MeleeWeapon)
-                if weapon:
-                    weapon_surface = pygame.Surface((weapon.rect_h.w, weapon.rect_h.h), flags=pygame.SRCALPHA)
-                    weapon_surface.fill(CFG.C_RED)
-                    self.window.blit(weapon_surface, (weapon.rect_h.x + camera_pos.x, weapon.rect_h.y + camera_pos.y))
-
-                    weapon_surface = pygame.Surface((weapon.rect_v.w, weapon.rect_v.h), flags=pygame.SRCALPHA)
-                    weapon_surface.fill(CFG.C_RED)
-                    self.window.blit(weapon_surface, (weapon.rect_v.x + camera_pos.x, weapon.rect_v.y + camera_pos.y))
 
         pygame.display.flip()
