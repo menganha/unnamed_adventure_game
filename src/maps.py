@@ -2,20 +2,26 @@
 Module to deal with map data
 """
 import pygame
-import pytmx
 from pytmx.util_pygame import load_pygame
 
+from components import HitBox, Position
 
-def create_map_image(map_file: str) -> pygame.Surface:
-    tmx_data = load_pygame(map_file)
 
-    map_surface = pygame.Surface((tmx_data.width * tmx_data.tilewidth, tmx_data.height * tmx_data.tileheight))
-    ti = tmx_data.get_tile_image_by_gid
-    for layer in tmx_data.visible_layers:
-        if isinstance(layer, pytmx.TiledTileLayer):
-            for x, y, gid, in layer:
-                tile = ti(gid)
-                if tile:
-                    map_surface.blit(tile, (x * tmx_data.tilewidth, y * tmx_data.tileheight))
+class Maps:
+    def __init__(self, map_file: str):
+        self.tmx_data = load_pygame(map_file)
 
-    return map_surface
+    def create_map_image(self) -> pygame.Surface:
+        map_surface = pygame.Surface(
+            (self.tmx_data.width * self.tmx_data.tilewidth, self.tmx_data.height * self.tmx_data.tileheight),
+            flags=pygame.SRCALPHA)
+        for layer_idx in self.tmx_data.visible_tile_layers:
+            for x, y, tile, in self.tmx_data.layers[layer_idx].tiles():
+                map_surface.blit(tile, (x * self.tmx_data.tilewidth, y * self.tmx_data.tileheight))
+
+        return map_surface
+
+    def create_solid_rectangles(self):
+        for group_idx in self.tmx_data.visible_object_groups:
+            for obj in self.tmx_data.layers[group_idx]:
+                yield Position(obj.x, obj.y), HitBox(obj.x, obj.y, obj.width, obj.height)

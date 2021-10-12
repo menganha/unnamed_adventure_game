@@ -8,6 +8,12 @@ from direction import Direction
 
 
 @component
+class Position:
+    x: int = 0
+    y: int = 0
+
+
+@component
 class Velocity:
     x: float = 0.0
     y: float = 0.0
@@ -24,12 +30,6 @@ class Renderable:
     def __post_init__(self):
         self.width = self.image.get_width()
         self.height = self.image.get_height()
-
-
-@component
-class Position:
-    x: int = 0
-    y: int = 0
 
 
 @component

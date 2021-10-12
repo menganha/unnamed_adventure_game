@@ -3,7 +3,6 @@ from pathlib import Path
 import pygame
 
 import esper
-import maps
 from animation_stripe import AnimationStripe
 from animation_system import AnimationSystem
 from camera_system import CameraSystem
@@ -11,6 +10,7 @@ from combat_system import CombatSystem
 from components import Renderable, Position, Velocity, HitBox, Input, Health, Animation
 from config import Config
 from input_system import InputSystem
+from maps import Maps
 from movement_system import MovementSystem
 from physics_system import PhysicsSystem
 from render_system import RenderSystem
@@ -21,7 +21,6 @@ def run():
     window = pygame.display.set_mode(Config.RESOLUTION, flags=pygame.SCALED)
     # pygame.display.set_caption('Unnamed Adventure Game')
     clock = pygame.time.Clock()
-    c_green = pygame.Color(0, 255, 0)
     pygame.key.set_repeat(1, 1)
 
     # Initialize Esper world, and create a "player" Entity with a few Components.
@@ -31,7 +30,7 @@ def run():
     player = world.create_entity()
 
     world.add_component(player, Velocity(x=0, y=0))
-    world.add_component(player, Position(x=350, y=160))
+    world.add_component(player, Position(x=350, y=370))
     world.add_component(player, Input())
     world.add_component(player, Health())
     # world.add_component(player, MeleeWeapon(range_front=8, range_side=16, offset=8))
@@ -54,28 +53,24 @@ def run():
 
     # Add map entity
     map_entity = world.create_entity()
-    map_surface = maps.create_map_image('data/overworld_map.tmx')
+    overworld_map = Maps('data/overworld_map.tmx')
+    map_surface = overworld_map.create_map_image()
     world.add_component(map_entity, Position(x=0, y=0))
     world.add_component(map_entity, Renderable(image=map_surface, depth=3))
+
+    for position, hitbox in overworld_map.create_solid_rectangles():
+        world.create_entity(position, hitbox)
 
     # Add camera entity
     camera_entity = world.create_entity()
     world.add_component(camera_entity, Position(x=0, y=0))
-
-    # Add a solid tile
-    solid_tile = world.create_entity()
-    tile_surface = pygame.Surface((32, 32))
-    tile_surface.fill(c_green)
-    world.add_component(solid_tile, Position(x=48, y=48))
-    world.add_component(solid_tile, Renderable(image=tile_surface))
-    world.add_component(solid_tile, HitBox(40, 45, tile_surface.get_width(), tile_surface.get_height()))
 
     # Another motionless enemy entity:
     enemy = world.create_entity()
     enemy_idle_down_image_path = Path('assets', 'sprites', 'enemy', 'jelly_idle.png')
     enemy_idle_animation = AnimationStripe(enemy_idle_down_image_path, sprite_width=16, delay=15)
     world.add_component(enemy, Renderable(image=enemy_idle_animation[0]))
-    world.add_component(enemy, Position(x=400, y=160))
+    world.add_component(enemy, Position(x=400, y=400))
     world.add_component(enemy, HitBox(400, 160, 16, 16))
     world.add_component(enemy, Animation(enemy_idle_animation))
     world.add_component(enemy, Health())
