@@ -10,4 +10,4 @@ class Config:
     DEBUG_MODE = False
     C_GREEN = pygame.Color(0, 255, 0, 70)
     C_RED = pygame.Color(200, 0, 0, 70)
-
+    C_BLUE = pygame.Color(0, 0, 255, 70)

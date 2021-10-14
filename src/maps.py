@@ -22,6 +22,5 @@ class Maps:
         return map_surface
 
     def create_solid_rectangles(self):
-        for group_idx in self.tmx_data.visible_object_groups:
-            for obj in self.tmx_data.layers[group_idx]:
-                yield Position(obj.x, obj.y), HitBox(obj.x, obj.y, obj.width, obj.height)
+        for obj in self.tmx_data.get_layer_by_name('solids'):
+            yield Position(obj.x, obj.y), HitBox(obj.x, obj.y, obj.width, obj.height)

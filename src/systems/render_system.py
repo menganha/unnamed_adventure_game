@@ -28,7 +28,7 @@ class RenderSystem(esper.Processor):
         if CFG.DEBUG_MODE:
             for ent, (hitbox) in self.world.get_component(HitBox):
                 hb_surface = pygame.Surface((hitbox.rect.w, hitbox.rect.h), flags=pygame.SRCALPHA)
-                hb_surface.fill(CFG.C_GREEN)
+                hb_surface.fill(CFG.C_BLUE)
                 self.window.blit(hb_surface, (hitbox.rect.x + camera_pos.x, hitbox.rect.y + camera_pos.y))
 
         pygame.display.flip()
