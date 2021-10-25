@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.5" tiledversion="1.7.2" orientation="orthogonal" renderorder="right-down" width="50" height="50" tilewidth="16" tileheight="16" infinite="0" nextlayerid="7" nextobjectid="20">
+<map version="1.5" tiledversion="1.7.2" orientation="orthogonal" renderorder="right-down" width="50" height="50" tilewidth="16" tileheight="16" infinite="0" nextlayerid="8" nextobjectid="21">
  <tileset firstgid="1" name="overworld" tilewidth="16" tileheight="16" tilecount="480" columns="32">
   <image source="../assets/sprites/map/overworld.png" width="512" height="240"/>
   <tile id="176">
@@ -116,7 +116,7 @@
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 </data>
  </layer>
- <objectgroup id="4" name="solids" tintcolor="#ff0627">
+ <objectgroup color="#00007f" id="4" name="solids" opacity="0.9">
   <object id="1" x="320" y="352" width="64" height="16"/>
   <object id="2" x="400" y="352" width="80" height="16"/>
   <object id="3" x="320" y="256" width="16" height="96"/>
@@ -133,8 +133,15 @@
   <object id="14" x="288" y="432" width="32" height="32"/>
   <object id="15" x="272" y="464" width="32" height="16"/>
  </objectgroup>
- <objectgroup id="5" name="interactives">
-  <object id="17" name="House" type="Door" x="384" y="352" width="16" height="16"/>
+ <objectgroup color="#ff55ff" id="5" name="interactives">
   <object id="19" name="enter warehouse" type="Sign" x="400" y="368" width="16" height="12"/>
+ </objectgroup>
+ <objectgroup color="#ffff00" id="7" name="doors">
+  <object id="20" name="HouseScene" x="384" y="352" width="16" height="16">
+   <properties>
+    <property name="dest_x" type="int" value="15"/>
+    <property name="dest_y" type="int" value="16"/>
+   </properties>
+  </object>
  </objectgroup>
 </map>

@@ -35,7 +35,6 @@ class CombatSystem(esper.Processor):
             1. Entity with Weapon component vs entity with Health
             2. Enemy entity vs player entity
         """
-
         for ent_attacking, ent_hit in permutations((ent_a, ent_b), 2):
             weapon = self.world.try_component(ent_attacking, Weapon)
             health = self.world.try_component(ent_hit, Health)

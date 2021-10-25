@@ -1,6 +1,6 @@
+import config as CFG
 import esper
 from components import Position, Renderable
-from config import Config
 
 
 class CameraSystem(esper.Processor):
@@ -28,8 +28,8 @@ class CameraSystem(esper.Processor):
                 self.ent_tracked_width = renderable.width
                 self.ent_tracked_height = renderable.height
 
-        camera_pos.x = - entity_followed_pos.x + int((Config.RESOLUTION[0] - self.ent_tracked_width)/2)
-        camera_pos.y = - entity_followed_pos.y + int((Config.RESOLUTION[1] - self.ent_tracked_height)/2)
+        camera_pos.x = - entity_followed_pos.x + int((CFG.RESOLUTION[0] - self.ent_tracked_width) / 2)
+        camera_pos.y = - entity_followed_pos.y + int((CFG.RESOLUTION[1] - self.ent_tracked_height) / 2)
 
         camera_pos.x = min(0, camera_pos.x)
         camera_pos.y = min(0, camera_pos.y)

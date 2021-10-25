@@ -1,12 +1,17 @@
+import components as cmp
 import esper
 import event_manager
-from components import Position, HitBox
+
+
+#
+# TODO: Big one: Loop only over components that have a velocity (non-static) Otherwise it is a waste of resources
+#
 
 
 class PhysicsSystem(esper.Processor):
 
     def process(self):
-        components = self.world.get_components(HitBox, Position)
+        components = self.world.get_components(cmp.HitBox, cmp.Position)
         # First update all hitbox rects to it's entity's position
         for ent, (hitbox, position) in components:
             hitbox.rect.x = position.x - int(hitbox.scale_offset / 2)

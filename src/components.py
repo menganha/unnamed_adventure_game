@@ -52,6 +52,11 @@ class HitBox:
         self.rect = pygame.Rect(x_pos, y_pos, width, height)
         self.rect.inflate_ip(self.scale_offset, self.scale_offset)
 
+    def position_of_unscaled_rect(self) -> (int, int):
+        x_pos = self.rect.x + int(self.scale_offset / 2)
+        y_pos = self.rect.y + int(self.scale_offset / 2)
+        return x_pos, y_pos
+
 
 @component
 class Input:
@@ -102,3 +107,10 @@ class Animation:
             self.move_right = AnimationStripe.get_flipped_stripe(self.move_left, flip_x=True, flip_y=False)
         if self.attack_left:
             self.attack_right = AnimationStripe.get_flipped_stripe(self.attack_left, flip_x=True, flip_y=False)
+
+
+@component
+class Door:
+    dest_scene: str
+    dest_x: int
+    dest_y: int

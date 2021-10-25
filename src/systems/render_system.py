@@ -1,8 +1,8 @@
 import pygame
 
+import config as CFG
 import esper
 from components import Renderable, Position, HitBox, Health
-from config import Config as CFG
 
 
 class RenderSystem(esper.Processor):

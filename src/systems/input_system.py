@@ -1,9 +1,9 @@
 import pygame
 
+import config as CFG
 import esper
 import event_manager
 from components import Input, Velocity, Renderable, HitBox, Position, Weapon
-from config import Config as CFG
 from direction import Direction
 from keyboard import Keyboard
 

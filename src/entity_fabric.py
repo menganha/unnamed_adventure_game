@@ -8,16 +8,11 @@ import esper
 from animation_stripe import AnimationStripe
 
 
-def create_player_at(x_pos: int, y_pos: int, world: esper.World) -> int:
-    """ Creates basic player at the given position"""
+def create_player_at(center_x_pos: int, center_y_pos: int, world: esper.World) -> int:
+    """ Creates the player entity centered at the given position"""
 
     player_entity = world.create_entity()
-    world.add_component(player_entity, cmp.Velocity(x=0, y=0))
-    world.add_component(player_entity, cmp.Position(x=x_pos, y=y_pos))
-    world.add_component(player_entity, cmp.Input())
-    world.add_component(player_entity, cmp.Health())
-
-    # Player Animations
+    # Animations
     kwargs = {}
     for typ in ['idle', 'move', 'attack']:
         for direction in ['up', 'down', 'left']:
@@ -28,11 +23,21 @@ def create_player_at(x_pos: int, y_pos: int, world: esper.World) -> int:
     world.add_component(player_entity, cmp.Renderable(image=kwargs['idle_down'][0]))
     world.add_component(player_entity, cmp.Animation(**kwargs))
 
-    # Player HitBox
+    # HitBox
     sprite_width = kwargs['idle_down'][0].get_width()
     sprite_height = kwargs['idle_down'][0].get_height()
     scale_offset = - int(sprite_width * 0.50)
-    world.add_component(player_entity, cmp.HitBox(x_pos, y_pos, sprite_width, sprite_height, scale_offset))
+    hitbox_component = cmp.HitBox(0, 0, sprite_width, sprite_height, scale_offset)
+    hitbox_component.rect.centerx = center_x_pos
+    hitbox_component.rect.centery = center_y_pos
+    world.add_component(player_entity, hitbox_component)
+
+    # Other components
+    x_pos, y_pos = hitbox_component.position_of_unscaled_rect()
+    world.add_component(player_entity, cmp.Position(x=x_pos, y=y_pos))
+    world.add_component(player_entity, cmp.Velocity(x=0, y=0))
+    world.add_component(player_entity, cmp.Input())
+    world.add_component(player_entity, cmp.Health())
 
     return player_entity
 

@@ -1,15 +1,14 @@
 import pygame
 
-from config import Config
+import config as cfg
 from scenes.overworld import OverWorldScene
-
-pygame.init()
-window = pygame.display.set_mode(Config.RESOLUTION, flags=pygame.SCALED, vsync=1)
 
 
 def run_game():
-    initial_scene = OverWorldScene(window)
-    current_scene = initial_scene
+    pygame.init()
+    window = pygame.display.set_mode(cfg.RESOLUTION, flags=pygame.SCALED, vsync=1)
+
+    current_scene = OverWorldScene(window, 24, 23)
     running = True
     while running:
         current_scene.on_enter()
@@ -18,3 +17,5 @@ def run_game():
         current_scene = current_scene.next_scene
         if not current_scene:
             running = False
+
+    pygame.quit()

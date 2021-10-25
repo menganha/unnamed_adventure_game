@@ -4,7 +4,7 @@ Module to deal with map data
 import pygame
 from pytmx.util_pygame import load_pygame
 
-from components import HitBox, Position
+import components as cmp
 
 
 class Maps:
@@ -23,4 +23,19 @@ class Maps:
 
     def create_solid_rectangles(self):
         for obj in self.tmx_data.get_layer_by_name('solids'):
-            yield Position(obj.x, obj.y), HitBox(obj.x, obj.y, obj.width, obj.height)
+            yield cmp.Position(obj.x, obj.y), cmp.HitBox(obj.x, obj.y, obj.width, obj.height)
+
+    def create_doors(self):
+        for obj in self.tmx_data.get_layer_by_name('doors'):
+            dest_x = obj.properties['dest_x']
+            dest_y = obj.properties['dest_y']
+            yield cmp.Door(obj.name, dest_x, dest_y), cmp.HitBox(obj.x, obj.y, obj.width, obj.height)
+
+    def get_center_coord_from_tile(self, tile_x_pos: int, tile_y_pos: int) -> (int, int):
+        """
+        Get tile center absolute coordinates from the position in "tile" coordinates, i.e. the one independent from
+        the tile size
+        """
+        center_x = tile_x_pos * self.tmx_data.tilewidth + int(self.tmx_data.tilewidth / 2)
+        center_y = tile_y_pos * self.tmx_data.tilewidth + int(self.tmx_data.tileheight / 2)
+        return center_x, center_y
