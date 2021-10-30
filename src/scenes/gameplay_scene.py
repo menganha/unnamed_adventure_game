@@ -4,6 +4,7 @@ import components as cmp
 import config as cfg
 import entity_fabric as fabric
 import systems as sys
+from component_utils import position_of_unscaled_rect
 from maps import Maps
 from scenes import BaseScene
 
@@ -22,8 +23,8 @@ class GameplayScene(BaseScene):
         map_surface = overworld_map.create_map_image()
         self.world.add_component(map_entity, cmp.Position(x=0, y=0))
         self.world.add_component(map_entity, cmp.Renderable(image=map_surface, depth=3))
-        for position, hitbox in overworld_map.create_solid_rectangles():
-            self.world.create_entity(position, hitbox)
+        for position, hitbox, wall_tag in overworld_map.create_solid_rectangles():
+            self.world.create_entity(position, hitbox, wall_tag)
         for door, hitbox in overworld_map.create_doors():
             self.world.create_entity(door, hitbox)
 
@@ -39,7 +40,7 @@ class GameplayScene(BaseScene):
             hitbox = self.world.component_for_entity(self.player_entity, cmp.HitBox)
             velocity.x, velocity.y = (0, 0)
             hitbox.rect.center = (player_x_pos, player_y_pos)
-            position.x, position.y = hitbox.position_of_unscaled_rect()
+            position.x, position.y = position_of_unscaled_rect(hitbox)
 
         # Add camera entity
         camera_entity = self.world.create_entity()
@@ -50,7 +51,7 @@ class GameplayScene(BaseScene):
 
         # Create some Processor instances, and assign them to be processed.
         input_processor = sys.InputSystem()
-        physics_system = sys.PhysicsSystem()
+        physics_system = sys.CollisionWithSolidsSystem()
         render_processor = sys.RenderSystem(window=self.window, camera_entity=camera_entity)
         animation_system = sys.AnimationSystem()
         transition_system = sys.TransitionSystem(self.player_entity, self)

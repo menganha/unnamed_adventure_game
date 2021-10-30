@@ -33,10 +33,16 @@ class Renderable:
 
 
 @component
+class WallTag:
+    """ Tag to keep track of collidable walls"""
+    pass
+
+
+@component
 class Health:
     points: int = 10
     cool_down_frames: int = 20
-    frame_counter: int = field(init=False, default=0)
+    cool_down_counter: int = field(init=False, default=0)
 
 
 @component
@@ -52,11 +58,6 @@ class HitBox:
         self.rect = pygame.Rect(x_pos, y_pos, width, height)
         self.rect.inflate_ip(self.scale_offset, self.scale_offset)
 
-    def position_of_unscaled_rect(self) -> (int, int):
-        x_pos = self.rect.x + int(self.scale_offset / 2)
-        y_pos = self.rect.y + int(self.scale_offset / 2)
-        return x_pos, y_pos
-
 
 @component
 class Input:
@@ -65,18 +66,15 @@ class Input:
 
 
 @component
-class Enemy:
-    """ Tags enemies an represent the value when hitting them """
-    damage: int = 5
+class EnemyTag:
+    """ Tags enemies and represent the value when colliding with them """
+    pass
 
 
 @component
 class Weapon:
-    range_front: int
-    range_side: int
-    offset: int
     damage: int = 5
-    life_time: int = 20  # In frames. -1 means is infinite
+    active_frames: int = 20  # -1 means is infinite
 
 
 @component

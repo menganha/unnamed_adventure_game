@@ -23,7 +23,7 @@ class Maps:
 
     def create_solid_rectangles(self):
         for obj in self.tmx_data.get_layer_by_name('solids'):
-            yield cmp.Position(obj.x, obj.y), cmp.HitBox(obj.x, obj.y, obj.width, obj.height)
+            yield cmp.Position(obj.x, obj.y), cmp.HitBox(obj.x, obj.y, obj.width, obj.height), cmp.WallTag()
 
     def create_doors(self):
         for obj in self.tmx_data.get_layer_by_name('doors'):

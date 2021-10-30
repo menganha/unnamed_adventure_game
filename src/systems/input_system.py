@@ -1,6 +1,7 @@
 import pygame
 
 import config as CFG
+import config as cfg
 import esper
 import event_manager
 from components import Input, Velocity, Renderable, HitBox, Position, Weapon
@@ -47,23 +48,28 @@ class InputSystem(esper.Processor):
             self.world.component_for_entity(entity, Renderable).direction = Direction.EAST
 
         if self.keyboard.is_key_pressed(pygame.K_SPACE):
-            """ Creates a temporary hitbox representing the weapon """
-            player_sprite = self.world.component_for_entity(entity, Renderable)
-            player_hb = self.world.component_for_entity(entity, HitBox)
-            weapon = Weapon(range_front=5, range_side=20, offset=player_hb.rect.w, life_time=20)
-            if player_sprite.direction in (Direction.WEST, Direction.EAST):
-                hitbox = HitBox(0, 0, weapon.range_front, weapon.range_side)
-            else:
-                hitbox = HitBox(0, 0, weapon.range_side, weapon.range_front)
-            hitbox.rect.centerx = player_hb.rect.centerx + \
-                                  int((weapon.offset + weapon.range_front) * player_sprite.direction.value.x) / 2
-            hitbox.rect.centery = player_hb.rect.centery + \
-                                  int((weapon.offset + weapon.range_front) * player_sprite.direction.value.y) / 2
-            position = Position(hitbox.rect.x, hitbox.rect.y)
-            self.world.create_entity(position, hitbox, weapon)
-            inp.block_counter = weapon.life_time
+            # Stop player when is attacking
             self.world.component_for_entity(entity, Velocity).x = 0
             self.world.component_for_entity(entity, Velocity).y = 0
+
+            # Creates a temporary hitbox representing the sword weapon
+            player_sprite = self.world.component_for_entity(entity, Renderable)
+            player_hb = self.world.component_for_entity(entity, HitBox)
+
+            weapon = Weapon(damage=cfg.SWORD_DAMAGE, active_frames=cfg.SWORD_ACTIVE_FRAMES)
+            if player_sprite.direction in (Direction.WEST, Direction.EAST):
+                hitbox = HitBox(0, 0, cfg.SWORD_FRONT_RANGE, cfg.SWORD_SIDE_RANGE)
+            else:
+                hitbox = HitBox(0, 0, cfg.SWORD_SIDE_RANGE, cfg.SWORD_FRONT_RANGE)
+            hitbox.rect.centerx = player_hb.rect.centerx + int((player_hb.rect.w + cfg.SWORD_FRONT_RANGE)
+                                                               * player_sprite.direction.value.x) / 2
+            hitbox.rect.centery = player_hb.rect.centery + int((player_hb.rect.h + cfg.SWORD_FRONT_RANGE)
+                                                               * player_sprite.direction.value.y) / 2
+            position = Position(hitbox.rect.x, hitbox.rect.y)
+            self.world.create_entity(position, hitbox, weapon)
+
+            # Block input until weapon life time is over and publish attach event
+            inp.block_counter = weapon.active_frames
             event_manager.post_event('attack')
 
         if self.keyboard.is_key_pressed(pygame.K_q):

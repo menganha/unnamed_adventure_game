@@ -18,7 +18,7 @@ class RenderSystem(esper.Processor):
         for ent, (rend, pos) in sorted(self.world.get_components(Renderable, Position),
                                        key=lambda x: x[1][0].depth, reverse=True):
             health = self.world.try_component(ent, Health)
-            if health and health.frame_counter > 0:
+            if health and health.cool_down_counter > 0:
                 flags = pygame.BLEND_RGBA_ADD
             else:
                 flags = 0
