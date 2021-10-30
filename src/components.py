@@ -22,7 +22,7 @@ class Velocity:
 @component
 class Renderable:
     image: pygame.Surface
-    depth: int = 0
+    depth: int = 100
     width: int = field(init=False)
     height: int = field(init=False)
     direction: Direction = Direction.SOUTH

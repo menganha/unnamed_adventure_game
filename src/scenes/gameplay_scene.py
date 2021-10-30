@@ -18,11 +18,13 @@ class GameplayScene(BaseScene):
 
     def on_enter(self):
         # Add map entity
-        map_entity = self.world.create_entity()
         overworld_map = Maps(self.map_data_file)
-        map_surface = overworld_map.create_map_image()
-        self.world.add_component(map_entity, cmp.Position(x=0, y=0))
-        self.world.add_component(map_entity, cmp.Renderable(image=map_surface, depth=3))
+        for idx, map_layer in enumerate(overworld_map.create_map_image()):
+            layer_entity = self.world.create_entity()
+            self.world.add_component(layer_entity, cmp.Position(x=0, y=0))
+            depth = 1000 * (idx - 1)
+            self.world.add_component(layer_entity, cmp.Renderable(image=map_layer, depth=depth))
+
         for position, hitbox, wall_tag in overworld_map.create_solid_rectangles():
             self.world.create_entity(position, hitbox, wall_tag)
         for door, hitbox in overworld_map.create_doors():
