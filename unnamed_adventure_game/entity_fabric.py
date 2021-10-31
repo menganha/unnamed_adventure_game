@@ -3,10 +3,11 @@ The module gathers functions that add commonly used entities to an input world
 """
 from pathlib import Path
 
-import components as cmp
 import esper
-from animation_stripe import AnimationStripe
-from component_utils import position_of_unscaled_rect
+
+import unnamed_adventure_game.components as cmp
+from unnamed_adventure_game.animation_stripe import AnimationStripe
+from unnamed_adventure_game.component_utils import position_of_unscaled_rect
 
 
 def create_player_at(center_x_pos: int, center_y_pos: int, world: esper.World) -> int:

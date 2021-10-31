@@ -1,5 +1,6 @@
 import esper
-from components import Velocity, Position
+
+from unnamed_adventure_game.components import Velocity, Position
 
 
 class MovementSystem(esper.Processor):

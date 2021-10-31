@@ -3,8 +3,8 @@ from dataclasses import field, InitVar
 
 import pygame
 
-from animation_stripe import AnimationStripe
-from direction import Direction
+from unnamed_adventure_game.animation_stripe import AnimationStripe
+from unnamed_adventure_game.direction import Direction
 
 
 @component

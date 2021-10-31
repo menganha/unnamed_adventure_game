@@ -1,13 +1,15 @@
 import logging
 
-import components as cmp
 import esper
-import event_manager
+
+import unnamed_adventure_game.components as cmp
+from unnamed_adventure_game import event_manager
 
 """
 BIG TODO:  We have to think how to decouple the direction values from the renderable. It doesn't 
 smell good. Is it possible to take it away at all? we can derive it from the current velocity values isn't it?
 """
+
 
 class CombatSystem(esper.Processor):
 
@@ -25,7 +27,8 @@ class CombatSystem(esper.Processor):
                                                                                                   cmp.EnemyTag)):
                     continue
                 if hitbox.rect.colliderect(victim_hitbox.rect):
-                    if health.cool_down_counter == 0:  # and weapon.life_time > 0:
+                    if health.cool_down_counter == 0:
+                        # Needs to stop control of the player/enemy and push it with some velocity. Probably changing the animation as well.
                         health.cool_down_counter = health.cool_down_frames
                         health.points -= weapon.damage
                         logging.info(

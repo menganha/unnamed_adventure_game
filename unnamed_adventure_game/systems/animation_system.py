@@ -1,7 +1,8 @@
 import esper
-import event_manager
-from components import Animation, Renderable, Velocity
-from direction import Direction
+
+from unnamed_adventure_game import event_manager
+from unnamed_adventure_game.components import Animation, Renderable, Velocity
+from unnamed_adventure_game.direction import Direction
 
 
 class AnimationSystem(esper.Processor):

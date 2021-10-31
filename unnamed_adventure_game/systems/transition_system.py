@@ -1,13 +1,13 @@
-import components as cmp
 import esper
-import scenes
-from scenes.base_scene import BaseScene
+
+import unnamed_adventure_game.components as cmp
+from unnamed_adventure_game import scenes
 
 
 class TransitionSystem(esper.Processor):
     TRANSITION_AREA_PERCENTAGE = 0.7
 
-    def __init__(self, player_entity: int, current_scene: BaseScene):
+    def __init__(self, player_entity: int, current_scene: scenes.BaseScene):
         super().__init__()
         self.player_entity = player_entity
         self.current_scene = current_scene

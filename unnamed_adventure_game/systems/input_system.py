@@ -1,12 +1,11 @@
+import esper
 import pygame
 
-import config as CFG
-import config as cfg
-import esper
-import event_manager
-from components import Input, Velocity, Renderable, HitBox, Position, Weapon
-from direction import Direction
-from keyboard import Keyboard
+import unnamed_adventure_game.config as cfg
+from unnamed_adventure_game import event_manager
+from unnamed_adventure_game.components import Input, Velocity, Renderable, HitBox, Position, Weapon
+from unnamed_adventure_game.direction import Direction
+from unnamed_adventure_game.keyboard import Keyboard
 
 
 class InputSystem(esper.Processor):

@@ -1,5 +1,5 @@
 """ Helper functions on components """
-import components as cmp
+import unnamed_adventure_game.components as cmp
 
 
 def position_of_unscaled_rect(hitbox: cmp.HitBox) -> (int, int):

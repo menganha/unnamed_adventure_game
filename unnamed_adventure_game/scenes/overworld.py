@@ -1,4 +1,4 @@
-from scenes import GameplayScene
+from unnamed_adventure_game.scenes import GameplayScene
 
 
 class OverWorldScene(GameplayScene):

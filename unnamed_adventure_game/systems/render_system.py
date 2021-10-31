@@ -1,8 +1,8 @@
+import esper
 import pygame
 
-import config as CFG
-import esper
-from components import Renderable, Position, HitBox, Health
+import unnamed_adventure_game.config as cfg
+from unnamed_adventure_game.components import Renderable, Position, HitBox, Health
 
 
 class RenderSystem(esper.Processor):
@@ -24,11 +24,10 @@ class RenderSystem(esper.Processor):
                 flags = 0
             self.window.blit(rend.image, (pos.x + camera_pos.x, pos.y + camera_pos.y), special_flags=flags)
 
-        # On debug mode then render all hitboxes
-        if CFG.DEBUG_MODE:
+        if cfg.DEBUG_MODE:  # On debug mode then render all hitboxes
             for ent, (hitbox) in self.world.get_component(HitBox):
                 hb_surface = pygame.Surface((hitbox.rect.w, hitbox.rect.h), flags=pygame.SRCALPHA)
-                hb_surface.fill(CFG.C_BLUE)
+                hb_surface.fill(cfg.C_BLUE)
                 self.window.blit(hb_surface, (hitbox.rect.x + camera_pos.x, hitbox.rect.y + camera_pos.y))
 
         pygame.display.flip()

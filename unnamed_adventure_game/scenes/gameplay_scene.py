@@ -1,12 +1,12 @@
 from abc import abstractmethod
 
-import components as cmp
-import config as cfg
-import entity_fabric as fabric
-import systems as sys
-from component_utils import position_of_unscaled_rect
-from maps import Maps
-from scenes import BaseScene
+import unnamed_adventure_game.components as cmp
+import unnamed_adventure_game.config as cfg
+import unnamed_adventure_game.entity_fabric as fabric
+import unnamed_adventure_game.systems as sys
+from unnamed_adventure_game.component_utils import position_of_unscaled_rect
+from unnamed_adventure_game.maps import Maps
+from unnamed_adventure_game.scenes import BaseScene
 
 
 class GameplayScene(BaseScene):

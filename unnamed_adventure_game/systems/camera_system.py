@@ -1,12 +1,14 @@
-import config as CFG
 import esper
-from components import Position, Renderable
+
+import unnamed_adventure_game.config as cfg
+from unnamed_adventure_game.components import Position, Renderable
 
 
 class CameraSystem(esper.Processor):
     """
     Updates the camera entity to center around the input entity position
     """
+
     def __init__(self, camera_entity: int, entity_followed: int):
         super().__init__()
         self.camera_entity = camera_entity
@@ -28,8 +30,8 @@ class CameraSystem(esper.Processor):
                 self.ent_tracked_width = renderable.width
                 self.ent_tracked_height = renderable.height
 
-        camera_pos.x = - entity_followed_pos.x + int((CFG.RESOLUTION[0] - self.ent_tracked_width) / 2)
-        camera_pos.y = - entity_followed_pos.y + int((CFG.RESOLUTION[1] - self.ent_tracked_height) / 2)
+        camera_pos.x = - entity_followed_pos.x + int((cfg.RESOLUTION[0] - self.ent_tracked_width) / 2)
+        camera_pos.y = - entity_followed_pos.y + int((cfg.RESOLUTION[1] - self.ent_tracked_height) / 2)
 
         camera_pos.x = min(0, camera_pos.x)
         camera_pos.y = min(0, camera_pos.y)

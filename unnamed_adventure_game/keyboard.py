@@ -2,7 +2,7 @@ import pygame
 
 
 class Keyboard:
-    """ Represents the keyboard state"""
+    """ Represents the keyboard state """
 
     def __init__(self):
         self.currentKeyStates = None

@@ -1,5 +1,6 @@
-import components as cmp
 import esper
+
+import unnamed_adventure_game.components as cmp
 
 
 class CollisionWithSolidsSystem(esper.Processor):

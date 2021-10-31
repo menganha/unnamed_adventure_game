@@ -1,10 +1,10 @@
 import abc
 from typing import Any, List
 
+import esper
 import pygame
 
-import esper
-import event_manager
+from unnamed_adventure_game import event_manager
 
 
 class BaseScene(abc.ABC):

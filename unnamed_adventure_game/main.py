@@ -2,8 +2,8 @@ import logging
 
 import pygame
 
-import config as cfg
-from scenes.overworld import OverWorldScene
+import unnamed_adventure_game.config as cfg
+from unnamed_adventure_game.scenes import OverWorldScene
 
 
 def run_game():
