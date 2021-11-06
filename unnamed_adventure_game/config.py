@@ -4,6 +4,7 @@ Stores all the game globals
 import pygame
 
 FPS = 60
+SQRT2 = 1.41421356
 RESOLUTION = 256, 224
 DEBUG_MODE = False
 C_GREEN = pygame.Color(0, 255, 0, 70)

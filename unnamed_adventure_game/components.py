@@ -1,10 +1,11 @@
 from dataclasses import dataclass as component
 from dataclasses import field, InitVar
+from typing import Dict
 
 import pygame
 
 from unnamed_adventure_game.animation_stripe import AnimationStripe
-from unnamed_adventure_game.direction import Direction
+from unnamed_adventure_game.utils.game import Direction, Status
 
 
 @component
@@ -20,12 +21,18 @@ class Velocity:
 
 
 @component
+class State:
+    """ State of being (usually a "moving" entity) used in different systems """
+    direction: Direction = Direction.SOUTH
+    status: Status = Status.IDLE
+
+
+@component
 class Renderable:
     image: pygame.Surface
     depth: int = 100
     width: int = field(init=False)
     height: int = field(init=False)
-    direction: Direction = Direction.SOUTH
 
     def __post_init__(self):
         self.width = self.image.get_width()
@@ -41,7 +48,7 @@ class WallTag:
 @component
 class Health:
     points: int = 10
-    cool_down_frames: int = 20
+    cool_down_frames: int = 20  # frame of invincibility
     cool_down_counter: int = field(init=False, default=0)
 
 
@@ -61,7 +68,6 @@ class HitBox:
 
 @component
 class Input:
-    # if != 0 it will block any input from being registered
     block_counter: int = field(init=False, default=0)
 
 
@@ -75,6 +81,8 @@ class EnemyTag:
 class Weapon:
     damage: int = 5
     active_frames: int = 20  # -1 means is infinite
+    freeze_frames: int = 0  # frames of input blocked when hit
+    recoil_velocity: int = 0  # frames of input blocked when hit
 
 
 @component
@@ -83,28 +91,41 @@ class Animation:
     Needs at least to get one animation stripe (idle_down) to instantiate this component.
     No need of "left" animation stripe as we just flip the "right" one
     """
-    idle_down: AnimationStripe
-    idle_up: AnimationStripe = None
-    idle_left: AnimationStripe = None
-    idle_right: AnimationStripe = field(init=False)
+    strips: Dict[Status, Dict[Direction, AnimationStripe]] = field(init=False)
 
-    move_down: AnimationStripe = None
-    move_up: AnimationStripe = None
-    move_left: AnimationStripe = None
-    move_right: AnimationStripe = field(init=False)
+    idle_down: InitVar[AnimationStripe]
+    idle_up: InitVar[AnimationStripe] = None
+    idle_left: InitVar[AnimationStripe] = None
 
-    attack_down: AnimationStripe = None
-    attack_up: AnimationStripe = None
-    attack_left: AnimationStripe = None
-    attack_right: AnimationStripe = field(init=False)
+    move_down: InitVar[AnimationStripe] = None
+    move_up: InitVar[AnimationStripe] = None
+    move_left: InitVar[AnimationStripe] = None
 
-    def __post_init__(self):
-        if self.idle_left:
-            self.idle_right = AnimationStripe.get_flipped_stripe(self.idle_left, flip_x=True, flip_y=False)
-        if self.move_left:
-            self.move_right = AnimationStripe.get_flipped_stripe(self.move_left, flip_x=True, flip_y=False)
-        if self.attack_left:
-            self.attack_right = AnimationStripe.get_flipped_stripe(self.attack_left, flip_x=True, flip_y=False)
+    attack_down: InitVar[AnimationStripe] = None
+    attack_up: InitVar[AnimationStripe] = None
+    attack_left: InitVar[AnimationStripe] = None
+
+    def __post_init__(self,
+                      idle_down: AnimationStripe, idle_up: AnimationStripe, idle_left: AnimationStripe,
+                      move_down: AnimationStripe, move_up: AnimationStripe, move_left: AnimationStripe,
+                      attack_down: AnimationStripe, attack_up: AnimationStripe, attack_left: AnimationStripe):
+
+        idle_right = move_right = attack_right = None
+        if idle_left:
+            idle_right = AnimationStripe.get_flipped_stripe(idle_left, flip_x=True, flip_y=False)
+        if move_left:
+            move_right = AnimationStripe.get_flipped_stripe(move_left, flip_x=True, flip_y=False)
+        if attack_left:
+            attack_right = AnimationStripe.get_flipped_stripe(attack_left, flip_x=True, flip_y=False)
+
+        self.strips = {
+            Status.IDLE: {Direction.NORTH: idle_up, Direction.WEST: idle_left,
+                          Direction.SOUTH: idle_down, Direction.EAST: idle_right},
+            Status.MOVING: {Direction.NORTH: move_up, Direction.WEST: move_left,
+                            Direction.SOUTH: move_down, Direction.EAST: move_right},
+            Status.ATTACKING: {Direction.NORTH: attack_up, Direction.WEST: attack_left,
+                               Direction.SOUTH: attack_down, Direction.EAST: attack_right}
+        }
 
 
 @component

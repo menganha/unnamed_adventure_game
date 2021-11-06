@@ -1,11 +1,11 @@
 import esper
 import pygame
 
+import unnamed_adventure_game.components as cmp
 import unnamed_adventure_game.config as cfg
-from unnamed_adventure_game import event_manager
-from unnamed_adventure_game.components import Input, Velocity, Renderable, HitBox, Position, Weapon
-from unnamed_adventure_game.direction import Direction
+from unnamed_adventure_game.entity_fabric import create_melee_weapon
 from unnamed_adventure_game.keyboard import Keyboard
+from unnamed_adventure_game.utils.game import Direction, Status
 
 
 class InputSystem(esper.Processor):
@@ -15,61 +15,62 @@ class InputSystem(esper.Processor):
         self.keyboard = Keyboard()
 
     def process(self):
-        for ent, (inp) in self.world.get_component(Input):
-            if inp.block_counter != 0:
-                inp.block_counter -= 1
+        for ent, (input_) in self.world.get_component(cmp.Input):
+            if input_.block_counter != 0:
+                input_.block_counter -= 1
                 return
-            self.input_processing(ent, inp)
+            self.input_processing(ent, input_)
 
-    def input_processing(self, entity: str, inp: Input):
+    def input_processing(self, entity: str, input_: cmp.Input):
         """
         Note: If moving in two directions at the same time, e.g., up and right, the renderable direction
         attribute will always be the one in the vertical direction, i.e, up
         """
         self.keyboard.process_input()
 
+        state = self.world.component_for_entity(entity, cmp.State)
+        velocity = self.world.component_for_entity(entity, cmp.Velocity)
+        velocity.x, velocity.y = 0, 0
+
         if self.keyboard.is_key_released(pygame.K_UP) or self.keyboard.is_key_released(pygame.K_DOWN):
-            self.world.component_for_entity(entity, Velocity).y = 0
+            velocity.y = 0
+            state.status = Status.IDLE
         if self.keyboard.is_key_down(pygame.K_DOWN):
-            self.world.component_for_entity(entity, Velocity).y = 1
-            self.world.component_for_entity(entity, Renderable).direction = Direction.SOUTH
+            velocity.y = 1
+            state.status = Status.MOVING
+            state.direction = Direction.SOUTH
         if self.keyboard.is_key_down(pygame.K_UP):
-            self.world.component_for_entity(entity, Velocity).y = -1
-            self.world.component_for_entity(entity, Renderable).direction = Direction.NORTH
+            velocity.y = -1
+            state.status = Status.MOVING
+            state.direction = Direction.NORTH
 
         if self.keyboard.is_key_released(pygame.K_LEFT) or self.keyboard.is_key_released(pygame.K_RIGHT):
-            self.world.component_for_entity(entity, Velocity).x = 0
+            self.world.component_for_entity(entity, cmp.Velocity).x = 0
+            velocity.x = 0
+            state.status = Status.IDLE
         if self.keyboard.is_key_down(pygame.K_LEFT):
-            self.world.component_for_entity(entity, Velocity).x = -1
-            self.world.component_for_entity(entity, Renderable).direction = Direction.WEST
+            velocity.x = -1
+            state.status = Status.MOVING
+            state.direction = Direction.WEST
         if self.keyboard.is_key_down(pygame.K_RIGHT):
-            self.world.component_for_entity(entity, Velocity).x = +1
-            self.world.component_for_entity(entity, Renderable).direction = Direction.EAST
+            velocity.x = 1
+            state.status = Status.MOVING
+            state.direction = Direction.EAST
 
         if self.keyboard.is_key_pressed(pygame.K_SPACE):
             # Stop player when is attacking
-            self.world.component_for_entity(entity, Velocity).x = 0
-            self.world.component_for_entity(entity, Velocity).y = 0
+            velocity = self.world.component_for_entity(entity, cmp.Velocity)
+            velocity.x = 0
+            velocity.y = 0
+            state.status = Status.ATTACKING
 
             # Creates a temporary hitbox representing the sword weapon
-            player_sprite = self.world.component_for_entity(entity, Renderable)
-            player_hb = self.world.component_for_entity(entity, HitBox)
-
-            weapon = Weapon(damage=cfg.SWORD_DAMAGE, active_frames=cfg.SWORD_ACTIVE_FRAMES)
-            if player_sprite.direction in (Direction.WEST, Direction.EAST):
-                hitbox = HitBox(0, 0, cfg.SWORD_FRONT_RANGE, cfg.SWORD_SIDE_RANGE)
-            else:
-                hitbox = HitBox(0, 0, cfg.SWORD_SIDE_RANGE, cfg.SWORD_FRONT_RANGE)
-            hitbox.rect.centerx = player_hb.rect.centerx + int((player_hb.rect.w + cfg.SWORD_FRONT_RANGE)
-                                                               * player_sprite.direction.value.x) / 2
-            hitbox.rect.centery = player_hb.rect.centery + int((player_hb.rect.h + cfg.SWORD_FRONT_RANGE)
-                                                               * player_sprite.direction.value.y) / 2
-            position = Position(hitbox.rect.x, hitbox.rect.y)
-            self.world.create_entity(position, hitbox, weapon)
+            hitbox = self.world.component_for_entity(entity, cmp.HitBox)
+            create_melee_weapon(hitbox, state.direction, cfg.SWORD_FRONT_RANGE, cfg.SWORD_SIDE_RANGE,
+                                cfg.SWORD_DAMAGE, cfg.SWORD_ACTIVE_FRAMES, self.world)
 
             # Block input until weapon life time is over and publish attach event
-            inp.block_counter = weapon.active_frames
-            event_manager.post_event('attack')
+            input_.block_counter = cfg.SWORD_ACTIVE_FRAMES
 
         if self.keyboard.is_key_pressed(pygame.K_q):
-            CFG.DEBUG_MODE = not CFG.DEBUG_MODE
+            cfg.DEBUG_MODE = not cfg.DEBUG_MODE

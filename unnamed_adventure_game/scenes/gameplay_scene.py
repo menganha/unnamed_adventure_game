@@ -4,9 +4,9 @@ import unnamed_adventure_game.components as cmp
 import unnamed_adventure_game.config as cfg
 import unnamed_adventure_game.entity_fabric as fabric
 import unnamed_adventure_game.systems as sys
-from unnamed_adventure_game.component_utils import position_of_unscaled_rect
 from unnamed_adventure_game.maps import Maps
 from unnamed_adventure_game.scenes import BaseScene
+from unnamed_adventure_game.utils.component import position_of_unscaled_rect
 
 
 class GameplayScene(BaseScene):
@@ -51,24 +51,24 @@ class GameplayScene(BaseScene):
         # Create enemy
         fabric.create_jelly_at(400, 400, self.world)
 
-        # Create some Processor instances, and assign them to be processed.
+        # Create the systems for the scene
         input_processor = sys.InputSystem()
         physics_system = sys.CollisionWithSolidsSystem()
-        render_processor = sys.RenderSystem(window=self.window, camera_entity=camera_entity)
+        render_system = sys.RenderSystem(window=self.window, camera_entity=camera_entity)
         animation_system = sys.AnimationSystem()
         transition_system = sys.TransitionSystem(self.player_entity, self)
-        movement_processor = sys.MovementSystem(min_x=0, max_x=cfg.RESOLUTION[0],
-                                                min_y=0, max_y=cfg.RESOLUTION[1])
-        camera_processor = sys.CameraSystem(camera_entity, entity_followed=self.player_entity)
+        movement_processor = sys.MovementSystem(min_x=0, max_x=cfg.RESOLUTION[0], min_y=0, max_y=cfg.RESOLUTION[1])
+        camera_system = sys.CameraSystem(camera_entity, entity_followed=self.player_entity)
         combat_system = sys.CombatSystem(player_entity=self.player_entity)
+
         self.world.add_processor(input_processor)
-        self.world.add_processor(animation_system)
         self.world.add_processor(combat_system)
         self.world.add_processor(movement_processor)
         self.world.add_processor(transition_system)
         self.world.add_processor(physics_system)
-        self.world.add_processor(camera_processor)
-        self.world.add_processor(render_processor)
+        self.world.add_processor(camera_system)
+        self.world.add_processor(animation_system)
+        self.world.add_processor(render_system)
 
     def on_exit(self):
         pass
