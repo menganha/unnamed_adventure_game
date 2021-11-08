@@ -7,11 +7,12 @@ from unnamed_adventure_game.scenes import OverWorldScene
 
 
 def run_game():
-    logging.basicConfig(level=logging.INFO)
+    logging.basicConfig(level=logging.INFO, format='%(asctime)s %(message)s')
     pygame.init()
-    window = pygame.display.set_mode(cfg.RESOLUTION, flags=pygame.SCALED, vsync=1)
+    pygame.font.init()
+    window = pygame.display.set_mode(cfg.RESOLUTION, pygame.SCALED, vsync=1)
 
-    current_scene = OverWorldScene(window, 24, 28)
+    current_scene = OverWorldScene(window, 26, 28)
     running = True
     while running:
         current_scene.on_enter()

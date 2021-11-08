@@ -30,32 +30,40 @@ class InputSystem(esper.Processor):
 
         state = self.world.component_for_entity(entity, cmp.State)
         velocity = self.world.component_for_entity(entity, cmp.Velocity)
-        velocity.x, velocity.y = 0, 0
+        position = self.world.component_for_entity(entity, cmp.Position)
 
-        if self.keyboard.is_key_released(pygame.K_UP) or self.keyboard.is_key_released(pygame.K_DOWN):
-            velocity.y = 0
-            state.status = Status.IDLE
-        if self.keyboard.is_key_down(pygame.K_DOWN):
-            velocity.y = 1
-            state.status = Status.MOVING
-            state.direction = Direction.SOUTH
-        if self.keyboard.is_key_down(pygame.K_UP):
-            velocity.y = -1
-            state.status = Status.MOVING
-            state.direction = Direction.NORTH
-
+        # Snaps position to grid when the respective key has been released.
+        # This allows for a deterministic movement pattern by eliminating any decimal residual accumulated and resetting
+        # the position to a integer value
         if self.keyboard.is_key_released(pygame.K_LEFT) or self.keyboard.is_key_released(pygame.K_RIGHT):
-            self.world.component_for_entity(entity, cmp.Velocity).x = 0
-            velocity.x = 0
+            position.x = round(position.x)
+        if self.keyboard.is_key_released(pygame.K_UP) or self.keyboard.is_key_released(pygame.K_DOWN):
+            position.y = round(position.y)
+
+        direction_x = - self.keyboard.is_key_down(pygame.K_LEFT) + self.keyboard.is_key_down(pygame.K_RIGHT)
+        direction_y = - self.keyboard.is_key_down(pygame.K_UP) + self.keyboard.is_key_down(pygame.K_DOWN)
+
+        abs_vel = 1 if (direction_y and direction_x) else 1.5 - 1e-8  # TODO: set this variables to some config module
+        velocity.x = direction_x * abs_vel
+        velocity.y = direction_y * abs_vel
+
+        if (self.keyboard.is_key_released(pygame.K_LEFT) or self.keyboard.is_key_released(pygame.K_RIGHT)
+            or self.keyboard.is_key_released(pygame.K_UP) or self.keyboard.is_key_released(pygame.K_DOWN)) or state.status != Status.MOVING:
+            if direction_x > 0:
+                state.direction = Direction.EAST
+            elif direction_x < 0:
+                state.direction = Direction.WEST
+            if direction_y > 0:
+                state.direction = Direction.SOUTH
+            elif direction_y < 0:
+                state.direction = Direction.NORTH
+
+        # Set entity status for animation system
+        tmp = [direction_y, direction_x]
+        if not direction_x and not direction_y:
             state.status = Status.IDLE
-        if self.keyboard.is_key_down(pygame.K_LEFT):
-            velocity.x = -1
+        else:
             state.status = Status.MOVING
-            state.direction = Direction.WEST
-        if self.keyboard.is_key_down(pygame.K_RIGHT):
-            velocity.x = 1
-            state.status = Status.MOVING
-            state.direction = Direction.EAST
 
         if self.keyboard.is_key_pressed(pygame.K_SPACE):
             # Stop player when is attacking

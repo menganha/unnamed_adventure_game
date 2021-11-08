@@ -5,7 +5,7 @@ from unnamed_adventure_game import event_manager
 from unnamed_adventure_game.event_type import EventType
 
 
-class CollisionWithSolidsSystem(esper.Processor):
+class CollisionSystem(esper.Processor):
     """
     Processes collisions with non-moving solid entities
 
@@ -21,16 +21,19 @@ class CollisionWithSolidsSystem(esper.Processor):
 
         # Checks for collision with wall entities. If it collides it resolves it by reverting the direction of movement
         for ent, (hitbox, position, velocity) in self.world.get_components(cmp.HitBox, cmp.Position, cmp.Velocity):
-            hitbox.rect.x = position.x - int(hitbox.scale_offset / 2)
-            hitbox.rect.y = position.y - int(hitbox.scale_offset / 2)
+            hitbox.rect.x = round(position.x) - int(hitbox.scale_offset / 2)
+            hitbox.rect.y = round(position.y) - int(hitbox.scale_offset / 2)
 
             if hitbox.rect.collidelist(static_hitboxes) != -1:
                 for dir_x, dir_y in ((1, 0), (0, 1), (1, 1)):
-                    test_rect = hitbox.rect.move(-velocity.x * dir_x, -velocity.y * dir_y)
+                    test_rect = hitbox.rect.copy()
+                    test_rect.x = round(position.x - velocity.x * dir_x) - int(hitbox.scale_offset / 2)
+                    test_rect.y = round(position.y - velocity.y * dir_y) - int(hitbox.scale_offset / 2)
+                    # test_rect = hitbox.rect.move(round(-velocity.x * dir_x), round(-velocity.y * dir_y))
                     if test_rect.collidelist(static_hitboxes) == -1:
                         hitbox.rect = test_rect
-                        position.x -= velocity.x * dir_x
-                        position.y -= velocity.y * dir_y
+                        position.x = round(position.x - velocity.x * dir_x)
+                        position.y = round(position.y - velocity.y * dir_y)
                         break
 
         # Checks for collision between non-wall entities and posts event if they collide between each other

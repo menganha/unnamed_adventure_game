@@ -33,6 +33,8 @@ class GameplayScene(BaseScene):
         # Add player entity
         player_x_pos, player_y_pos = overworld_map.get_center_coord_from_tile(self.start_tile_x_pos,
                                                                               self.start_tile_y_pos)
+        # player_x_pos = 439
+        # player_y_pos = 415
         if not self.player_entity:
             self.player_entity = fabric.create_player_at(center_x_pos=player_x_pos, center_y_pos=player_y_pos,
                                                          world=self.world)
@@ -44,6 +46,10 @@ class GameplayScene(BaseScene):
             hitbox.rect.center = (player_x_pos, player_y_pos)
             position.x, position.y = position_of_unscaled_rect(hitbox)
 
+        # position = self.world.component_for_entity(self.player_entity, cmp.Position)
+        # hitbox = self.world.component_for_entity(self.player_entity, cmp.HitBox)
+        # position.x, position.y = player_x_pos, player_y_pos
+
         # Add camera entity
         camera_entity = self.world.create_entity()
         self.world.add_component(camera_entity, cmp.Position(x=0, y=0))
@@ -52,20 +58,20 @@ class GameplayScene(BaseScene):
         fabric.create_jelly_at(400, 400, self.world)
 
         # Create the systems for the scene
-        input_processor = sys.InputSystem()
-        physics_system = sys.CollisionWithSolidsSystem()
+        input_system = sys.InputSystem()
+        collision_system = sys.CollisionSystem()
         render_system = sys.RenderSystem(window=self.window, camera_entity=camera_entity)
         animation_system = sys.AnimationSystem()
         transition_system = sys.TransitionSystem(self.player_entity, self)
-        movement_processor = sys.MovementSystem(min_x=0, max_x=cfg.RESOLUTION[0], min_y=0, max_y=cfg.RESOLUTION[1])
+        movement_system = sys.MovementSystem(min_x=0, max_x=cfg.RESOLUTION[0], min_y=0, max_y=cfg.RESOLUTION[1])
         camera_system = sys.CameraSystem(camera_entity, entity_followed=self.player_entity)
         combat_system = sys.CombatSystem(player_entity=self.player_entity)
 
-        self.world.add_processor(input_processor)
+        self.world.add_processor(input_system)
+        self.world.add_processor(movement_system)
+        self.world.add_processor(collision_system)
         self.world.add_processor(combat_system)
-        self.world.add_processor(movement_processor)
         self.world.add_processor(transition_system)
-        self.world.add_processor(physics_system)
         self.world.add_processor(camera_system)
         self.world.add_processor(animation_system)
         self.world.add_processor(render_system)

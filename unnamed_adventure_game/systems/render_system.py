@@ -22,12 +22,12 @@ class RenderSystem(esper.Processor):
                 flags = pygame.BLEND_RGBA_ADD
             else:
                 flags = 0
-            self.window.blit(rend.image, (pos.x + camera_pos.x, pos.y + camera_pos.y), special_flags=flags)
+            self.window.blit(rend.image, (round(pos.x + camera_pos.x), round(pos.y + camera_pos.y)), special_flags=flags)
 
         if cfg.DEBUG_MODE:  # On debug mode then render all hitboxes
             for ent, (hitbox) in self.world.get_component(cmp.HitBox):
                 hb_surface = pygame.Surface((hitbox.rect.w, hitbox.rect.h), flags=pygame.SRCALPHA)
                 hb_surface.fill(cfg.C_BLUE)
-                self.window.blit(hb_surface, (hitbox.rect.x + camera_pos.x, hitbox.rect.y + camera_pos.y))
+                self.window.blit(hb_surface, (hitbox.rect.x + round(camera_pos.x), hitbox.rect.y + round(camera_pos.y)))
 
         pygame.display.flip()

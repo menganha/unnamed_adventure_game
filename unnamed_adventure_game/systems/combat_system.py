@@ -1,5 +1,4 @@
 import logging
-from math import copysign
 
 import esper
 
@@ -7,6 +6,7 @@ import unnamed_adventure_game.components as cmp
 from unnamed_adventure_game import event_manager
 from unnamed_adventure_game.event_type import EventType
 from unnamed_adventure_game.utils.esper import try_pair_signature
+from unnamed_adventure_game.utils.game import Direction
 from unnamed_adventure_game.utils.game import Status
 
 """
@@ -53,12 +53,18 @@ class CombatSystem(esper.Processor):
 
             self.world.component_for_entity(victim, cmp.State).status = Status.IDLE
 
-            input_ = self.world.component_for_entity(victim, cmp.Input)
-            input_.block_counter = attacker_weapon.freeze_frames
+            if input_ := self.world.try_component(victim, cmp.Input):
+                input_.block_counter = attacker_weapon.freeze_frames
 
-            vel = self.world.component_for_entity(victim, cmp.Velocity)
-            vel.x = copysign(3, -vel.x)  # TODO: Make it global or set in a component
-            vel.y = 0
+            victim_vel = self.world.component_for_entity(victim, cmp.Velocity)
+            victim_hitbox = self.world.component_for_entity(victim, cmp.HitBox)
+            weapon_hitbox = self.world.component_for_entity(attacker, cmp.HitBox)
+
+            rel_pos_x = victim_hitbox.rect.centerx - weapon_hitbox.rect.centerx
+            rel_pos_y = victim_hitbox.rect.centery - weapon_hitbox.rect.centery
+            recoil_direction = Direction.closest_direction(rel_pos_x, rel_pos_y)
+            victim_vel.x = recoil_direction.value.x * attacker_weapon.recoil_velocity
+            victim_vel.y = recoil_direction.value.y * attacker_weapon.recoil_velocity
 
             victim_health.cool_down_counter = victim_health.cool_down_frames
             victim_health.points -= attacker_weapon.damage

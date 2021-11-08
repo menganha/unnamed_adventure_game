@@ -13,25 +13,22 @@ class CameraSystem(esper.Processor):
         super().__init__()
         self.camera_entity = camera_entity
         self.entity_followed = entity_followed
-        self.ent_tracked_width = None
-        self.ent_tracked_height = None
+        self.ent_ = None
+        self.entity_tracked_relative_coord = None
 
     def process(self):
         camera_pos = self.world.component_for_entity(self.camera_entity, Position)
         entity_followed_pos = self.world.component_for_entity(self.entity_followed, Position)
 
-        # Check if the the followed entity is a physical object (renderable) and extract and memoize
-        # its dimensions
-        if not (self.ent_tracked_height and self.ent_tracked_width):
-            self.ent_tracked_width = 0
-            self.ent_tracked_height = 0
-            renderable = self.world.try_component(self.entity_followed, Renderable)
-            if renderable:
-                self.ent_tracked_width = renderable.width
-                self.ent_tracked_height = renderable.height
+        # Check if the the followed entity is a visible object and extract and memoize its dimensions
+        if not self.entity_tracked_relative_coord:
+            self.entity_tracked_relative_coord = [0, 0]
+            if renderable := self.world.try_component(self.entity_followed, Renderable):
+                self.entity_tracked_relative_coord[0] = int((cfg.RESOLUTION[0] - renderable.width) / 2)
+                self.entity_tracked_relative_coord[1] = int((cfg.RESOLUTION[1] - renderable.height) / 2)
 
-        camera_pos.x = - entity_followed_pos.x + int((cfg.RESOLUTION[0] - self.ent_tracked_width) / 2)
-        camera_pos.y = - entity_followed_pos.y + int((cfg.RESOLUTION[1] - self.ent_tracked_height) / 2)
+        camera_pos.x = - entity_followed_pos.x + self.entity_tracked_relative_coord[0]
+        camera_pos.y = - entity_followed_pos.y + self.entity_tracked_relative_coord[1]
 
         camera_pos.x = min(0, camera_pos.x)
         camera_pos.y = min(0, camera_pos.y)
