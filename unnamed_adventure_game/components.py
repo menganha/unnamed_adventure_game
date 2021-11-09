@@ -88,8 +88,8 @@ class Weapon:
 @component
 class Animation:
     """
-    Needs at least to get one animation stripe (idle_down) to instantiate this component.
-    No need of "left" animation stripe as we just flip the "right" one
+    Needs at least to get one animation stripe (idle_down) to instantiate this component. No need of "left" animation
+    stripe as we can just "flip" the right one
     """
     strips: Dict[Status, Dict[Direction, AnimationStripe]] = field(init=False)
 

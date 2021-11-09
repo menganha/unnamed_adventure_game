@@ -1,5 +1,3 @@
-import logging
-
 import esper
 
 from unnamed_adventure_game.components import Velocity, Position
@@ -21,13 +19,15 @@ class MovementSystem(esper.Processor):
             pos.x += vel.x
             pos.y += vel.y
 
-            if (vel.x != 0 or vel.y != 0) and ent == 20:
-                logging.info(f'pos x, pos y: {pos.x}, {pos.y} |||| '
-                             f'{round(pos.x) - round(self.max_x)}, {pos.x - self.max_x}  '
-                             f'{round(pos.y) - round(self.max_y)}, {pos.y - self.max_y}')
+            # if (vel.x != 0 or vel.y != 0) and ent == 20:
+            #     logging.info(f'pos x, pos y: {pos.x}, {pos.y} ||| '
+            #                  f'{round(pos.x) - round(self.max_x)}, {pos.x - self.max_x}  '
+            #                  f'{round(pos.y) - round(self.max_y)}, {pos.y - self.max_y}  |||'
+            #                  f'{round(pos.x)}  {round(pos.y)}')
+            #
+            #     self.max_x = pos.x
+            #     self.max_y = pos.y
 
-                self.max_x = pos.x
-                self.max_y = pos.y
             # if vel.x == 0:
             #     pos.x = round(pos.x)
             # if vel.y == 0:

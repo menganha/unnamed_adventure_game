@@ -30,10 +30,10 @@ class AnimationStripe:
         """ Gets the next animation frame image"""
         current_image = self.strip[self.current_image_index]
 
-        if self.delay_counter >= self.delay:
+        self.delay_counter += 1
+        if self.delay_counter == self.delay:
             self.current_image_index += 1
             self.delay_counter = 0
-        self.delay_counter += 1
 
         if self.current_image_index == len(self.strip):
             self.current_image_index = 0

@@ -14,4 +14,5 @@ from the main folder.
 
 * python >= 3.6
 * pygame
+* esper
 * pyTMX

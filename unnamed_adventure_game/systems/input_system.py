@@ -32,23 +32,25 @@ class InputSystem(esper.Processor):
         velocity = self.world.component_for_entity(entity, cmp.Velocity)
         position = self.world.component_for_entity(entity, cmp.Position)
 
-        # Snaps position to grid when the respective key has been released.
-        # This allows for a deterministic movement pattern by eliminating any decimal residual accumulated and resetting
-        # the position to a integer value
-        if self.keyboard.is_key_released(pygame.K_LEFT) or self.keyboard.is_key_released(pygame.K_RIGHT):
-            position.x = round(position.x)
-        if self.keyboard.is_key_released(pygame.K_UP) or self.keyboard.is_key_released(pygame.K_DOWN):
-            position.y = round(position.y)
-
         direction_x = - self.keyboard.is_key_down(pygame.K_LEFT) + self.keyboard.is_key_down(pygame.K_RIGHT)
         direction_y = - self.keyboard.is_key_down(pygame.K_UP) + self.keyboard.is_key_down(pygame.K_DOWN)
 
-        abs_vel = 1 if (direction_y and direction_x) else 1.5 - 1e-8  # TODO: set this variables to some config module
+        abs_vel = cfg.VELOCITY_DIAGONAL if (direction_y and direction_x) else cfg.VELOCITY
         velocity.x = direction_x * abs_vel
         velocity.y = direction_y * abs_vel
 
-        if (self.keyboard.is_key_released(pygame.K_LEFT) or self.keyboard.is_key_released(pygame.K_RIGHT)
-            or self.keyboard.is_key_released(pygame.K_UP) or self.keyboard.is_key_released(pygame.K_DOWN)) or state.status != Status.MOVING:
+        # Snaps position to grid when the respective key has been released.  This allows for a deterministic movement
+        # pattern by eliminating any decimal residual accumulated when resetting the position to a integer value
+        horizontal_key_released = self.keyboard.is_key_released(pygame.K_LEFT) or self.keyboard.is_key_released(pygame.K_RIGHT)
+        vertical_key_released = self.keyboard.is_key_released(pygame.K_UP) or self.keyboard.is_key_released(pygame.K_DOWN)
+
+        if horizontal_key_released:
+            position.x = round(position.x)
+        if vertical_key_released:
+            position.y = round(position.y)
+
+        # Attempt to change direction only when a key is released or the status of the entity is not moving
+        if horizontal_key_released or vertical_key_released or state.status != Status.MOVING:
             if direction_x > 0:
                 state.direction = Direction.EAST
             elif direction_x < 0:
@@ -59,7 +61,6 @@ class InputSystem(esper.Processor):
                 state.direction = Direction.NORTH
 
         # Set entity status for animation system
-        tmp = [direction_y, direction_x]
         if not direction_x and not direction_y:
             state.status = Status.IDLE
         else:
@@ -77,8 +78,9 @@ class InputSystem(esper.Processor):
             create_melee_weapon(hitbox, state.direction, cfg.SWORD_FRONT_RANGE, cfg.SWORD_SIDE_RANGE,
                                 cfg.SWORD_DAMAGE, cfg.SWORD_ACTIVE_FRAMES, self.world)
 
-            # Block input until weapon life time is over and publish attach event
-            input_.block_counter = cfg.SWORD_ACTIVE_FRAMES
+            # Block input until weapon life time is over and publish attach event. We need to block it one less than
+            # The active frames as we are counting already the frame when it is activated as active
+            input_.block_counter = cfg.SWORD_ACTIVE_FRAMES - 1
 
         if self.keyboard.is_key_pressed(pygame.K_q):
             cfg.DEBUG_MODE = not cfg.DEBUG_MODE
