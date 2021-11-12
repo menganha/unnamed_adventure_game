@@ -11,7 +11,3 @@ def position_of_unscaled_rect(hitbox: cmp.HitBox) -> (int, int):
     x_pos = hitbox.rect.x + int(hitbox.scale_offset / 2)
     y_pos = hitbox.rect.y + int(hitbox.scale_offset / 2)
     return x_pos, y_pos
-
-
-def opposite_direction(velocity: cmp.Velocity) -> cmp.Velocity:
-    """ Changes 180 degrees the direction of velocity """

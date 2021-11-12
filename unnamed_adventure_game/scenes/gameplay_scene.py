@@ -59,16 +59,18 @@ class GameplayScene(BaseScene):
 
         # Create the systems for the scene
         input_system = sys.InputSystem()
-        collision_system = sys.CollisionSystem()
-        render_system = sys.RenderSystem(window=self.window, camera_entity=camera_entity)
-        animation_system = sys.AnimationSystem()
-        transition_system = sys.TransitionSystem(self.player_entity, self)
         movement_system = sys.MovementSystem(min_x=0, max_x=cfg.RESOLUTION[0], min_y=0, max_y=cfg.RESOLUTION[1])
+        script_system = sys.ScriptSystem()
+        collision_system = sys.CollisionSystem()
+        combat_system = sys.CombatSystem()
+        transition_system = sys.TransitionSystem(self.player_entity, self)
         camera_system = sys.CameraSystem(camera_entity, entity_followed=self.player_entity)
-        combat_system = sys.CombatSystem(player_entity=self.player_entity)
+        animation_system = sys.AnimationSystem()
+        render_system = sys.RenderSystem(window=self.window, camera_entity=camera_entity)
 
         self.world.add_processor(input_system)
         self.world.add_processor(movement_system)
+        self.world.add_processor(script_system)
         self.world.add_processor(collision_system)
         self.world.add_processor(combat_system)
         self.world.add_processor(transition_system)

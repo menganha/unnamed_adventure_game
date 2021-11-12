@@ -1,6 +1,7 @@
 """
 The module gathers functions that add commonly used entities to an input world
 """
+from functools import partial
 from pathlib import Path
 
 import esper
@@ -15,7 +16,8 @@ def create_player_at(center_x_pos: int, center_y_pos: int, world: esper.World) -
     """ Creates the player entity centered at the given position"""
 
     player_entity = world.create_entity()
-    # Animations
+
+    # Create Animations dictionary and add it as a component
     kwargs = {}
     for typ in ['idle', 'move', 'attack']:
         for direction in ['up', 'down', 'left']:
@@ -40,10 +42,46 @@ def create_player_at(center_x_pos: int, center_y_pos: int, world: esper.World) -
     world.add_component(player_entity, cmp.Position(x=x_pos, y=y_pos))
     world.add_component(player_entity, cmp.Velocity(x=0, y=0))
     world.add_component(player_entity, cmp.Input())
-    world.add_component(player_entity, cmp.Health())
+    world.add_component(player_entity, cmp.Health(points=100))
     world.add_component(player_entity, cmp.State())
 
     return player_entity
+
+
+def create_bomb_at(ent: int, world: esper.World) -> int:
+    bomb_entity = world.create_entity()
+    img_path = Path('assets', 'sprites', 'bomb.png')
+    animation_stripe = AnimationStripe(img_path, sprite_width=16, delay=5)
+
+    position = world.component_for_entity(ent, cmp.Position)
+    direction = world.component_for_entity(ent, cmp.State).direction
+    renderable = world.component_for_entity(ent, cmp.Renderable)
+
+    bomb_renderable_component = cmp.Renderable(image=animation_stripe[0])
+
+    bomb_position_center_x = position.x + renderable.width // 2 + direction.value.x * 8
+    bomb_position_center_y = position.y + renderable.height // 2 + direction.value.y * 8
+    bomb_position_x = bomb_position_center_x - bomb_renderable_component.width // 2
+    bomb_position_y = bomb_position_center_y - bomb_renderable_component.height // 2
+
+    # TODO: Using partial here is smelly code. Consider changing this once the game has a fuller set of features. It may
+    #   be that some pattern emerge and we try to make the script creation less ugly.
+    bomb_script = partial(create_bomb_hitbox, bomb_entity, bomb_position_center_x, bomb_position_center_y)
+
+    world.add_component(bomb_entity, bomb_renderable_component)
+    world.add_component(bomb_entity, cmp.Animation(idle_down=animation_stripe))
+    world.add_component(bomb_entity, cmp.Position(bomb_position_x, bomb_position_y))
+    world.add_component(bomb_entity, cmp.Script(delay=100, function=bomb_script))
+    world.add_component(bomb_entity, cmp.State())
+
+    return bomb_entity
+
+
+def create_bomb_hitbox(entity: int, x_pos: int, y_pos: int, world: esper.World):
+    hitbox = cmp.HitBox(0, 0, 30, 30)
+    hitbox.rect.center = x_pos, y_pos
+    world.add_component(entity, hitbox)
+    world.add_component(entity, cmp.Weapon(damage=10, active_frames=10))
 
 
 def create_melee_weapon(parent_hitbox: cmp.HitBox, direction: Direction, front_range: int, side_range: int,

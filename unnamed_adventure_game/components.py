@@ -1,6 +1,6 @@
 from dataclasses import dataclass as component
 from dataclasses import field, InitVar
-from typing import Dict
+from typing import Dict, Callable
 
 import pygame
 
@@ -82,7 +82,21 @@ class Weapon:
     damage: int = 5
     active_frames: int = 20  # -1 means is infinite
     freeze_frames: int = 0  # frames of input blocked when hit
-    recoil_velocity: int = 0  # frames of input blocked when hit
+    recoil_velocity: int = 0
+
+
+@component
+class Script:
+    """ Calls a function with the parent entity ID passed as an argument """
+    function: Callable[[int], None]
+    delay: int
+
+
+@component
+class Door:
+    target_scene: str
+    target_x: int
+    target_y: int
 
 
 @component
@@ -126,10 +140,3 @@ class Animation:
             Status.ATTACKING: {Direction.NORTH: attack_up, Direction.WEST: attack_left,
                                Direction.SOUTH: attack_down, Direction.EAST: attack_right}
         }
-
-
-@component
-class Door:
-    dest_scene: str
-    dest_x: int
-    dest_y: int

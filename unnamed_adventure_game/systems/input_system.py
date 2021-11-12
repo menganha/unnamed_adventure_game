@@ -3,7 +3,7 @@ import pygame
 
 import unnamed_adventure_game.components as cmp
 import unnamed_adventure_game.config as cfg
-from unnamed_adventure_game.entity_fabric import create_melee_weapon
+from unnamed_adventure_game.entity_fabric import create_melee_weapon, create_bomb_at
 from unnamed_adventure_game.keyboard import Keyboard
 from unnamed_adventure_game.utils.game import Direction, Status
 
@@ -21,7 +21,7 @@ class InputSystem(esper.Processor):
                 return
             self.input_processing(ent, input_)
 
-    def input_processing(self, entity: str, input_: cmp.Input):
+    def input_processing(self, entity: int, input_: cmp.Input):
         """
         Note: If moving in two directions at the same time, e.g., up and right, the renderable direction
         attribute will always be the one in the vertical direction, i.e, up
@@ -81,6 +81,9 @@ class InputSystem(esper.Processor):
             # Block input until weapon life time is over and publish attach event. We need to block it one less than
             # The active frames as we are counting already the frame when it is activated as active
             input_.block_counter = cfg.SWORD_ACTIVE_FRAMES - 1
+
+        if self.keyboard.is_key_pressed(pygame.K_b):
+            create_bomb_at(entity, self.world)
 
         if self.keyboard.is_key_pressed(pygame.K_q):
             cfg.DEBUG_MODE = not cfg.DEBUG_MODE

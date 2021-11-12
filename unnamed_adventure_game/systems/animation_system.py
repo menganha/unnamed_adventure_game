@@ -8,7 +8,4 @@ class AnimationSystem(esper.Processor):
 
     def process(self):
         for ent, (animation, renderable, state) in self.world.get_components(Animation, Renderable, State):
-            renderable.image = animation.strips \
-                .get(state.status, Status.IDLE) \
-                .get(state.direction, Direction.SOUTH) \
-                .next()
+            renderable.image = animation.strips.get(state.status, Status.IDLE).get(state.direction, Direction.SOUTH).next()

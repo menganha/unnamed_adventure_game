@@ -27,5 +27,5 @@ class TransitionSystem(esper.Processor):
             return
         self.current_scene.in_scene = False
         player_components = self.world.components_for_entity(player_ent)
-        next_scene_class = getattr(scenes, door.dest_scene)
-        self.current_scene.next_scene = next_scene_class(self.current_scene.window, door.dest_x, door.dest_y, player_components)
+        next_scene_class = getattr(scenes, door.target_scene)
+        self.current_scene.next_scene = next_scene_class(self.current_scene.window, door.target_x, door.target_y, player_components)
