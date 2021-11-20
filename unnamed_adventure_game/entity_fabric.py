@@ -7,7 +7,7 @@ from pathlib import Path
 import esper
 
 import unnamed_adventure_game.components as cmp
-from unnamed_adventure_game.animation_stripe import AnimationStripe
+from unnamed_adventure_game.animation import AnimationStrip
 from unnamed_adventure_game.utils.component import position_of_unscaled_rect
 from unnamed_adventure_game.utils.game import Direction
 
@@ -23,7 +23,7 @@ def create_player_at(center_x_pos: int, center_y_pos: int, world: esper.World) -
         for direction in ['up', 'down', 'left']:
             img_path = Path('assets', 'sprites', 'player', f'{typ}_{direction}.png')
             delay = 4 if typ == 'attack' else 7
-            kwargs.update({f'{typ}_{direction}': AnimationStripe(img_path, sprite_width=32, delay=delay)})
+            kwargs.update({f'{typ}_{direction}': AnimationStrip(img_path, sprite_width=32, delay=delay)})
 
     world.add_component(player_entity, cmp.Renderable(image=kwargs['idle_down'][0]))
     world.add_component(player_entity, cmp.Animation(**kwargs))
@@ -51,7 +51,8 @@ def create_player_at(center_x_pos: int, center_y_pos: int, world: esper.World) -
 def create_bomb_at(ent: int, world: esper.World) -> int:
     bomb_entity = world.create_entity()
     img_path = Path('assets', 'sprites', 'bomb.png')
-    animation_stripe = AnimationStripe(img_path, sprite_width=16, delay=5)
+    frame_sequence = [0] * 52 + [0, 0, 1, 1, 2, 2] * 8
+    animation_stripe = AnimationStrip(img_path, sprite_width=16, frame_sequence=frame_sequence)
 
     position = world.component_for_entity(ent, cmp.Position)
     direction = world.component_for_entity(ent, cmp.State).direction
@@ -105,7 +106,7 @@ def create_melee_weapon(parent_hitbox: cmp.HitBox, direction: Direction, front_r
 
 def create_jelly_at(x_pos: int, y_pos: int, world: esper.World) -> int:
     enemy_idle_down_image_path = Path('assets', 'sprites', 'enemy', 'jelly_idle.png')
-    enemy_idle_animation = AnimationStripe(enemy_idle_down_image_path, sprite_width=16, delay=15)
+    enemy_idle_animation = AnimationStrip(enemy_idle_down_image_path, sprite_width=16, delay=15)
     enemy_entity = world.create_entity()
     world.add_component(enemy_entity, cmp.State())
     world.add_component(enemy_entity, cmp.Velocity())

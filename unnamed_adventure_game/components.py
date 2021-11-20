@@ -1,10 +1,10 @@
 from dataclasses import dataclass as component
 from dataclasses import field, InitVar
-from typing import Dict, Callable
+from typing import Dict, Callable, List
 
 import pygame
 
-from unnamed_adventure_game.animation_stripe import AnimationStripe
+from unnamed_adventure_game.animation import AnimationStrip, flip_strip_sprites
 from unnamed_adventure_game.utils.game import Direction, Status
 
 
@@ -25,6 +25,13 @@ class State:
     """ State of being (usually a "moving" entity) used in different systems """
     direction: Direction = Direction.SOUTH
     status: Status = Status.IDLE
+
+    previous_direction: Direction = field(init=False)
+    previous_status: Status = field(init=False)
+
+    def __post_init__(self):
+        self.previous_direction = self.direction
+        self.previous_status = self.status
 
 
 @component
@@ -105,32 +112,37 @@ class Animation:
     Needs at least to get one animation stripe (idle_down) to instantiate this component. No need of "left" animation
     stripe as we can just "flip" the right one
     """
-    strips: Dict[Status, Dict[Direction, AnimationStripe]] = field(init=False)
+    index: int = field(init=False, default=0)
+    frame_counter: int = field(init=False, default=0)
+    strips: Dict[Status, Dict[Direction, List[pygame.Surface]]] = field(init=False)
 
-    idle_down: InitVar[AnimationStripe]
-    idle_up: InitVar[AnimationStripe] = None
-    idle_left: InitVar[AnimationStripe] = None
+    idle_down: InitVar[AnimationStrip]
+    idle_up: InitVar[AnimationStrip] = None
+    idle_left: InitVar[AnimationStrip] = None
 
-    move_down: InitVar[AnimationStripe] = None
-    move_up: InitVar[AnimationStripe] = None
-    move_left: InitVar[AnimationStripe] = None
+    move_down: InitVar[AnimationStrip] = None
+    move_up: InitVar[AnimationStrip] = None
+    move_left: InitVar[AnimationStrip] = None
 
-    attack_down: InitVar[AnimationStripe] = None
-    attack_up: InitVar[AnimationStripe] = None
-    attack_left: InitVar[AnimationStripe] = None
+    attack_down: InitVar[AnimationStrip] = None
+    attack_up: InitVar[AnimationStrip] = None
+    attack_left: InitVar[AnimationStrip] = None
 
     def __post_init__(self,
-                      idle_down: AnimationStripe, idle_up: AnimationStripe, idle_left: AnimationStripe,
-                      move_down: AnimationStripe, move_up: AnimationStripe, move_left: AnimationStripe,
-                      attack_down: AnimationStripe, attack_up: AnimationStripe, attack_left: AnimationStripe):
+                      idle_down: AnimationStrip, idle_up: AnimationStrip, idle_left: AnimationStrip,
+                      move_down: AnimationStrip, move_up: AnimationStrip, move_left: AnimationStrip,
+                      attack_down: AnimationStrip, attack_up: AnimationStrip, attack_left: AnimationStrip):
+        """
+        Creates a dictionary with the as values images surfaces and the states as keys
+        """
 
         idle_right = move_right = attack_right = None
         if idle_left:
-            idle_right = AnimationStripe.get_flipped_stripe(idle_left, flip_x=True, flip_y=False)
+            idle_right = flip_strip_sprites(idle_left)
         if move_left:
-            move_right = AnimationStripe.get_flipped_stripe(move_left, flip_x=True, flip_y=False)
+            move_right = flip_strip_sprites(move_left)
         if attack_left:
-            attack_right = AnimationStripe.get_flipped_stripe(attack_left, flip_x=True, flip_y=False)
+            attack_right = flip_strip_sprites(attack_left, reverse_order=False)  # May not be general
 
         self.strips = {
             Status.IDLE: {Direction.NORTH: idle_up, Direction.WEST: idle_left,

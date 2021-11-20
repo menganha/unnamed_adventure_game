@@ -15,11 +15,14 @@ class InputSystem(esper.Processor):
         self.keyboard = Keyboard()
 
     def process(self):
-        for ent, (input_) in self.world.get_component(cmp.Input):
+        for entity, (input_) in self.world.get_component(cmp.Input):
+            state = self.world.component_for_entity(entity, cmp.State)
+            state.previous_status = state.status
+            state.previous_direction = state.direction
             if input_.block_counter != 0:
                 input_.block_counter -= 1
                 return
-            self.input_processing(ent, input_)
+            self.input_processing(entity, input_)
 
     def input_processing(self, entity: int, input_: cmp.Input):
         """
