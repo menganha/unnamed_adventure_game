@@ -1,7 +1,6 @@
 """
 The module gathers functions that add commonly used entities to an input world
 """
-from functools import partial
 from pathlib import Path
 
 import esper
@@ -65,14 +64,12 @@ def create_bomb_at(ent: int, world: esper.World) -> int:
     bomb_position_x = bomb_position_center_x - bomb_renderable_component.width // 2
     bomb_position_y = bomb_position_center_y - bomb_renderable_component.height // 2
 
-    # TODO: Using partial here is smelly code. Consider changing this once the game has a fuller set of features. It may
-    #   be that some pattern emerge and we try to make the script creation less ugly.
-    bomb_script = partial(create_bomb_hitbox, bomb_entity, bomb_position_center_x, bomb_position_center_y)
+    script_arguments = (bomb_entity, bomb_position_center_x, bomb_position_center_y)
 
     world.add_component(bomb_entity, bomb_renderable_component)
     world.add_component(bomb_entity, cmp.Animation(idle_down=animation_stripe))
     world.add_component(bomb_entity, cmp.Position(bomb_position_x, bomb_position_y))
-    world.add_component(bomb_entity, cmp.Script(delay=100, function=bomb_script))
+    world.add_component(bomb_entity, cmp.Script(delay=100, function=create_bomb_hitbox, args=script_arguments))
     world.add_component(bomb_entity, cmp.State())
 
     return bomb_entity

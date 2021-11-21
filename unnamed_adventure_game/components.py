@@ -1,6 +1,6 @@
 from dataclasses import dataclass as component
 from dataclasses import field, InitVar
-from typing import Dict, Callable, List, Optional
+from typing import Dict, Callable, List, Optional, Tuple, Any
 
 import pygame
 
@@ -100,7 +100,8 @@ class Weapon:
 @component
 class Script:
     """ Calls a function with the parent entity ID passed as an argument """
-    function: Callable[[int], None]
+    function: Callable[..., None]
+    args: Tuple[Any, ...]
     delay: int
 
 

@@ -11,5 +11,5 @@ class ScriptSystem(esper.Processor):
             if script.delay > 0:
                 script.delay -= 1
             if script.delay == 0:
-                script.function(self.world)
+                script.function(*script.args, self.world)
                 self.world.remove_component(ent, Script)
