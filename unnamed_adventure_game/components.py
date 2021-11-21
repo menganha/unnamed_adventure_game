@@ -1,6 +1,6 @@
 from dataclasses import dataclass as component
 from dataclasses import field, InitVar
-from typing import Dict, Callable, List
+from typing import Dict, Callable, List, Optional
 
 import pygame
 
@@ -10,8 +10,8 @@ from unnamed_adventure_game.utils.game import Direction, Status
 
 @component
 class Position:
-    x: int = 0
-    y: int = 0
+    x: float = 0.0
+    y: float = 0.0
 
 
 @component
@@ -49,6 +49,11 @@ class Renderable:
 @component
 class WallTag:
     """ Tag to keep track of collidable walls"""
+    pass
+
+
+@component
+class VisualEffectTag:
     pass
 
 
@@ -114,27 +119,22 @@ class Animation:
     """
     index: int = field(init=False, default=0)
     frame_counter: int = field(init=False, default=0)
-    strips: Dict[Status, Dict[Direction, List[pygame.Surface]]] = field(init=False)
+    strips: Dict[Status, Dict[Direction, List[AnimationStrip]]] = field(init=False)
 
     idle_down: InitVar[AnimationStrip]
-    idle_up: InitVar[AnimationStrip] = None
-    idle_left: InitVar[AnimationStrip] = None
+    idle_up: InitVar[Optional[AnimationStrip]] = None
+    idle_left: InitVar[Optional[AnimationStrip]] = None
 
-    move_down: InitVar[AnimationStrip] = None
-    move_up: InitVar[AnimationStrip] = None
-    move_left: InitVar[AnimationStrip] = None
+    move_down: InitVar[Optional[AnimationStrip]] = None
+    move_up: InitVar[Optional[AnimationStrip]] = None
+    move_left: InitVar[Optional[AnimationStrip]] = None
 
-    attack_down: InitVar[AnimationStrip] = None
-    attack_up: InitVar[AnimationStrip] = None
-    attack_left: InitVar[AnimationStrip] = None
+    attack_down: InitVar[Optional[AnimationStrip]] = None
+    attack_up: InitVar[Optional[AnimationStrip]] = None
+    attack_left: InitVar[Optional[AnimationStrip]] = None
 
-    def __post_init__(self,
-                      idle_down: AnimationStrip, idle_up: AnimationStrip, idle_left: AnimationStrip,
-                      move_down: AnimationStrip, move_up: AnimationStrip, move_left: AnimationStrip,
-                      attack_down: AnimationStrip, attack_up: AnimationStrip, attack_left: AnimationStrip):
-        """
-        Creates a dictionary with the as values images surfaces and the states as keys
-        """
+    def __post_init__(self, idle_down, idle_up, idle_left, move_down, move_up, move_left, attack_down, attack_up, attack_left):
+        """ Creates a dictionary with the as values images surfaces and the states as keys """
 
         idle_right = move_right = attack_right = None
         if idle_left:

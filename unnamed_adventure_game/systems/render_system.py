@@ -15,6 +15,8 @@ class RenderSystem(esper.Processor):
     def process(self):
         self.window.fill(self.clear_color)
         camera_pos = self.world.component_for_entity(self.camera_entity, cmp.Position)
+
+        # Render sprites
         for ent, (rend, pos) in sorted(self.world.get_components(cmp.Renderable, cmp.Position),
                                        key=lambda x: x[1][0].depth, reverse=False):
             health = self.world.try_component(ent, cmp.Health)
@@ -23,6 +25,10 @@ class RenderSystem(esper.Processor):
             else:
                 flags = 0
             self.window.blit(rend.image, (round(pos.x + camera_pos.x), round(pos.y + camera_pos.y)), special_flags=flags)
+
+        # Render native shapes
+        for ent, (_, pos) in self.world.get_components(cmp.VisualEffectTag, cmp.Position):
+            pygame.draw.circle(self.window, cfg.C_BLACK, (round(pos.x + camera_pos.x), round(pos.y + camera_pos.y)), radius=1)
 
         if cfg.DEBUG_MODE:  # On debug mode then render all hitboxes
             for ent, (hitbox) in self.world.get_component(cmp.HitBox):

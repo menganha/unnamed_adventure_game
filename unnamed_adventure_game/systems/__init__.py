@@ -7,3 +7,4 @@ from unnamed_adventure_game.systems.movement_system import MovementSystem
 from unnamed_adventure_game.systems.render_system import RenderSystem
 from unnamed_adventure_game.systems.script_system import ScriptSystem
 from unnamed_adventure_game.systems.transition_system import TransitionSystem
+from unnamed_adventure_game.systems.visual_effects_system import VisualEffectsSystem

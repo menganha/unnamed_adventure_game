@@ -8,6 +8,7 @@ from unnamed_adventure_game.event_type import EventType
 from unnamed_adventure_game.utils.esper import try_pair_signature
 from unnamed_adventure_game.utils.game import Direction
 from unnamed_adventure_game.utils.game import Status
+from unnamed_adventure_game.visual_effects import create_explosion
 
 
 class CombatSystem(esper.Processor):
@@ -29,6 +30,8 @@ class CombatSystem(esper.Processor):
             if health.cool_down_counter > 0:
                 health.cool_down_counter -= 1
             if health.points <= 0:  # Using the "<" condition for cases when the inflicted damage is to big that results in negative health
+                center = self.world.component_for_entity(ent, cmp.HitBox).rect.center
+                create_explosion(center[0], center[1], 30, 30, self.world)
                 self.world.delete_entity(ent)
 
     def on_collision(self, ent1: int, ent2: int):

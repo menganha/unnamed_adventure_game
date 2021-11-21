@@ -3,6 +3,7 @@ import pygame
 
 import unnamed_adventure_game.components as cmp
 import unnamed_adventure_game.config as cfg
+import unnamed_adventure_game.visual_effects as vfx
 from unnamed_adventure_game.entity_fabric import create_melee_weapon, create_bomb_at
 from unnamed_adventure_game.keyboard import Keyboard
 from unnamed_adventure_game.utils.game import Direction, Status
@@ -16,7 +17,7 @@ class InputSystem(esper.Processor):
 
     def process(self):
         for entity, (input_) in self.world.get_component(cmp.Input):
-            state = self.world.component_for_entity(entity, cmp.State)
+            state = self.world.component_for_entity(entity, cmp.State)  # TODO: code smell: should we introduce a standalone state system?
             state.previous_status = state.status
             state.previous_direction = state.direction
             if input_.block_counter != 0:
@@ -84,6 +85,9 @@ class InputSystem(esper.Processor):
             # Block input until weapon life time is over and publish attach event. We need to block it one less than
             # The active frames as we are counting already the frame when it is activated as active
             input_.block_counter = cfg.SWORD_ACTIVE_FRAMES - 1
+
+        if self.keyboard.is_key_pressed(pygame.K_e):
+            vfx.create_explosion(position.x, position.y, 30, 30, self.world)
 
         if self.keyboard.is_key_pressed(pygame.K_b):
             create_bomb_at(entity, self.world)
