@@ -7,8 +7,8 @@ from unnamed_adventure_game.components import VisualEffectTag, Position, Velocit
 
 class VisualEffectsSystem(esper.Processor):
     """ Logic for visual effects """
-    ABS_TOL = 1e-3
-    FRICTION = 0.8
+    ABS_TOL = 1e-2
+    FRICTION = 0.75
 
     def process(self):
         for ent, (_, pos, vel) in self.world.get_components(VisualEffectTag, Position, Velocity):

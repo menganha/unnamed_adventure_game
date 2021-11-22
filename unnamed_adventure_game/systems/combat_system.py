@@ -3,6 +3,7 @@ import logging
 import esper
 
 import unnamed_adventure_game.components as cmp
+import unnamed_adventure_game.config as cfg
 from unnamed_adventure_game import event_manager
 from unnamed_adventure_game.event_type import EventType
 from unnamed_adventure_game.utils.esper import try_pair_signature
@@ -31,7 +32,7 @@ class CombatSystem(esper.Processor):
                 health.cool_down_counter -= 1
             if health.points <= 0:  # Using the "<" condition for cases when the inflicted damage is to big that results in negative health
                 center = self.world.component_for_entity(ent, cmp.HitBox).rect.center
-                create_explosion(center[0], center[1], 30, 30, self.world)
+                create_explosion(center[0], center[1], 50, 20, cfg.C_RED, self.world)
                 self.world.delete_entity(ent)
 
     def on_collision(self, ent1: int, ent2: int):

@@ -6,6 +6,8 @@ from pathlib import Path
 import esper
 
 import unnamed_adventure_game.components as cmp
+import unnamed_adventure_game.visual_effects as vfx
+from unnamed_adventure_game import config as cfg
 from unnamed_adventure_game.animation import AnimationStrip
 from unnamed_adventure_game.utils.component import position_of_unscaled_rect
 from unnamed_adventure_game.utils.game import Direction
@@ -76,10 +78,12 @@ def create_bomb_at(ent: int, world: esper.World) -> int:
 
 
 def create_bomb_hitbox(entity: int, x_pos: int, y_pos: int, world: esper.World):
-    hitbox = cmp.HitBox(0, 0, 30, 30)
+    bomb_range = 20
+    hitbox = cmp.HitBox(0, 0, bomb_range * 2, bomb_range * 2)
     hitbox.rect.center = x_pos, y_pos
     world.add_component(entity, hitbox)
     world.add_component(entity, cmp.Weapon(damage=10, active_frames=10))
+    vfx.create_explosion(hitbox.rect.centerx, hitbox.rect.centery, 60, bomb_range, cfg.C_RED, world)
 
 
 def create_melee_weapon(parent_hitbox: cmp.HitBox, direction: Direction, front_range: int, side_range: int,

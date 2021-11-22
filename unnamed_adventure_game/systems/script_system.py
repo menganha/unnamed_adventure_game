@@ -4,9 +4,9 @@ from unnamed_adventure_game.components import Script
 
 
 class ScriptSystem(esper.Processor):
+    """ Handle all scripts (custom functions) that are called with certain delay """
 
     def process(self):
-        """ Process all scripts """
         for ent, (script) in self.world.get_component(Script):
             if script.delay > 0:
                 script.delay -= 1

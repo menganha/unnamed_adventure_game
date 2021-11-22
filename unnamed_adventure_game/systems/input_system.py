@@ -87,7 +87,7 @@ class InputSystem(esper.Processor):
             input_.block_counter = cfg.SWORD_ACTIVE_FRAMES - 1
 
         if self.keyboard.is_key_pressed(pygame.K_e):
-            vfx.create_explosion(position.x, position.y, 30, 30, self.world)
+            vfx.create_explosion(position.x, position.y, 30, 30, cfg.C_WHITE, self.world)
 
         if self.keyboard.is_key_pressed(pygame.K_b):
             create_bomb_at(entity, self.world)

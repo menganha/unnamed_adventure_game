@@ -26,9 +26,9 @@ class RenderSystem(esper.Processor):
                 flags = 0
             self.window.blit(rend.image, (round(pos.x + camera_pos.x), round(pos.y + camera_pos.y)), special_flags=flags)
 
-        # Render native shapes
-        for ent, (_, pos) in self.world.get_components(cmp.VisualEffectTag, cmp.Position):
-            pygame.draw.circle(self.window, cfg.C_BLACK, (round(pos.x + camera_pos.x), round(pos.y + camera_pos.y)), radius=1)
+        # Render native shapes which are (normally) associated with particle effects
+        for ent, (vfx, pos) in self.world.get_components(cmp.VisualEffectTag, cmp.Position):
+            pygame.draw.circle(self.window, vfx.color, (round(pos.x + camera_pos.x), round(pos.y + camera_pos.y)), radius=1)
 
         if cfg.DEBUG_MODE:  # On debug mode then render all hitboxes
             for ent, (hitbox) in self.world.get_component(cmp.HitBox):

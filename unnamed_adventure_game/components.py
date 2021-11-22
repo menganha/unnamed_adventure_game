@@ -54,7 +54,7 @@ class WallTag:
 
 @component
 class VisualEffectTag:
-    pass
+    color: pygame.Color
 
 
 @component
@@ -135,15 +135,16 @@ class Animation:
     attack_left: InitVar[Optional[AnimationStrip]] = None
 
     def __post_init__(self, idle_down, idle_up, idle_left, move_down, move_up, move_left, attack_down, attack_up, attack_left):
-        """ Creates a dictionary with the as values images surfaces and the states as keys """
-
+        """
+        Creates a dictionary with the as values images surfaces and the states as keys
+        """
         idle_right = move_right = attack_right = None
         if idle_left:
             idle_right = flip_strip_sprites(idle_left)
         if move_left:
             move_right = flip_strip_sprites(move_left)
         if attack_left:
-            attack_right = flip_strip_sprites(attack_left, reverse_order=False)  # May not be general
+            attack_right = flip_strip_sprites(attack_left, reverse_order=False)  # May not be in general the situation
 
         self.strips = {
             Status.IDLE: {Direction.NORTH: idle_up, Direction.WEST: idle_left,
