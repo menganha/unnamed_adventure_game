@@ -1,5 +1,3 @@
-from abc import abstractmethod
-
 import yazelc.components as cmp
 import yazelc.config as cfg
 import yazelc.player as player
@@ -20,14 +18,6 @@ from yazelc.utils.component import position_of_unscaled_rect
 
 
 class GameplayScene(BaseScene):
-    PLAYER_ENTITY = None
-
-    # TODO: No need to inherit from this class for different gameplay scenes locations as one can make an extra method to get
-    #   the desired scene
-    @property
-    @abstractmethod
-    def map_data_file(self):
-        pass
 
     def on_enter(self):
         # Add map entity

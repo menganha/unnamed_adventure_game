@@ -1,5 +1,6 @@
 import abc
-from typing import Any, List
+from pathlib import Path
+from typing import List, Optional
 
 import esper
 import pygame
@@ -10,9 +11,12 @@ from yazelc import event_manager
 class BaseScene(abc.ABC):
     """ Base implementation for all scenes. This class is abstract and should not be instantiated """
 
-    def __init__(self, window: pygame.Surface, start_tile_x_pos: int, start_tile_y_pos: int,
-                 player_components: List[Any] = None):
+    PLAYER_ENTITY = None
+
+    def __init__(self, window: pygame.Surface, map_name: str, start_tile_x_pos: int, start_tile_y_pos: int,
+                 player_components: Optional[List[object]] = None):
         self.window = window
+        self.map_data_file = Path('data', f'{map_name}.tmx')
         self.world = esper.World()
         self.start_tile_x_pos = start_tile_x_pos
         self.start_tile_y_pos = start_tile_y_pos
@@ -21,9 +25,9 @@ class BaseScene(abc.ABC):
         self.next_scene = None
         self.last_player_position = None
         if player_components:
-            self.player_entity = self.world.create_entity(*player_components)
+            self.PLAYER_ENTITY = self.world.create_entity(*player_components)
         else:
-            self.player_entity = None
+            self.PLAYER_ENTITY = None
 
     @abc.abstractmethod
     def on_enter(self):

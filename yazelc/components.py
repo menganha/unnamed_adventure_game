@@ -117,7 +117,7 @@ class Script:
 
 @component
 class Door:
-    target_scene: str
+    target_map: str
     target_x: int
     target_y: int
 

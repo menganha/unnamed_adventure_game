@@ -2,8 +2,10 @@ import logging
 
 import pygame
 
-import yazelc.config as cfg
-from yazelc.scenes.overworld import OverWorldScene
+from yazelc import config as cfg
+from yazelc.scenes.gameplay_scene import GameplayScene
+
+INITIAL_MAP = 'overworld'
 
 
 def run_game():
@@ -11,7 +13,7 @@ def run_game():
     pygame.init()
     window = pygame.display.set_mode(cfg.RESOLUTION, pygame.SCALED, vsync=1)
 
-    current_scene = OverWorldScene(window, 26, 28)
+    current_scene = GameplayScene(window, INITIAL_MAP, 26, 28)
     running = True
     while running:
         current_scene.on_enter()

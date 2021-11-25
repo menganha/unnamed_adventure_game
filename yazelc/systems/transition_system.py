@@ -1,15 +1,22 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 import esper
 
-import yazelc.components as cmp
+from yazelc import components as cmp
 from yazelc import event_manager
 from yazelc.event_type import EventType
-from yazelc.scenes.base_scene import BaseScene
 from yazelc.utils.esper import try_signature
+
+if TYPE_CHECKING:
+    from yazelc.scenes.gameplay_scene import GameplayScene
 
 
 class TransitionSystem(esper.Processor):
+    """ Transition between gameplay scenes """
 
-    def __init__(self, current_scene: BaseScene):
+    def __init__(self, current_scene: GameplayScene):
         super().__init__()
         self.current_scene = current_scene
         event_manager.subscribe(EventType.COLLISION, self.on_collision)
@@ -26,5 +33,6 @@ class TransitionSystem(esper.Processor):
             return
         self.current_scene.in_scene = False
         player_components = self.world.components_for_entity(player_ent)
-        next_scene_class = getattr(scenes, door.target_scene)
-        self.current_scene.next_scene = next_scene_class(self.current_scene.window, door.target_x, door.target_y, player_components)
+        current_scene_class = type(self.current_scene)
+        self.current_scene.next_scene = current_scene_class(self.current_scene.window, door.target_map,
+                                                            door.target_x, door.target_y, player_components)
