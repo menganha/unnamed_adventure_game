@@ -1,6 +1,6 @@
 import esper
 
-from unnamed_adventure_game.components import Script
+from yazelc.components import Script
 
 
 class ScriptSystem(esper.Processor):

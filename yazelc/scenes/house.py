@@ -1,4 +1,4 @@
-from unnamed_adventure_game.scenes import GameplayScene
+from yazelc.scenes import GameplayScene
 
 
 class HouseScene(GameplayScene):

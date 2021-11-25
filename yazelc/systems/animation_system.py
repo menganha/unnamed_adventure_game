@@ -1,7 +1,7 @@
 import esper
 
-from unnamed_adventure_game.components import Animation, State, Renderable
-from unnamed_adventure_game.utils.game import Direction, Status
+from yazelc.components import Animation, State, Renderable
+from yazelc.utils.game import Direction, Status
 
 
 class AnimationSystem(esper.Processor):

@@ -4,7 +4,7 @@ from typing import Any, List
 import esper
 import pygame
 
-from unnamed_adventure_game import event_manager
+from yazelc import event_manager
 
 
 class BaseScene(abc.ABC):

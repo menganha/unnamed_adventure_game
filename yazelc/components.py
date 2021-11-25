@@ -4,8 +4,8 @@ from typing import Dict, Callable, List, Optional, Tuple, Any
 
 import pygame
 
-from unnamed_adventure_game.animation import AnimationStrip, flip_strip_sprites
-from unnamed_adventure_game.utils.game import Direction, Status
+from yazelc.animation import AnimationStrip, flip_strip_sprites
+from yazelc.utils.game import Direction, Status
 
 
 @component
@@ -80,7 +80,9 @@ class HitBox:
 
 @component
 class Input:
-    block_counter: int = field(init=False, default=0)
+    handle_input_function: Callable
+    block_counter: int = 0
+    is_paused: bool = False
 
 
 @component

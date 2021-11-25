@@ -4,13 +4,17 @@ The module gathers functions that add commonly used entities to an input world
 from pathlib import Path
 
 import esper
+import pygame
 
-import unnamed_adventure_game.components as cmp
-import unnamed_adventure_game.visual_effects as vfx
-from unnamed_adventure_game import config as cfg
-from unnamed_adventure_game.animation import AnimationStrip
-from unnamed_adventure_game.utils.component import position_of_unscaled_rect
-from unnamed_adventure_game.utils.game import Direction
+import yazelc.components as cmp
+import yazelc.visual_effects as vfx
+from yazelc import config as cfg
+from yazelc import event_manager
+from yazelc.animation import AnimationStrip
+from yazelc.event_type import EventType
+from yazelc.keyboard import Keyboard
+from yazelc.utils.component import position_of_unscaled_rect
+from yazelc.utils.game import Direction, Status
 
 
 def create_player_at(center_x_pos: int, center_y_pos: int, world: esper.World) -> int:
@@ -42,7 +46,7 @@ def create_player_at(center_x_pos: int, center_y_pos: int, world: esper.World) -
     x_pos, y_pos = position_of_unscaled_rect(hitbox_component)
     world.add_component(player_entity, cmp.Position(x=x_pos, y=y_pos))
     world.add_component(player_entity, cmp.Velocity(x=0, y=0))
-    world.add_component(player_entity, cmp.Input())
+    world.add_component(player_entity, cmp.Input(handle_input_function=handle_gameplay_input))
     world.add_component(player_entity, cmp.Health(points=100))
     world.add_component(player_entity, cmp.State())
 
@@ -119,3 +123,80 @@ def create_jelly_at(x_pos: int, y_pos: int, world: esper.World) -> int:
     world.add_component(enemy_entity, cmp.Animation(enemy_idle_animation))
     world.add_component(enemy_entity, cmp.Renderable(image=enemy_idle_animation[0]))
     return enemy_entity
+
+
+def handle_gameplay_input(entity: int, input_: cmp.Input, keyboard: Keyboard, world: esper.World):
+    state = world.component_for_entity(entity, cmp.State)
+    velocity = world.component_for_entity(entity, cmp.Velocity)
+    position = world.component_for_entity(entity, cmp.Position)
+
+    direction_x = - keyboard.is_key_down(pygame.K_LEFT) + keyboard.is_key_down(pygame.K_RIGHT)
+    direction_y = - keyboard.is_key_down(pygame.K_UP) + keyboard.is_key_down(pygame.K_DOWN)
+
+    abs_vel = cfg.VELOCITY_DIAGONAL if (direction_y and direction_x) else cfg.VELOCITY
+    velocity.x = direction_x * abs_vel
+    velocity.y = direction_y * abs_vel
+
+    # Snaps position to grid when the respective key has been released.  This allows for a deterministic movement
+    # pattern by eliminating any decimal residual accumulated when resetting the position to a integer value
+    horizontal_key_released = keyboard.is_key_released(pygame.K_LEFT) or keyboard.is_key_released(pygame.K_RIGHT)
+    vertical_key_released = keyboard.is_key_released(pygame.K_UP) or keyboard.is_key_released(pygame.K_DOWN)
+
+    if horizontal_key_released:
+        position.x = round(position.x)
+    if vertical_key_released:
+        position.y = round(position.y)
+
+    # Attempt to change direction only when a key is released or the status of the entity is not moving
+    if horizontal_key_released or vertical_key_released or state.status != Status.MOVING:
+        if direction_x > 0:
+            state.direction = Direction.EAST
+        elif direction_x < 0:
+            state.direction = Direction.WEST
+        if direction_y > 0:
+            state.direction = Direction.SOUTH
+        elif direction_y < 0:
+            state.direction = Direction.NORTH
+
+    # Set entity status for animation system
+    if not direction_x and not direction_y:
+        state.status = Status.IDLE
+    else:
+        state.status = Status.MOVING
+
+    if keyboard.is_key_pressed(pygame.K_SPACE):
+        # Stop player when is attacking
+        velocity.x = 0
+        velocity.y = 0
+        state.status = Status.ATTACKING
+
+        # Creates a temporary hitbox representing the sword weapon
+        hitbox = world.component_for_entity(entity, cmp.HitBox)
+        create_melee_weapon(hitbox, state.direction, cfg.SWORD_FRONT_RANGE, cfg.SWORD_SIDE_RANGE,
+                            cfg.SWORD_DAMAGE, cfg.SWORD_ACTIVE_FRAMES, world)
+
+        # Block input until weapon life time is over and publish attach event. We need to block it one less than
+        # The active frames as we are counting already the frame when it is activated as active
+        input_.block_counter = cfg.SWORD_ACTIVE_FRAMES - 1
+
+    if keyboard.is_key_pressed(pygame.K_e):
+        vfx.create_explosion(position.x, position.y, 30, 30, cfg.C_WHITE, world)
+
+    if keyboard.is_key_pressed(pygame.K_b):
+        create_bomb_at(entity, world)
+
+    if keyboard.is_key_pressed(pygame.K_q):
+        cfg.DEBUG_MODE = not cfg.DEBUG_MODE
+
+    if keyboard.is_key_pressed(pygame.K_p):
+        event_manager.post_event(EventType.PAUSE)
+        input_.handle_input_function = handle_menu_input
+
+
+def handle_menu_input(entity: int, input_: cmp.Input, keyboard: Keyboard, world: esper.World):
+    direction_x = - keyboard.is_key_down(pygame.K_LEFT) + keyboard.is_key_down(pygame.K_RIGHT)
+    direction_y = - keyboard.is_key_down(pygame.K_UP) + keyboard.is_key_down(pygame.K_DOWN)
+
+    if keyboard.is_key_pressed(pygame.K_p):
+        event_manager.post_event(EventType.PAUSE)
+        input_.handle_input_function = handle_gameplay_input

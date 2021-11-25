@@ -1,8 +1,8 @@
 import esper
 
-import unnamed_adventure_game.components as cmp
-from unnamed_adventure_game import event_manager
-from unnamed_adventure_game.event_type import EventType
+import yazelc.components as cmp
+from yazelc import event_manager
+from yazelc.event_type import EventType
 
 
 class CollisionSystem(esper.Processor):

@@ -1,16 +1,28 @@
 from abc import abstractmethod
 
-import unnamed_adventure_game.components as cmp
-import unnamed_adventure_game.config as cfg
-import unnamed_adventure_game.entity_fabric as fabric
-import unnamed_adventure_game.systems as sys
-from unnamed_adventure_game.maps import Maps
-from unnamed_adventure_game.scenes import BaseScene
-from unnamed_adventure_game.utils.component import position_of_unscaled_rect
+import yazelc.components as cmp
+import yazelc.config as cfg
+import yazelc.player as player
+from yazelc.maps import Maps
+from yazelc.scenes import BaseScene
+from yazelc.systems.animation_system import AnimationSystem
+from yazelc.systems.camera_system import CameraSystem
+from yazelc.systems.collision_system import CollisionSystem
+from yazelc.systems.combat_system import CombatSystem
+from yazelc.systems.input_system import InputSystem
+from yazelc.systems.menu_system import MenuSystem
+from yazelc.systems.movement_system import MovementSystem
+from yazelc.systems.render_system import RenderSystem
+from yazelc.systems.script_system import ScriptSystem
+from yazelc.systems.transition_system import TransitionSystem
+from yazelc.systems.visual_effects_system import VisualEffectsSystem
+from yazelc.utils.component import position_of_unscaled_rect
 
 
 class GameplayScene(BaseScene):
 
+    # TODO: No need to inherit from this class for different gameplay scenes locations as one can make an extra method to get
+    #   the desired scene
     @property
     @abstractmethod
     def map_data_file(self):
@@ -33,10 +45,8 @@ class GameplayScene(BaseScene):
         # Add player entity
         player_x_pos, player_y_pos = overworld_map.get_center_coord_from_tile(self.start_tile_x_pos,
                                                                               self.start_tile_y_pos)
-        # player_x_pos = 439
-        # player_y_pos = 415
         if not self.player_entity:
-            self.player_entity = fabric.create_player_at(center_x_pos=player_x_pos, center_y_pos=player_y_pos,
+            self.player_entity = player.create_player_at(center_x_pos=player_x_pos, center_y_pos=player_y_pos,
                                                          world=self.world)
         else:
             position = self.world.component_for_entity(self.player_entity, cmp.Position)
@@ -46,32 +56,30 @@ class GameplayScene(BaseScene):
             hitbox.rect.center = (player_x_pos, player_y_pos)
             position.x, position.y = position_of_unscaled_rect(hitbox)
 
-        # position = self.world.component_for_entity(self.player_entity, cmp.Position)
-        # hitbox = self.world.component_for_entity(self.player_entity, cmp.HitBox)
-        # position.x, position.y = player_x_pos, player_y_pos
-
         # Add camera entity
         camera_entity = self.world.create_entity()
         self.world.add_component(camera_entity, cmp.Position(x=0, y=0))
 
         # Create enemy
-        fabric.create_jelly_at(400, 400, self.world)
+        player.create_jelly_at(400, 400, self.world)
 
         # Create the systems for the scene
-        input_system = sys.InputSystem()
-        movement_system = sys.MovementSystem(min_x=0, max_x=cfg.RESOLUTION[0], min_y=0, max_y=cfg.RESOLUTION[1])
-        script_system = sys.ScriptSystem()
-        collision_system = sys.CollisionSystem()
-        combat_system = sys.CombatSystem()
-        visual_effect_system = sys.VisualEffectsSystem()
-        transition_system = sys.TransitionSystem(self.player_entity, self)
-        camera_system = sys.CameraSystem(camera_entity, entity_followed=self.player_entity)
-        animation_system = sys.AnimationSystem()
-        render_system = sys.RenderSystem(window=self.window, camera_entity=camera_entity)
+        input_system = InputSystem()
+        movement_system = MovementSystem(min_x=0, max_x=cfg.RESOLUTION[0], min_y=0, max_y=cfg.RESOLUTION[1])
+        script_system = ScriptSystem()
+        menu_system = MenuSystem()
+        collision_system = CollisionSystem()
+        combat_system = CombatSystem()
+        visual_effect_system = VisualEffectsSystem()
+        transition_system = TransitionSystem(self.player_entity, self)
+        camera_system = CameraSystem(camera_entity, entity_followed=self.player_entity)
+        animation_system = AnimationSystem()
+        render_system = RenderSystem(window=self.window, camera_entity=camera_entity)
 
         self.world.add_processor(input_system)
         self.world.add_processor(movement_system)
         self.world.add_processor(script_system)
+        self.world.add_processor(menu_system)
         self.world.add_processor(collision_system)
         self.world.add_processor(combat_system)
         self.world.add_processor(visual_effect_system)

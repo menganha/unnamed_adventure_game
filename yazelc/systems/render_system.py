@@ -1,12 +1,12 @@
 import esper
 import pygame
 
-import unnamed_adventure_game.components as cmp
-import unnamed_adventure_game.config as cfg
+import yazelc.components as cmp
+import yazelc.config as cfg
 
 
 class RenderSystem(esper.Processor):
-    def __init__(self, window, camera_entity: int, clear_color=(0, 0, 0)):
+    def __init__(self, window, camera_entity: int, clear_color=pygame.Color(0, 0, 0)):
         super().__init__()
         self.window = window
         self.camera_entity = camera_entity
@@ -28,7 +28,8 @@ class RenderSystem(esper.Processor):
 
         # Render native shapes which are (normally) associated with particle effects
         for ent, (vfx, pos) in self.world.get_components(cmp.VisualEffectTag, cmp.Position):
-            pygame.draw.circle(self.window, vfx.color, (round(pos.x + camera_pos.x), round(pos.y + camera_pos.y)), radius=1)
+            rect = pygame.Rect(round(pos.x + camera_pos.x), round(pos.y + camera_pos.y), 1, 1)
+            pygame.draw.rect(self.window, vfx.color, rect)
 
         if cfg.DEBUG_MODE:  # On debug mode then render all hitboxes
             for ent, (hitbox) in self.world.get_component(cmp.HitBox):

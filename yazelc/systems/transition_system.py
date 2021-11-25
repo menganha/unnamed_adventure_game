@@ -1,10 +1,10 @@
 import esper
 
-import unnamed_adventure_game.components as cmp
-from unnamed_adventure_game import event_manager
-from unnamed_adventure_game import scenes
-from unnamed_adventure_game.event_type import EventType
-from unnamed_adventure_game.utils.esper import try_signature
+import yazelc.components as cmp
+from yazelc import event_manager
+from yazelc import scenes
+from yazelc.event_type import EventType
+from yazelc.utils.esper import try_signature
 
 
 class TransitionSystem(esper.Processor):

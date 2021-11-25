@@ -2,14 +2,14 @@ import logging
 
 import esper
 
-import unnamed_adventure_game.components as cmp
-import unnamed_adventure_game.config as cfg
-from unnamed_adventure_game import event_manager
-from unnamed_adventure_game.event_type import EventType
-from unnamed_adventure_game.utils.esper import try_pair_signature
-from unnamed_adventure_game.utils.game import Direction
-from unnamed_adventure_game.utils.game import Status
-from unnamed_adventure_game.visual_effects import create_explosion
+import yazelc.components as cmp
+import yazelc.config as cfg
+from yazelc import event_manager
+from yazelc.event_type import EventType
+from yazelc.utils.esper import try_pair_signature
+from yazelc.utils.game import Direction
+from yazelc.utils.game import Status
+from yazelc.visual_effects import create_explosion
 
 
 class CombatSystem(esper.Processor):

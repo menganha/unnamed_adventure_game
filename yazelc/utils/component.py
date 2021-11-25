@@ -1,6 +1,6 @@
 """ Helper functions on components """
 
-import unnamed_adventure_game.components as cmp
+import yazelc.components as cmp
 
 
 def position_of_unscaled_rect(hitbox: cmp.HitBox) -> (int, int):

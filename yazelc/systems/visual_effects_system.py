@@ -2,7 +2,7 @@ from math import isclose
 
 import esper
 
-from unnamed_adventure_game.components import VisualEffectTag, Position, Velocity
+from yazelc.components import VisualEffectTag, Position, Velocity
 
 
 class VisualEffectsSystem(esper.Processor):

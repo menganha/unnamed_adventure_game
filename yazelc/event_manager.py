@@ -4,7 +4,7 @@ https://jakubszwajka.github.io/How-to-build-event-system-python/_
 from collections import defaultdict as _defaultdict
 from typing import Callable as _Callable
 
-from unnamed_adventure_game.event_type import EventType as _EventType
+from yazelc.event_type import EventType as _EventType
 
 # Uses defaultdict to initialize a list when using a new (missing) key in the dict
 subscribers = _defaultdict(list)

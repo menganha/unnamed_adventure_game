@@ -4,7 +4,7 @@ from math import radians, cos, sin
 import esper
 import pygame
 
-import unnamed_adventure_game.components as cmp
+import yazelc.components as cmp
 
 
 def create_explosion(origin_x: int, origin_y: int, n_particles: int, max_vel: int, color: pygame.Color, world: esper.World):
