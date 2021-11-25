@@ -36,7 +36,7 @@ def create_player_at(center_x_pos: int, center_y_pos: int, world: esper.World) -
     # HitBox
     sprite_width = kwargs['idle_down'][0].get_width()
     sprite_height = kwargs['idle_down'][0].get_height()
-    scale_offset = - int(sprite_width * 0.5)
+    scale_offset = - int(sprite_width * 0.7)
     hitbox_component = cmp.HitBox(0, 0, sprite_width, sprite_height, scale_offset)
     hitbox_component.rect.centerx = center_x_pos
     hitbox_component.rect.centery = center_y_pos
@@ -46,7 +46,7 @@ def create_player_at(center_x_pos: int, center_y_pos: int, world: esper.World) -
     x_pos, y_pos = position_of_unscaled_rect(hitbox_component)
     world.add_component(player_entity, cmp.Position(x=x_pos, y=y_pos))
     world.add_component(player_entity, cmp.Velocity(x=0, y=0))
-    world.add_component(player_entity, cmp.Input(handle_input_function=handle_gameplay_input))
+    world.add_component(player_entity, cmp.Input(handle_input_function=handle_input))
     world.add_component(player_entity, cmp.Health(points=100))
     world.add_component(player_entity, cmp.State())
 
@@ -90,8 +90,8 @@ def create_bomb_hitbox(entity: int, x_pos: int, y_pos: int, world: esper.World):
     vfx.create_explosion(hitbox.rect.centerx, hitbox.rect.centery, 60, bomb_range, cfg.C_RED, world)
 
 
-def create_melee_weapon(parent_hitbox: cmp.HitBox, direction: Direction, front_range: int, side_range: int,
-                        damage: int, active_frames: int, world: esper.World) -> int:
+def create_melee_weapon(parent_hitbox: cmp.HitBox, direction: Direction, front_range: int, side_range: int, damage: int,
+                        active_frames: int, world: esper.World) -> int:
     """ Creates a sword for the parent entity with a hitbox """
 
     if direction in (Direction.WEST, Direction.EAST):
@@ -125,10 +125,10 @@ def create_jelly_at(x_pos: int, y_pos: int, world: esper.World) -> int:
     return enemy_entity
 
 
-def handle_gameplay_input(entity: int, input_: cmp.Input, keyboard: Keyboard, world: esper.World):
-    state = world.component_for_entity(entity, cmp.State)
-    velocity = world.component_for_entity(entity, cmp.Velocity)
-    position = world.component_for_entity(entity, cmp.Position)
+def handle_input(player_entity: int, input_: cmp.Input, keyboard: Keyboard, world: esper.World):
+    state = world.component_for_entity(player_entity, cmp.State)
+    velocity = world.component_for_entity(player_entity, cmp.Velocity)
+    position = world.component_for_entity(player_entity, cmp.Position)
 
     direction_x = - keyboard.is_key_down(pygame.K_LEFT) + keyboard.is_key_down(pygame.K_RIGHT)
     direction_y = - keyboard.is_key_down(pygame.K_UP) + keyboard.is_key_down(pygame.K_DOWN)
@@ -171,7 +171,7 @@ def handle_gameplay_input(entity: int, input_: cmp.Input, keyboard: Keyboard, wo
         state.status = Status.ATTACKING
 
         # Creates a temporary hitbox representing the sword weapon
-        hitbox = world.component_for_entity(entity, cmp.HitBox)
+        hitbox = world.component_for_entity(player_entity, cmp.HitBox)
         create_melee_weapon(hitbox, state.direction, cfg.SWORD_FRONT_RANGE, cfg.SWORD_SIDE_RANGE,
                             cfg.SWORD_DAMAGE, cfg.SWORD_ACTIVE_FRAMES, world)
 
@@ -183,20 +183,12 @@ def handle_gameplay_input(entity: int, input_: cmp.Input, keyboard: Keyboard, wo
         vfx.create_explosion(position.x, position.y, 30, 30, cfg.C_WHITE, world)
 
     if keyboard.is_key_pressed(pygame.K_b):
-        create_bomb_at(entity, world)
+        create_bomb_at(player_entity, world)
 
     if keyboard.is_key_pressed(pygame.K_q):
         cfg.DEBUG_MODE = not cfg.DEBUG_MODE
 
     if keyboard.is_key_pressed(pygame.K_p):
         event_manager.post_event(EventType.PAUSE)
-        input_.handle_input_function = handle_menu_input
-
-
-def handle_menu_input(entity: int, input_: cmp.Input, keyboard: Keyboard, world: esper.World):
-    direction_x = - keyboard.is_key_down(pygame.K_LEFT) + keyboard.is_key_down(pygame.K_RIGHT)
-    direction_y = - keyboard.is_key_down(pygame.K_UP) + keyboard.is_key_down(pygame.K_DOWN)
-
-    if keyboard.is_key_pressed(pygame.K_p):
-        event_manager.post_event(EventType.PAUSE)
-        input_.handle_input_function = handle_gameplay_input
+        world.remove_component(player_entity, cmp.Input)
+        # input_.handle_input_function = handle_menu_input

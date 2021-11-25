@@ -3,7 +3,7 @@ import logging
 import pygame
 
 import yazelc.config as cfg
-from yazelc.scenes import OverWorldScene
+from yazelc.scenes.overworld import OverWorldScene
 
 
 def run_game():

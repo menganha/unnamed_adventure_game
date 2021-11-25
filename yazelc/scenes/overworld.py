@@ -1,4 +1,4 @@
-from yazelc.scenes import GameplayScene
+from yazelc.scenes.gameplay_scene import GameplayScene
 
 
 class OverWorldScene(GameplayScene):

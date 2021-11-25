@@ -4,6 +4,9 @@ import pygame
 import yazelc.components as cmp
 import yazelc.config as cfg
 import yazelc.text as text
+from yazelc import event_manager
+from yazelc.event_type import EventType
+from yazelc.keyboard import Keyboard
 from yazelc.systems.camera_system import CameraSystem
 
 
@@ -39,7 +42,18 @@ class PauseMenu:
         self.entity = world.create_entity()
         world.add_component(self.entity, cmp.Renderable(image=self.background))
         world.add_component(self.entity, cmp.Position(menu_pos_x, menu_pos_y))
+        world.add_component(self.entity, cmp.Menu(0, 0, 2, 0))
+        world.add_component(self.entity, cmp.Input(handle_input_function=PauseMenu.handle_menu_input))
+        world.add_component(self.entity, cmp.State())
 
     def delete_entity(self, world: esper.World):
         world.delete_entity(self.entity)
         self.entity = None
+
+    @staticmethod
+    def handle_menu_input(entity: int, input_: cmp.Input, keyboard: Keyboard, world: esper.World):
+        direction_x = - keyboard.is_key_down(pygame.K_LEFT) + keyboard.is_key_down(pygame.K_RIGHT)
+        direction_y = - keyboard.is_key_down(pygame.K_UP) + keyboard.is_key_down(pygame.K_DOWN)
+
+        if keyboard.is_key_pressed(pygame.K_p):
+            event_manager.post_event(EventType.PAUSE)

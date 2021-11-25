@@ -53,6 +53,14 @@ class WallTag:
 
 
 @component
+class Menu:
+    item_x: int
+    item_y: int
+    item_max_x: int
+    item_max_y: int
+
+
+@component
 class VisualEffectTag:
     color: pygame.Color
 

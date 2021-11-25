@@ -4,7 +4,7 @@ import yazelc.components as cmp
 import yazelc.config as cfg
 import yazelc.player as player
 from yazelc.maps import Maps
-from yazelc.scenes import BaseScene
+from yazelc.scenes.base_scene import BaseScene
 from yazelc.systems.animation_system import AnimationSystem
 from yazelc.systems.camera_system import CameraSystem
 from yazelc.systems.collision_system import CollisionSystem
@@ -20,6 +20,7 @@ from yazelc.utils.component import position_of_unscaled_rect
 
 
 class GameplayScene(BaseScene):
+    PLAYER_ENTITY = None
 
     # TODO: No need to inherit from this class for different gameplay scenes locations as one can make an extra method to get
     #   the desired scene
@@ -45,13 +46,13 @@ class GameplayScene(BaseScene):
         # Add player entity
         player_x_pos, player_y_pos = overworld_map.get_center_coord_from_tile(self.start_tile_x_pos,
                                                                               self.start_tile_y_pos)
-        if not self.player_entity:
-            self.player_entity = player.create_player_at(center_x_pos=player_x_pos, center_y_pos=player_y_pos,
+        if not self.PLAYER_ENTITY:
+            self.PLAYER_ENTITY = player.create_player_at(center_x_pos=player_x_pos, center_y_pos=player_y_pos,
                                                          world=self.world)
         else:
-            position = self.world.component_for_entity(self.player_entity, cmp.Position)
-            velocity = self.world.component_for_entity(self.player_entity, cmp.Velocity)
-            hitbox = self.world.component_for_entity(self.player_entity, cmp.HitBox)
+            position = self.world.component_for_entity(self.PLAYER_ENTITY, cmp.Position)
+            velocity = self.world.component_for_entity(self.PLAYER_ENTITY, cmp.Velocity)
+            hitbox = self.world.component_for_entity(self.PLAYER_ENTITY, cmp.HitBox)
             velocity.x, velocity.y = (0, 0)
             hitbox.rect.center = (player_x_pos, player_y_pos)
             position.x, position.y = position_of_unscaled_rect(hitbox)
@@ -64,15 +65,15 @@ class GameplayScene(BaseScene):
         player.create_jelly_at(400, 400, self.world)
 
         # Create the systems for the scene
-        input_system = InputSystem()
+        input_system = InputSystem(self.PLAYER_ENTITY)
         movement_system = MovementSystem(min_x=0, max_x=cfg.RESOLUTION[0], min_y=0, max_y=cfg.RESOLUTION[1])
         script_system = ScriptSystem()
         menu_system = MenuSystem()
         collision_system = CollisionSystem()
         combat_system = CombatSystem()
         visual_effect_system = VisualEffectsSystem()
-        transition_system = TransitionSystem(self.player_entity, self)
-        camera_system = CameraSystem(camera_entity, entity_followed=self.player_entity)
+        transition_system = TransitionSystem(self)
+        camera_system = CameraSystem(camera_entity, entity_followed=self.PLAYER_ENTITY)
         animation_system = AnimationSystem()
         render_system = RenderSystem(window=self.window, camera_entity=camera_entity)
 
