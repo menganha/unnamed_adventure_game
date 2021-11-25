@@ -44,7 +44,6 @@ class PauseMenu:
         world.add_component(self.entity, cmp.Position(menu_pos_x, menu_pos_y))
         world.add_component(self.entity, cmp.Menu(0, 0, 2, 0))
         world.add_component(self.entity, cmp.Input(handle_input_function=PauseMenu.handle_menu_input))
-        world.add_component(self.entity, cmp.State())
 
     def delete_entity(self, world: esper.World):
         world.delete_entity(self.entity)

@@ -2,7 +2,6 @@ import esper
 
 import yazelc.components as cmp
 from yazelc import event_manager
-from yazelc import player
 from yazelc.event_type import EventType
 from yazelc.keyboard import Keyboard
 from yazelc.systems.animation_system import AnimationSystem
@@ -24,25 +23,22 @@ class InputSystem(esper.Processor):
         super().__init__()
         self.player_entity = player_entity
         self.keyboard = Keyboard()
-        self.paused = False
+        self.is_paused = False
         self.processors_pause = None
         event_manager.subscribe(EventType.PAUSE, self.on_pause)
 
     def process(self):
         self.keyboard.process_input()
 
-        for entity, (input_, state) in self.world.get_components(cmp.Input, cmp.State):
-            state.previous_status = state.status
-            state.previous_direction = state.direction
-            if input_.block_counter != 0:
-                input_.block_counter -= 1
-                return
+        for entity, input_ in self.world.get_component(cmp.Input):
+            if not self.world.has_component(entity, cmp.Menu) and self.is_paused:
+                continue
             input_.handle_input_function(entity, input_, self.keyboard, self.world)
 
     def on_pause(self):
-        self.paused = not self.paused
+        self.is_paused = not self.is_paused
 
-        if self.paused:
+        if self.is_paused:
             if not self.processors_pause:
                 self.processors_pause = [self.world.get_processor(proc_type) for proc_type in self.PROCESSOR_TYPES_PAUSE]
             for proc in self.PROCESSOR_TYPES_PAUSE:
@@ -54,4 +50,3 @@ class InputSystem(esper.Processor):
                 self.world.add_processor(proc)
             pause_menu = self.world.get_processor(MenuSystem).pause_menu
             pause_menu.delete_entity(self.world)
-            self.world.add_component(self.player_entity, cmp.Input(handle_input_function=player.handle_input))

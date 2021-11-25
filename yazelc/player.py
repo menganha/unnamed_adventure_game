@@ -127,68 +127,73 @@ def create_jelly_at(x_pos: int, y_pos: int, world: esper.World) -> int:
 
 def handle_input(player_entity: int, input_: cmp.Input, keyboard: Keyboard, world: esper.World):
     state = world.component_for_entity(player_entity, cmp.State)
-    velocity = world.component_for_entity(player_entity, cmp.Velocity)
-    position = world.component_for_entity(player_entity, cmp.Position)
-
-    direction_x = - keyboard.is_key_down(pygame.K_LEFT) + keyboard.is_key_down(pygame.K_RIGHT)
-    direction_y = - keyboard.is_key_down(pygame.K_UP) + keyboard.is_key_down(pygame.K_DOWN)
-
-    abs_vel = cfg.VELOCITY_DIAGONAL if (direction_y and direction_x) else cfg.VELOCITY
-    velocity.x = direction_x * abs_vel
-    velocity.y = direction_y * abs_vel
-
-    # Snaps position to grid when the respective key has been released.  This allows for a deterministic movement
-    # pattern by eliminating any decimal residual accumulated when resetting the position to a integer value
-    horizontal_key_released = keyboard.is_key_released(pygame.K_LEFT) or keyboard.is_key_released(pygame.K_RIGHT)
-    vertical_key_released = keyboard.is_key_released(pygame.K_UP) or keyboard.is_key_released(pygame.K_DOWN)
-
-    if horizontal_key_released:
-        position.x = round(position.x)
-    if vertical_key_released:
-        position.y = round(position.y)
-
-    # Attempt to change direction only when a key is released or the status of the entity is not moving
-    if horizontal_key_released or vertical_key_released or state.status != Status.MOVING:
-        if direction_x > 0:
-            state.direction = Direction.EAST
-        elif direction_x < 0:
-            state.direction = Direction.WEST
-        if direction_y > 0:
-            state.direction = Direction.SOUTH
-        elif direction_y < 0:
-            state.direction = Direction.NORTH
-
-    # Set entity status for animation system
-    if not direction_x and not direction_y:
-        state.status = Status.IDLE
-    else:
-        state.status = Status.MOVING
-
-    if keyboard.is_key_pressed(pygame.K_SPACE):
-        # Stop player when is attacking
-        velocity.x = 0
-        velocity.y = 0
-        state.status = Status.ATTACKING
-
-        # Creates a temporary hitbox representing the sword weapon
-        hitbox = world.component_for_entity(player_entity, cmp.HitBox)
-        create_melee_weapon(hitbox, state.direction, cfg.SWORD_FRONT_RANGE, cfg.SWORD_SIDE_RANGE,
-                            cfg.SWORD_DAMAGE, cfg.SWORD_ACTIVE_FRAMES, world)
-
-        # Block input until weapon life time is over and publish attach event. We need to block it one less than
-        # The active frames as we are counting already the frame when it is activated as active
-        input_.block_counter = cfg.SWORD_ACTIVE_FRAMES - 1
-
-    if keyboard.is_key_pressed(pygame.K_e):
-        vfx.create_explosion(position.x, position.y, 30, 30, cfg.C_WHITE, world)
-
-    if keyboard.is_key_pressed(pygame.K_b):
-        create_bomb_at(player_entity, world)
-
-    if keyboard.is_key_pressed(pygame.K_q):
-        cfg.DEBUG_MODE = not cfg.DEBUG_MODE
+    state.previous_status = state.status
+    state.previous_direction = state.direction
 
     if keyboard.is_key_pressed(pygame.K_p):
         event_manager.post_event(EventType.PAUSE)
-        world.remove_component(player_entity, cmp.Input)
-        # input_.handle_input_function = handle_menu_input
+
+    if input_.block_counter != 0:
+        input_.block_counter -= 1
+
+    else:
+        velocity = world.component_for_entity(player_entity, cmp.Velocity)
+        position = world.component_for_entity(player_entity, cmp.Position)
+
+        direction_x = - keyboard.is_key_down(pygame.K_LEFT) + keyboard.is_key_down(pygame.K_RIGHT)
+        direction_y = - keyboard.is_key_down(pygame.K_UP) + keyboard.is_key_down(pygame.K_DOWN)
+
+        abs_vel = cfg.VELOCITY_DIAGONAL if (direction_y and direction_x) else cfg.VELOCITY
+        velocity.x = direction_x * abs_vel
+        velocity.y = direction_y * abs_vel
+
+        # Snaps position to grid when the respective key has been released.  This allows for a deterministic movement
+        # pattern by eliminating any decimal residual accumulated when resetting the position to a integer value
+        horizontal_key_released = keyboard.is_key_released(pygame.K_LEFT) or keyboard.is_key_released(pygame.K_RIGHT)
+        vertical_key_released = keyboard.is_key_released(pygame.K_UP) or keyboard.is_key_released(pygame.K_DOWN)
+
+        if horizontal_key_released:
+            position.x = round(position.x)
+        if vertical_key_released:
+            position.y = round(position.y)
+
+        # Attempt to change direction only when a key is released or the status of the entity is not moving
+        if horizontal_key_released or vertical_key_released or state.status != Status.MOVING:
+            if direction_x > 0:
+                state.direction = Direction.EAST
+            elif direction_x < 0:
+                state.direction = Direction.WEST
+            if direction_y > 0:
+                state.direction = Direction.SOUTH
+            elif direction_y < 0:
+                state.direction = Direction.NORTH
+
+        # Set entity status for animation system
+        if not direction_x and not direction_y:
+            state.status = Status.IDLE
+        else:
+            state.status = Status.MOVING
+
+        if keyboard.is_key_pressed(pygame.K_SPACE):
+            # Stop player when is attacking
+            velocity.x = 0
+            velocity.y = 0
+            state.status = Status.ATTACKING
+
+            # Creates a temporary hitbox representing the sword weapon
+            hitbox = world.component_for_entity(player_entity, cmp.HitBox)
+            create_melee_weapon(hitbox, state.direction, cfg.SWORD_FRONT_RANGE, cfg.SWORD_SIDE_RANGE,
+                                cfg.SWORD_DAMAGE, cfg.SWORD_ACTIVE_FRAMES, world)
+
+            # Block input until weapon life time is over and publish attach event. We need to block it one less than
+            # The active frames as we are counting already the frame when it is activated as active
+            input_.block_counter = cfg.SWORD_ACTIVE_FRAMES - 1
+
+        if keyboard.is_key_pressed(pygame.K_e):
+            vfx.create_explosion(position.x, position.y, 30, 30, cfg.C_WHITE, world)
+
+        if keyboard.is_key_pressed(pygame.K_b):
+            create_bomb_at(player_entity, world)
+
+        if keyboard.is_key_pressed(pygame.K_q):
+            cfg.DEBUG_MODE = not cfg.DEBUG_MODE
