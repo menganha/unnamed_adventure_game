@@ -6,7 +6,7 @@ from typing import Iterator, Tuple
 import pygame
 from pytmx.util_pygame import load_pygame
 
-import yazelc.components as cmp
+from yazelc import components as cmp
 
 
 class Maps:

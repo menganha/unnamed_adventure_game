@@ -1,6 +1,6 @@
 import esper
 
-import yazelc.components as cmp
+from yazelc import components as cmp
 from yazelc import event_manager
 from yazelc.event_type import EventType
 

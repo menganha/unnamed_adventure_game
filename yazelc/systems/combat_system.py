@@ -2,13 +2,13 @@ import logging
 
 import esper
 
-import yazelc.components as cmp
-import yazelc.config as cfg
+from yazelc import components as cmp
+from yazelc import config as cfg
 from yazelc import event_manager
 from yazelc.event_type import EventType
-from yazelc.utils.esper import try_pair_signature
-from yazelc.utils.game import Direction
-from yazelc.utils.game import Status
+from yazelc.utils.esper_utils import try_pair_signature
+from yazelc.utils.game_utils import Direction
+from yazelc.utils.game_utils import Status
 from yazelc.visual_effects import create_explosion
 
 

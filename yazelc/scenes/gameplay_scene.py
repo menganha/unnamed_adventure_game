@@ -2,11 +2,13 @@ import pygame
 
 from yazelc import components as cmp
 from yazelc import config as cfg
+from yazelc import enemy
 from yazelc import player
 from yazelc.gamepad import Gamepad
 from yazelc.keyboard import Keyboard
 from yazelc.maps import Maps
 from yazelc.scenes.base_scene import BaseScene
+from yazelc.systems.ai_system import AISystem
 from yazelc.systems.animation_system import AnimationSystem
 from yazelc.systems.camera_system import CameraSystem
 from yazelc.systems.collision_system import CollisionSystem
@@ -17,7 +19,7 @@ from yazelc.systems.render_system import RenderSystem
 from yazelc.systems.script_system import ScriptSystem
 from yazelc.systems.transition_system import TransitionSystem
 from yazelc.systems.visual_effects_system import VisualEffectsSystem
-from yazelc.utils.component import position_of_unscaled_rect
+from yazelc.utils.component_utils import position_of_unscaled_rect
 
 
 class GameplayScene(BaseScene):
@@ -55,7 +57,7 @@ class GameplayScene(BaseScene):
         self.world.add_component(camera_entity, cmp.Position(x=0, y=0))
 
         # Create enemy
-        player.create_jelly_at(400, 400, self.world)
+        enemy.create_jelly_at(400, 400, self.world)
 
         # Get the input device
         pygame.joystick.init()
@@ -66,6 +68,7 @@ class GameplayScene(BaseScene):
             pygame.joystick.quit()
 
         # Create the systems for the scene
+        ai_system = AISystem()
         input_system = InputSystem(controller)
         movement_system = MovementSystem(min_x=0, max_x=cfg.RESOLUTION[0], min_y=0, max_y=cfg.RESOLUTION[1])
         script_system = ScriptSystem()
@@ -77,6 +80,7 @@ class GameplayScene(BaseScene):
         animation_system = AnimationSystem()
         render_system = RenderSystem(window=self.window, camera_entity=camera_entity)
 
+        self.world.add_processor(ai_system)
         self.world.add_processor(input_system)
         self.world.add_processor(movement_system)
         self.world.add_processor(script_system)

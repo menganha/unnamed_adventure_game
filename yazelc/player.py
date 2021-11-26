@@ -12,8 +12,8 @@ from yazelc import visual_effects as vfx
 from yazelc.animation import AnimationStrip
 from yazelc.controller import Controller, Button
 from yazelc.event_type import EventType
-from yazelc.utils.component import position_of_unscaled_rect
-from yazelc.utils.game import Direction, Status
+from yazelc.utils.component_utils import position_of_unscaled_rect
+from yazelc.utils.game_utils import Direction, Status
 
 
 def create_player_at(center_x_pos: int, center_y_pos: int, world: esper.World) -> int:
@@ -106,22 +106,6 @@ def create_melee_weapon(parent_hitbox: cmp.HitBox, direction: Direction, front_r
     world.add_component(sword_ent, cmp.Weapon(damage=damage, active_frames=active_frames))
     world.add_component(sword_ent, cmp.Position(hitbox.rect.x, hitbox.rect.y))
     return sword_ent
-
-
-def create_jelly_at(x_pos: int, y_pos: int, world: esper.World) -> int:
-    enemy_idle_down_image_path = Path('assets', 'sprites', 'enemy', 'jelly_idle.png')
-    enemy_idle_animation = AnimationStrip(enemy_idle_down_image_path, sprite_width=16, delay=15)
-    enemy_entity = world.create_entity()
-    world.add_component(enemy_entity, cmp.State())
-    world.add_component(enemy_entity, cmp.Velocity())
-    world.add_component(enemy_entity, cmp.Health())
-    world.add_component(enemy_entity, cmp.Weapon(damage=1, active_frames=-1, freeze_frames=7, recoil_velocity=3))
-    world.add_component(enemy_entity, cmp.HitBox(x_pos, y_pos, 16, 16))
-    world.add_component(enemy_entity, cmp.Position(x=x_pos, y=x_pos))
-    world.add_component(enemy_entity, cmp.EnemyTag())
-    world.add_component(enemy_entity, cmp.Animation(enemy_idle_animation))
-    world.add_component(enemy_entity, cmp.Renderable(image=enemy_idle_animation[0]))
-    return enemy_entity
 
 
 def handle_input(player_entity: int, controller: Controller, world: esper.World):

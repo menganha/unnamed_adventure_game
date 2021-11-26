@@ -7,7 +7,7 @@ import esper
 from yazelc import components as cmp
 from yazelc import event_manager
 from yazelc.event_type import EventType
-from yazelc.utils.esper import try_signature
+from yazelc.utils.esper_utils import try_signature
 
 if TYPE_CHECKING:
     from yazelc.scenes.gameplay_scene import GameplayScene

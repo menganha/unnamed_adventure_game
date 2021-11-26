@@ -1,5 +1,6 @@
 from collections import namedtuple
 from enum import Enum, auto
+from random import randrange
 
 _direction = namedtuple('Direction', ['x', 'y'])  # Helper type to define directions
 
@@ -21,10 +22,10 @@ class Direction(Enum):
     def closest_direction(cls, vec_x: int, vec_y: int) -> 'Direction':
         return max(list(cls),
                    key=lambda direction: direction.value.x * vec_x + direction.value.y * vec_y)
-    #
-    # @classmethod
-    # def random_direction(cls) -> 'Direction':
-    #     return list(cls)[randrange(4)]
+
+    @classmethod
+    def random_direction(cls) -> 'Direction':
+        return list(cls)[randrange(4)]
 
 
 class Status(Enum):

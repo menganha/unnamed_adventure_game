@@ -5,7 +5,7 @@ from typing import Dict, Callable, List, Optional, Tuple, Any
 import pygame
 
 from yazelc.animation import AnimationStrip, flip_strip_sprites
-from yazelc.utils.game import Direction, Status
+from yazelc.utils.game_utils import Direction, Status
 
 
 @component
@@ -87,6 +87,14 @@ class HitBox:
 
 
 @component
+class Brain:
+    """ Brain given to an NPC character / Enemy AI"""
+    direction: Direction = Direction.SOUTH
+    think_frames: int = 0  # amount of frames it takes to take a new decision
+    think_counter: int = field(init=False, default=0)
+
+
+@component
 class Input:
     handle_input_function: Callable
     block_counter: int = 0
@@ -164,3 +172,9 @@ class Animation:
             Status.ATTACKING: {Direction.NORTH: attack_up, Direction.WEST: attack_left,
                                Direction.SOUTH: attack_down, Direction.EAST: attack_right}
         }
+
+        # Remove the empty strips from the dict
+        for status in (Status.IDLE, Status.MOVING, Status.ATTACKING):
+            for direction in (Direction.NORTH, Direction.SOUTH, Direction.WEST, Direction.EAST):
+                if self.strips[status][direction] is None:
+                    del self.strips[status][direction]

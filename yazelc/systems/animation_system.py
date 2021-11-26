@@ -1,7 +1,7 @@
 import esper
 
 from yazelc.components import Animation, State, Renderable
-from yazelc.utils.game import Direction, Status
+from yazelc.utils.game_utils import Direction, Status
 
 
 class AnimationSystem(esper.Processor):
@@ -12,7 +12,8 @@ class AnimationSystem(esper.Processor):
             if state.direction != state.previous_direction or state.status != state.previous_status:
                 animation.frame_counter = 0
 
-            strip = animation.strips.get(state.status, Status.IDLE).get(state.direction, Direction.SOUTH)
+            direction_strips = animation.strips.get(state.status, animation.strips[Status.IDLE])
+            strip = direction_strips.get(state.direction, direction_strips[Direction.SOUTH])
             animation.index = strip.frame_sequence[animation.frame_counter]
             renderable.image = strip[animation.index]
 

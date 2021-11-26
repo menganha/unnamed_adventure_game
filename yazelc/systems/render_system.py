@@ -1,8 +1,8 @@
 import esper
 import pygame
 
-import yazelc.components as cmp
-import yazelc.config as cfg
+from yazelc import components as cmp
+from yazelc import config as cfg
 
 
 class RenderSystem(esper.Processor):
