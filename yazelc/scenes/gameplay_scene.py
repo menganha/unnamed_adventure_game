@@ -1,6 +1,6 @@
-import yazelc.components as cmp
-import yazelc.config as cfg
-import yazelc.player as player
+from yazelc import components as cmp
+from yazelc import config as cfg
+from yazelc import player
 from yazelc.maps import Maps
 from yazelc.scenes.base_scene import BaseScene
 from yazelc.systems.animation_system import AnimationSystem
@@ -8,7 +8,6 @@ from yazelc.systems.camera_system import CameraSystem
 from yazelc.systems.collision_system import CollisionSystem
 from yazelc.systems.combat_system import CombatSystem
 from yazelc.systems.input_system import InputSystem
-from yazelc.systems.menu_system import MenuSystem
 from yazelc.systems.movement_system import MovementSystem
 from yazelc.systems.render_system import RenderSystem
 from yazelc.systems.script_system import ScriptSystem
@@ -55,10 +54,9 @@ class GameplayScene(BaseScene):
         player.create_jelly_at(400, 400, self.world)
 
         # Create the systems for the scene
-        input_system = InputSystem(self.PLAYER_ENTITY)
+        input_system = InputSystem()
         movement_system = MovementSystem(min_x=0, max_x=cfg.RESOLUTION[0], min_y=0, max_y=cfg.RESOLUTION[1])
         script_system = ScriptSystem()
-        menu_system = MenuSystem()
         collision_system = CollisionSystem()
         combat_system = CombatSystem()
         visual_effect_system = VisualEffectsSystem()
@@ -70,7 +68,6 @@ class GameplayScene(BaseScene):
         self.world.add_processor(input_system)
         self.world.add_processor(movement_system)
         self.world.add_processor(script_system)
-        self.world.add_processor(menu_system)
         self.world.add_processor(collision_system)
         self.world.add_processor(combat_system)
         self.world.add_processor(visual_effect_system)

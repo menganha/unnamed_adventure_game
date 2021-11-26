@@ -6,10 +6,10 @@ from pathlib import Path
 import esper
 import pygame
 
-import yazelc.components as cmp
-import yazelc.visual_effects as vfx
+from yazelc import components as cmp
 from yazelc import config as cfg
 from yazelc import event_manager
+from yazelc import visual_effects as vfx
 from yazelc.animation import AnimationStrip
 from yazelc.event_type import EventType
 from yazelc.keyboard import Keyboard
@@ -125,7 +125,7 @@ def create_jelly_at(x_pos: int, y_pos: int, world: esper.World) -> int:
     return enemy_entity
 
 
-def handle_input(player_entity: int, input_: cmp.Input, keyboard: Keyboard, world: esper.World):
+def handle_input(player_entity: int, keyboard: Keyboard, world: esper.World):
     state = world.component_for_entity(player_entity, cmp.State)
     state.previous_status = state.status
     state.previous_direction = state.direction
@@ -133,6 +133,7 @@ def handle_input(player_entity: int, input_: cmp.Input, keyboard: Keyboard, worl
     if keyboard.is_key_pressed(pygame.K_p):
         event_manager.post_event(EventType.PAUSE)
 
+    input_ = world.component_for_entity(player_entity, cmp.Input)
     if input_.block_counter != 0:
         input_.block_counter -= 1
 

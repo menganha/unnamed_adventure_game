@@ -1,58 +1,77 @@
 import esper
 import pygame
 
-import yazelc.components as cmp
-import yazelc.config as cfg
-import yazelc.text as text
+from yazelc import components as cmp
+from yazelc import config as cfg
 from yazelc import event_manager
+from yazelc import text
 from yazelc.event_type import EventType
 from yazelc.keyboard import Keyboard
 from yazelc.systems.camera_system import CameraSystem
 
+# TODO: See if other types of menus, e.g., inventory menu have some emerging pattern that we can encapsulate on a
+#  general class or module
+WIDTH = 130
+HEIGHT = 50
+ALPHA = 150
+BG_COLOR = pygame.Color(cfg.C_BLACK.r, cfg.C_BLACK.g, cfg.C_BLACK.b, ALPHA)
+FG_COLOR = cfg.C_WHITE
+FG_COLOR_INACTIVE = pygame.Color(cfg.C_WHITE.r, cfg.C_WHITE.g, cfg.C_WHITE.b, ALPHA)
+PAUSE_TEXT = text.Text('PAUSE', size=8)
+CONTINUE_TEXT = text.Text('Continue', size=8)
+QUIT_TEXT = text.Text('Quit', size=8)
+PAUSE_TEXT_POS_Y = 3
+CONTINUE_TEXT_POS_Y = 25
+QUIT_TEXT_POS_Y = 37
 
-class PauseMenu:
-    WIDTH = 150
-    HEIGHT = 50
-    BG_COLOR = cfg.C_BLACK
-    FG_COLOR = cfg.C_WHITE
-    ALPHA = 180
 
-    def __init__(self):
-        self.background = pygame.Surface((self.WIDTH, self.HEIGHT))
-        self.entity = None
+def create_base_surface():
+    background = pygame.Surface((WIDTH, HEIGHT), pygame.SRCALPHA)
+    background.fill(BG_COLOR)
+    PAUSE_TEXT.render_at(background, FG_COLOR, pos_y=PAUSE_TEXT_POS_Y)
 
-        self.background.fill(self.BG_COLOR)
-        self.background.set_alpha(self.ALPHA)
+    return background
 
-        pause_text = text.Text('PAUSE', size=8, color=self.FG_COLOR)
-        continue_text = text.Text('Continue', size=8, color=self.FG_COLOR)
-        quit_text = text.Text('Quit', size=8, color=self.FG_COLOR)
 
-        pause_text.render_at(self.background, pos_y=3)
-        continue_text.render_at(self.background, pos_y=20)
-        quit_text.render_at(self.background, pos_y=30)
+def create_entity(world: esper.World):
+    camera_entity = world.get_processor(CameraSystem).camera_entity
+    camera_pos = world.component_for_entity(camera_entity, cmp.Position)
 
-    def create_entity(self, world: esper.World):
-        camera_entity = world.get_processor(CameraSystem).camera_entity
-        camera_pos = world.component_for_entity(camera_entity, cmp.Position)
+    menu_pos_x = round(-camera_pos.x + (cfg.RESOLUTION[0] - WIDTH) // 2)
+    menu_pos_y = round(-camera_pos.y + (cfg.RESOLUTION[1] - HEIGHT) // 2)
 
-        menu_pos_x = round(-camera_pos.x + (cfg.RESOLUTION[0] - self.WIDTH) // 2)
-        menu_pos_y = round(-camera_pos.y + (cfg.RESOLUTION[1] - self.HEIGHT) // 2)
+    entity = world.create_entity()
+    base_surface = create_base_surface()
+    CONTINUE_TEXT.render_at(base_surface, FG_COLOR, pos_y=CONTINUE_TEXT_POS_Y)
+    QUIT_TEXT.render_at(base_surface, FG_COLOR_INACTIVE, pos_y=QUIT_TEXT_POS_Y)
+    world.add_component(entity, cmp.Renderable(image=base_surface))
+    world.add_component(entity, cmp.Position(menu_pos_x, menu_pos_y))
+    world.add_component(entity, cmp.Menu(0, 0, 0, 2))
+    world.add_component(entity, cmp.Input(handle_input_function=handle_menu_input))
 
-        self.entity = world.create_entity()
-        world.add_component(self.entity, cmp.Renderable(image=self.background))
-        world.add_component(self.entity, cmp.Position(menu_pos_x, menu_pos_y))
-        world.add_component(self.entity, cmp.Menu(0, 0, 2, 0))
-        world.add_component(self.entity, cmp.Input(handle_input_function=PauseMenu.handle_menu_input))
 
-    def delete_entity(self, world: esper.World):
-        world.delete_entity(self.entity)
-        self.entity = None
+def handle_menu_input(entity: int, keyboard: Keyboard, world: esper.World):
+    direction_x = - keyboard.is_key_down(pygame.K_LEFT) + keyboard.is_key_down(pygame.K_RIGHT)
+    direction_y = - keyboard.is_key_down(pygame.K_UP) + keyboard.is_key_down(pygame.K_DOWN)
 
-    @staticmethod
-    def handle_menu_input(entity: int, input_: cmp.Input, keyboard: Keyboard, world: esper.World):
-        direction_x = - keyboard.is_key_down(pygame.K_LEFT) + keyboard.is_key_down(pygame.K_RIGHT)
-        direction_y = - keyboard.is_key_down(pygame.K_UP) + keyboard.is_key_down(pygame.K_DOWN)
+    menu = world.component_for_entity(entity, cmp.Menu)
+    menu.item_x += direction_x
+    menu.item_y += direction_y
 
-        if keyboard.is_key_pressed(pygame.K_p):
-            event_manager.post_event(EventType.PAUSE)
+    menu.item_x = max(0, min(menu.item_max_x - 1, menu.item_x))
+    menu.item_y = max(0, min(menu.item_max_y - 1, menu.item_y))
+
+    if direction_y and menu.item_y == 0:
+        surface = create_base_surface()
+        CONTINUE_TEXT.render_at(surface, FG_COLOR, pos_y=CONTINUE_TEXT_POS_Y)
+        QUIT_TEXT.render_at(surface, FG_COLOR_INACTIVE, pos_y=QUIT_TEXT_POS_Y)
+        world.component_for_entity(entity, cmp.Renderable).image = surface
+    elif direction_y and menu.item_y == 1:
+        surface = create_base_surface()
+        CONTINUE_TEXT.render_at(surface, FG_COLOR_INACTIVE, pos_y=CONTINUE_TEXT_POS_Y)
+        QUIT_TEXT.render_at(surface, FG_COLOR, pos_y=QUIT_TEXT_POS_Y)
+        world.component_for_entity(entity, cmp.Renderable).image = surface
+
+    if (keyboard.is_key_pressed(pygame.K_SPACE) and menu.item_y == 0) or keyboard.is_key_pressed(pygame.K_p):
+        event_manager.post_event(EventType.PAUSE)
+        world.delete_entity(entity)
