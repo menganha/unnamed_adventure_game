@@ -1,6 +1,7 @@
 from yazelc import components as cmp
 from yazelc import config as cfg
 from yazelc import player
+from yazelc.keyboard import Keyboard
 from yazelc.maps import Maps
 from yazelc.scenes.base_scene import BaseScene
 from yazelc.systems.animation_system import AnimationSystem
@@ -54,7 +55,7 @@ class GameplayScene(BaseScene):
         player.create_jelly_at(400, 400, self.world)
 
         # Create the systems for the scene
-        input_system = InputSystem()
+        input_system = InputSystem(Keyboard())
         movement_system = MovementSystem(min_x=0, max_x=cfg.RESOLUTION[0], min_y=0, max_y=cfg.RESOLUTION[1])
         script_system = ScriptSystem()
         collision_system = CollisionSystem()

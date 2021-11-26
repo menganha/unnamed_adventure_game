@@ -5,8 +5,8 @@ from yazelc import components as cmp
 from yazelc import config as cfg
 from yazelc import event_manager
 from yazelc import text
+from yazelc.controller import Controller, Button
 from yazelc.event_type import EventType
-from yazelc.keyboard import Keyboard
 from yazelc.systems.camera_system import CameraSystem
 
 # TODO: See if other types of menus, e.g., inventory menu have some emerging pattern that we can encapsulate on a
@@ -29,7 +29,6 @@ def create_base_surface():
     background = pygame.Surface((WIDTH, HEIGHT), pygame.SRCALPHA)
     background.fill(BG_COLOR)
     PAUSE_TEXT.render_at(background, FG_COLOR, pos_y=PAUSE_TEXT_POS_Y)
-
     return background
 
 
@@ -50,9 +49,9 @@ def create_entity(world: esper.World):
     world.add_component(entity, cmp.Input(handle_input_function=handle_menu_input))
 
 
-def handle_menu_input(entity: int, keyboard: Keyboard, world: esper.World):
-    direction_x = - keyboard.is_key_down(pygame.K_LEFT) + keyboard.is_key_down(pygame.K_RIGHT)
-    direction_y = - keyboard.is_key_down(pygame.K_UP) + keyboard.is_key_down(pygame.K_DOWN)
+def handle_menu_input(entity: int, controller: Controller, world: esper.World):
+    direction_x = - controller.is_button_down(Button.LEFT) + controller.is_button_down(Button.RIGHT)
+    direction_y = - controller.is_button_down(Button.UP) + controller.is_button_down(Button.DOWN)
 
     menu = world.component_for_entity(entity, cmp.Menu)
     menu.item_x += direction_x
@@ -72,6 +71,6 @@ def handle_menu_input(entity: int, keyboard: Keyboard, world: esper.World):
         QUIT_TEXT.render_at(surface, FG_COLOR, pos_y=QUIT_TEXT_POS_Y)
         world.component_for_entity(entity, cmp.Renderable).image = surface
 
-    if (keyboard.is_key_pressed(pygame.K_SPACE) and menu.item_y == 0) or keyboard.is_key_pressed(pygame.K_p):
+    if (controller.is_button_pressed(Button.A) and menu.item_y == 0) or controller.is_button_pressed(Button.START):
         event_manager.post_event(EventType.PAUSE)
         world.delete_entity(entity)

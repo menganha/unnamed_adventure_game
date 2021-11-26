@@ -3,8 +3,8 @@ import esper
 from yazelc import components as cmp
 from yazelc import event_manager
 from yazelc import pause_menu
+from yazelc.controller import Controller
 from yazelc.event_type import EventType
-from yazelc.keyboard import Keyboard
 from yazelc.systems.animation_system import AnimationSystem
 from yazelc.systems.collision_system import CollisionSystem
 from yazelc.systems.combat_system import CombatSystem
@@ -19,22 +19,22 @@ class InputSystem(esper.Processor):
     PROCESSOR_TYPES_PAUSE = [MovementSystem, ScriptSystem, CollisionSystem, CombatSystem, VisualEffectsSystem, TransitionSystem,
                              AnimationSystem]
 
-    def __init__(self):
+    def __init__(self, controller: Controller):
         super().__init__()
-        self.keyboard = Keyboard()
+        self.controller = controller
         self.is_paused = False
         self.processors_pause = None
         event_manager.subscribe(EventType.PAUSE, self.on_pause)
 
     def process(self):
-        self.keyboard.process_input()
+        self.controller.process_input()
 
         if self.is_paused:
             for entity, (input_, _) in self.world.get_components(cmp.Input, cmp.Menu):
-                input_.handle_input_function(entity, self.keyboard, self.world)
+                input_.handle_input_function(entity, self.controller, self.world)
         else:
             for entity, input_ in self.world.get_component(cmp.Input):
-                input_.handle_input_function(entity, self.keyboard, self.world)
+                input_.handle_input_function(entity, self.controller, self.world)
 
     def on_pause(self):
         self.is_paused = not self.is_paused
