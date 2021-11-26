@@ -1,6 +1,9 @@
+import pygame
+
 from yazelc import components as cmp
 from yazelc import config as cfg
 from yazelc import player
+from yazelc.gamepad import Gamepad
 from yazelc.keyboard import Keyboard
 from yazelc.maps import Maps
 from yazelc.scenes.base_scene import BaseScene
@@ -54,8 +57,16 @@ class GameplayScene(BaseScene):
         # Create enemy
         player.create_jelly_at(400, 400, self.world)
 
+        # Get the input device
+        pygame.joystick.init()
+        if pygame.joystick.get_count():
+            controller = Gamepad(pygame.joystick.Joystick(0))
+        else:
+            controller = Keyboard()
+            pygame.joystick.quit()
+
         # Create the systems for the scene
-        input_system = InputSystem(Keyboard())
+        input_system = InputSystem(controller)
         movement_system = MovementSystem(min_x=0, max_x=cfg.RESOLUTION[0], min_y=0, max_y=cfg.RESOLUTION[1])
         script_system = ScriptSystem()
         collision_system = CollisionSystem()

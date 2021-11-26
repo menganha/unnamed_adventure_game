@@ -3,10 +3,7 @@ from enum import Enum, auto
 
 
 class Button(Enum):
-    """
-    Buttons on a controller base on the classic SNES controller.
-    These are the only inputs the game recognizes
-    """
+    """ Buttons on the controller. These are the only inputs the game will recognize """
     A = auto()
     B = auto()
     X = auto()
