@@ -21,15 +21,12 @@ class CollisionSystem(esper.Processor):
 
         # Checks for collision with wall entities. If it collides it resolves it by reverting the direction of movement
         for ent, (hitbox, position, velocity) in self.world.get_components(cmp.HitBox, cmp.Position, cmp.Velocity):
-            hitbox.rect.x = round(position.x) - int(hitbox.scale_offset / 2)
-            hitbox.rect.y = round(position.y) - int(hitbox.scale_offset / 2)
 
             if hitbox.rect.collidelist(static_hitboxes) != -1:
                 for dir_x, dir_y in ((1, 0), (0, 1), (1, 1)):
-                    test_rect = hitbox.rect.copy()
-                    test_rect.x = round(position.x - velocity.x * dir_x) - int(hitbox.scale_offset / 2)
-                    test_rect.y = round(position.y - velocity.y * dir_y) - int(hitbox.scale_offset / 2)
-                    # test_rect = hitbox.rect.move(round(-velocity.x * dir_x), round(-velocity.y * dir_y))
+                    delta_x = (round(position.x) - round(position.prev_x)) * dir_x
+                    delta_y = (round(position.y) - round(position.prev_y)) * dir_y
+                    test_rect = hitbox.rect.move(-delta_x, -delta_y)
                     if test_rect.collidelist(static_hitboxes) == -1:
                         hitbox.rect = test_rect
                         position.x = round(position.x - velocity.x * dir_x)

@@ -1,7 +1,6 @@
 import pygame
 
 from yazelc import components as cmp
-from yazelc import config as cfg
 from yazelc import enemy
 from yazelc import player
 from yazelc.gamepad import Gamepad
@@ -19,7 +18,6 @@ from yazelc.systems.render_system import RenderSystem
 from yazelc.systems.script_system import ScriptSystem
 from yazelc.systems.transition_system import TransitionSystem
 from yazelc.systems.visual_effects_system import VisualEffectsSystem
-from yazelc.utils.component_utils import position_of_unscaled_rect
 
 
 class GameplayScene(BaseScene):
@@ -42,15 +40,14 @@ class GameplayScene(BaseScene):
         player_x_pos, player_y_pos = overworld_map.get_center_coord_from_tile(self.start_tile_x_pos,
                                                                               self.start_tile_y_pos)
         if not self.PLAYER_ENTITY:
-            self.PLAYER_ENTITY = player.create_player_at(center_x_pos=player_x_pos, center_y_pos=player_y_pos,
-                                                         world=self.world)
+            self.PLAYER_ENTITY = player.create_player_at(center_x_pos=player_x_pos, center_y_pos=player_y_pos, world=self.world)
         else:
             position = self.world.component_for_entity(self.PLAYER_ENTITY, cmp.Position)
             velocity = self.world.component_for_entity(self.PLAYER_ENTITY, cmp.Velocity)
             hitbox = self.world.component_for_entity(self.PLAYER_ENTITY, cmp.HitBox)
             velocity.x, velocity.y = (0, 0)
             hitbox.rect.center = (player_x_pos, player_y_pos)
-            position.x, position.y = position_of_unscaled_rect(hitbox)
+            position.x, position.y = player.get_position_of_sprite(hitbox)
 
         # Add camera entity
         camera_entity = self.world.create_entity()
@@ -70,13 +67,14 @@ class GameplayScene(BaseScene):
         # Create the systems for the scene
         ai_system = AISystem()
         input_system = InputSystem(controller)
-        movement_system = MovementSystem(min_x=0, max_x=cfg.RESOLUTION[0], min_y=0, max_y=cfg.RESOLUTION[1])
+        movement_system = MovementSystem()
         script_system = ScriptSystem()
         collision_system = CollisionSystem()
         combat_system = CombatSystem()
         visual_effect_system = VisualEffectsSystem()
         transition_system = TransitionSystem(self)
-        camera_system = CameraSystem(camera_entity, entity_followed=self.PLAYER_ENTITY)
+        camera_system = CameraSystem(camera_entity, entity_followed=self.PLAYER_ENTITY, max_x=overworld_map.width,
+                                     max_y=overworld_map.height)
         animation_system = AnimationSystem()
         render_system = RenderSystem(window=self.window, camera_entity=camera_entity)
 

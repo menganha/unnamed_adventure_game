@@ -24,17 +24,17 @@ class RenderSystem(esper.Processor):
                 flags = pygame.BLEND_RGBA_ADD
             else:
                 flags = 0
-            self.window.blit(rend.image, (round(pos.x + camera_pos.x), round(pos.y + camera_pos.y)), special_flags=flags)
+            self.window.blit(rend.image, (round(pos.x - camera_pos.x), round(pos.y - camera_pos.y)), special_flags=flags)
 
         # Render native shapes which are (normally) associated with particle effects
         for ent, (vfx, pos) in self.world.get_components(cmp.VisualEffectTag, cmp.Position):
-            rect = pygame.Rect(round(pos.x + camera_pos.x), round(pos.y + camera_pos.y), 1, 1)
+            rect = pygame.Rect(round(pos.x - camera_pos.x), round(pos.y - camera_pos.y), 1, 1)
             pygame.draw.rect(self.window, vfx.color, rect)
 
         if cfg.DEBUG_MODE:  # On debug mode then render all hitboxes
             for ent, (hitbox) in self.world.get_component(cmp.HitBox):
                 hb_surface = pygame.Surface((hitbox.rect.w, hitbox.rect.h), flags=pygame.SRCALPHA)
                 hb_surface.fill(cfg.C_BLUE)
-                self.window.blit(hb_surface, (hitbox.rect.x + round(camera_pos.x), hitbox.rect.y + round(camera_pos.y)))
+                self.window.blit(hb_surface, (hitbox.rect.x - round(camera_pos.x), hitbox.rect.y - round(camera_pos.y)))
 
         pygame.display.flip()

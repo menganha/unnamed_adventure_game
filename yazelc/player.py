@@ -12,8 +12,19 @@ from yazelc import visual_effects as vfx
 from yazelc.animation import AnimationStrip
 from yazelc.controller import Controller, Button
 from yazelc.event_type import EventType
-from yazelc.utils.component_utils import position_of_unscaled_rect
 from yazelc.utils.game_utils import Direction, Status
+
+VELOCITY = 1.5 - 1.e-8  # This ensures that the rounding produces the displacement pattern 1,2,1,2.. that averages a velocity of 1.5
+VELOCITY_DIAGONAL = 1
+
+HITBOX_HEIGHT = 10
+HITBOX_WIDTH = 10
+SPRITE_SIZE = 32
+
+SWORD_FRONT_RANGE = 5
+SWORD_SIDE_RANGE = 20
+SWORD_DAMAGE = 5
+SWORD_ACTIVE_FRAMES = 20
 
 
 def create_player_at(center_x_pos: int, center_y_pos: int, world: esper.World) -> int:
@@ -27,22 +38,18 @@ def create_player_at(center_x_pos: int, center_y_pos: int, world: esper.World) -
         for direction in ['up', 'down', 'left']:
             img_path = Path('assets', 'sprites', 'player', f'{typ}_{direction}.png')
             delay = 4 if typ == 'attack' else 7
-            kwargs.update({f'{typ}_{direction}': AnimationStrip(img_path, sprite_width=32, delay=delay)})
+            kwargs.update({f'{typ}_{direction}': AnimationStrip(img_path, sprite_width=SPRITE_SIZE, delay=delay)})
 
     world.add_component(player_entity, cmp.Renderable(image=kwargs['idle_down'][0]))
     world.add_component(player_entity, cmp.Animation(**kwargs))
 
     # HitBox
-    sprite_width = kwargs['idle_down'][0].get_width()
-    sprite_height = kwargs['idle_down'][0].get_height()
-    scale_offset = - int(sprite_width * 0.7)
-    hitbox_component = cmp.HitBox(0, 0, sprite_width, sprite_height, scale_offset)
-    hitbox_component.rect.centerx = center_x_pos
-    hitbox_component.rect.centery = center_y_pos
+    hitbox_component = cmp.HitBox(0, 0, HITBOX_WIDTH, HITBOX_HEIGHT)
+    hitbox_component.rect.center = (center_x_pos, center_y_pos)
     world.add_component(player_entity, hitbox_component)
 
     # Other components
-    x_pos, y_pos = position_of_unscaled_rect(hitbox_component)
+    x_pos, y_pos = get_position_of_sprite(hitbox_component)
     world.add_component(player_entity, cmp.Position(x=x_pos, y=y_pos))
     world.add_component(player_entity, cmp.Velocity(x=0, y=0))
     world.add_component(player_entity, cmp.Input(handle_input_function=handle_input))
@@ -50,6 +57,13 @@ def create_player_at(center_x_pos: int, center_y_pos: int, world: esper.World) -
     world.add_component(player_entity, cmp.State())
 
     return player_entity
+
+
+def get_position_of_sprite(hitbox: cmp.HitBox):
+    """ Gets the position of the sprite from the player's Hitbox """
+    relative_pos_x = SPRITE_SIZE // 2
+    relative_pos_y = 3 + SPRITE_SIZE // 2
+    return hitbox.rect.centerx - relative_pos_x, hitbox.rect.centery - relative_pos_y
 
 
 def create_bomb_at(ent: int, world: esper.World) -> int:
@@ -127,7 +141,7 @@ def handle_input(player_entity: int, controller: Controller, world: esper.World)
         direction_x = - controller.is_button_down(Button.LEFT) + controller.is_button_down(Button.RIGHT)
         direction_y = - controller.is_button_down(Button.UP) + controller.is_button_down(Button.DOWN)
 
-        abs_vel = cfg.VELOCITY_DIAGONAL if (direction_y and direction_x) else cfg.VELOCITY
+        abs_vel = VELOCITY_DIAGONAL if (direction_y and direction_x) else VELOCITY
         velocity.x = direction_x * abs_vel
         velocity.y = direction_y * abs_vel
 
@@ -166,12 +180,12 @@ def handle_input(player_entity: int, controller: Controller, world: esper.World)
 
             # Creates a temporary hitbox representing the sword weapon
             hitbox = world.component_for_entity(player_entity, cmp.HitBox)
-            create_melee_weapon(hitbox, state.direction, cfg.SWORD_FRONT_RANGE, cfg.SWORD_SIDE_RANGE,
-                                cfg.SWORD_DAMAGE, cfg.SWORD_ACTIVE_FRAMES, world)
+            create_melee_weapon(hitbox, state.direction, SWORD_FRONT_RANGE, SWORD_SIDE_RANGE,
+                                SWORD_DAMAGE, SWORD_ACTIVE_FRAMES, world)
 
             # Block input until weapon life time is over and publish attach event. We need to block it one less than
             # The active frames as we are counting already the frame when it is activated as active
-            input_.block_counter = cfg.SWORD_ACTIVE_FRAMES - 1
+            input_.block_counter = SWORD_ACTIVE_FRAMES - 1
 
         if controller.is_button_pressed(Button.L):
             vfx.create_explosion(position.x, position.y, 30, 30, cfg.C_WHITE, world)

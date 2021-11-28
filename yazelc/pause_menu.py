@@ -36,8 +36,8 @@ def create_entity(world: esper.World):
     camera_entity = world.get_processor(CameraSystem).camera_entity
     camera_pos = world.component_for_entity(camera_entity, cmp.Position)
 
-    menu_pos_x = round(-camera_pos.x + (cfg.RESOLUTION[0] - WIDTH) // 2)
-    menu_pos_y = round(-camera_pos.y + (cfg.RESOLUTION[1] - HEIGHT) // 2)
+    menu_pos_x = round(camera_pos.x + (cfg.RESOLUTION[0] - WIDTH) // 2)
+    menu_pos_y = round(camera_pos.y + (cfg.RESOLUTION[1] - HEIGHT) // 2)
 
     entity = world.create_entity()
     base_surface = create_base_surface()

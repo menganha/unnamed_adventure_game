@@ -9,10 +9,12 @@ class CameraSystem(esper.Processor):
     Updates the camera entity to center around the input entity position
     """
 
-    def __init__(self, camera_entity: int, entity_followed: int):
+    def __init__(self, camera_entity: int, entity_followed: int, max_x: int, max_y: int):
         super().__init__()
         self.camera_entity = camera_entity
         self.entity_followed = entity_followed
+        self.max_x = max_x
+        self.max_y = max_y
         self.relative_coord_with_respect_to_entity_tracked = None
 
     def process(self):
@@ -26,8 +28,10 @@ class CameraSystem(esper.Processor):
                 self.relative_coord_with_respect_to_entity_tracked[0] = int((cfg.RESOLUTION[0] - renderable.width) / 2)
                 self.relative_coord_with_respect_to_entity_tracked[1] = int((cfg.RESOLUTION[1] - renderable.height) / 2)
 
-        camera_pos.x = - entity_followed_pos.x + self.relative_coord_with_respect_to_entity_tracked[0]
-        camera_pos.y = - entity_followed_pos.y + self.relative_coord_with_respect_to_entity_tracked[1]
+        camera_pos.x = entity_followed_pos.x - self.relative_coord_with_respect_to_entity_tracked[0]
+        camera_pos.y = entity_followed_pos.y - self.relative_coord_with_respect_to_entity_tracked[1]
 
-        camera_pos.x = min(0, camera_pos.x)
-        camera_pos.y = min(0, camera_pos.y)
+        camera_pos.x = max(0, camera_pos.x)
+        camera_pos.y = max(0, camera_pos.y)
+        camera_pos.x = min(self.max_x - cfg.RESOLUTION[0], camera_pos.x)
+        camera_pos.y = min(self.max_y - cfg.RESOLUTION[1], camera_pos.y)

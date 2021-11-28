@@ -12,6 +12,8 @@ from yazelc.utils.game_utils import Direction, Status
 class Position:
     x: float = 0.0
     y: float = 0.0
+    prev_x: int = field(init=False, default=x)
+    prev_y: int = field(init=False, default=y)
 
 
 @component

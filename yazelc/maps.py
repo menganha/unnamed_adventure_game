@@ -12,6 +12,8 @@ from yazelc import components as cmp
 class Maps:
     def __init__(self, map_file: str):
         self.tmx_data = load_pygame(map_file)
+        self.width = self.tmx_data.width * self.tmx_data.tilewidth
+        self.height = self.tmx_data.height * self.tmx_data.tileheight
 
     def create_map_image(self) -> Iterator[pygame.Surface]:
         for layer_idx in self.tmx_data.visible_tile_layers:
@@ -28,9 +30,9 @@ class Maps:
 
     def create_doors(self):
         for obj in self.tmx_data.get_layer_by_name('doors'):
-            dest_x = obj.properties['dest_x']
-            dest_y = obj.properties['dest_y']
-            yield cmp.Door(obj.name, dest_x, dest_y), cmp.HitBox(obj.x, obj.y, obj.width, obj.height)
+            target_x = obj.properties['dest_x']
+            target_y = obj.properties['dest_y']
+            yield cmp.Door(obj.name, target_x, target_y), cmp.HitBox(obj.x, obj.y, obj.width, obj.height)
 
     def get_center_coord_from_tile(self, tile_x_pos: int, tile_y_pos: int) -> (int, int):
         """
