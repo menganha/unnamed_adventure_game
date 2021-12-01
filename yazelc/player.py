@@ -12,6 +12,7 @@ from yazelc import visual_effects as vfx
 from yazelc.animation import AnimationStrip
 from yazelc.controller import Controller, Button
 from yazelc.event_type import EventType
+from yazelc.items import ItemType
 from yazelc.utils.game_utils import Direction, Status
 
 VELOCITY = 1.5 - 1.e-8  # This ensures that the rounding produces the displacement pattern 1,2,1,2.. that averages a velocity of 1.5
@@ -21,6 +22,11 @@ HITBOX_HEIGHT = 10
 HITBOX_WIDTH = 10
 SPRITE_SIZE = 32
 
+MAX_HEALTH = 100
+
+INVENTORY = {item_type: 0 for item_type in ItemType if item_type != ItemType.HEART}
+
+# TODO: Modify the sprite such that the range of the sword is the same on all cardinal directions!!!
 SWORD_FRONT_RANGE = 5
 SWORD_SIDE_RANGE = 20
 SWORD_DAMAGE = 5
@@ -53,7 +59,7 @@ def create_player_at(center_x_pos: int, center_y_pos: int, world: esper.World) -
     world.add_component(player_entity, cmp.Position(x=x_pos, y=y_pos))
     world.add_component(player_entity, cmp.Velocity(x=0, y=0))
     world.add_component(player_entity, cmp.Input(handle_input_function=handle_input))
-    world.add_component(player_entity, cmp.Health(points=100))
+    world.add_component(player_entity, cmp.Health(points=MAX_HEALTH))
     world.add_component(player_entity, cmp.State())
 
     return player_entity

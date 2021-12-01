@@ -5,6 +5,7 @@ from typing import Dict, Callable, List, Optional, Tuple, Any
 import pygame
 
 from yazelc.animation import AnimationStrip, flip_strip_sprites
+from yazelc.items import ItemType
 from yazelc.utils.game_utils import Direction, Status
 
 
@@ -94,6 +95,12 @@ class Brain:
     direction: Direction = Direction.SOUTH
     think_frames: int = 0  # amount of frames it takes to take a new decision
     think_counter: int = field(init=False, default=0)
+
+
+@component
+class Pickable:
+    """ Pickable items tag """
+    item_type: ItemType
 
 
 @component

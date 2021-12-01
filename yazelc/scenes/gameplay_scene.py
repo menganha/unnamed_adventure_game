@@ -2,6 +2,7 @@ import pygame
 
 from yazelc import components as cmp
 from yazelc import enemy
+from yazelc import items
 from yazelc import player
 from yazelc.gamepad import Gamepad
 from yazelc.keyboard import Keyboard
@@ -13,6 +14,7 @@ from yazelc.systems.camera_system import CameraSystem
 from yazelc.systems.collision_system import CollisionSystem
 from yazelc.systems.combat_system import CombatSystem
 from yazelc.systems.input_system import InputSystem
+from yazelc.systems.inventory_system import InventorySystem
 from yazelc.systems.movement_system import MovementSystem
 from yazelc.systems.render_system import RenderSystem
 from yazelc.systems.script_system import ScriptSystem
@@ -56,6 +58,9 @@ class GameplayScene(BaseScene):
         # Create enemy
         enemy.create_jelly_at(400, 400, self.world)
 
+        # Create a pickable item
+        items.create_entity(items.ItemType.HEART, 700, 700, self.world)
+
         # Get the input device
         pygame.joystick.init()
         if pygame.joystick.get_count():
@@ -71,6 +76,7 @@ class GameplayScene(BaseScene):
         script_system = ScriptSystem()
         collision_system = CollisionSystem()
         combat_system = CombatSystem()
+        inventory_system = InventorySystem(self.PLAYER_ENTITY)
         visual_effect_system = VisualEffectsSystem()
         transition_system = TransitionSystem(self)
         camera_system = CameraSystem(camera_entity, entity_followed=self.PLAYER_ENTITY, max_x=overworld_map.width,
@@ -84,6 +90,7 @@ class GameplayScene(BaseScene):
         self.world.add_processor(script_system)
         self.world.add_processor(collision_system)
         self.world.add_processor(combat_system)
+        self.world.add_processor(inventory_system)
         self.world.add_processor(visual_effect_system)
         self.world.add_processor(transition_system)
         self.world.add_processor(camera_system)

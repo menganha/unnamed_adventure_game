@@ -13,6 +13,7 @@ if TYPE_CHECKING:
     from yazelc.scenes.gameplay_scene import GameplayScene
 
 
+# TODO: Fix bug where enemies can go through doors since there are no solid hitboxes preventing movement
 class TransitionSystem(esper.Processor):
     """ Transition between gameplay scenes """
 
