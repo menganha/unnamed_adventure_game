@@ -3,17 +3,17 @@ import pygame
 
 from yazelc import components as cmp
 from yazelc import config as cfg
+from yazelc.systems.hud_system import HUDSystem
 
 
 class RenderSystem(esper.Processor):
-    def __init__(self, window, camera_entity: int, clear_color=pygame.Color(0, 0, 0)):
+    def __init__(self, window: pygame.Surface, camera_entity: int):
         super().__init__()
         self.window = window
         self.camera_entity = camera_entity
-        self.clear_color = clear_color
 
     def process(self):
-        self.window.fill(self.clear_color)
+        self.window.fill(cfg.C_BLACK)
         camera_pos = self.world.component_for_entity(self.camera_entity, cmp.Position)
 
         # Render sprites
@@ -36,5 +36,8 @@ class RenderSystem(esper.Processor):
                 hb_surface = pygame.Surface((hitbox.rect.w, hitbox.rect.h), flags=pygame.SRCALPHA)
                 hb_surface.fill(cfg.C_BLUE)
                 self.window.blit(hb_surface, (hitbox.rect.x - round(camera_pos.x), hitbox.rect.y - round(camera_pos.y)))
+
+        hud_image = self.world.get_processor(HUDSystem).hud_image
+        self.window.blit(hud_image, (0, 0))
 
         pygame.display.flip()

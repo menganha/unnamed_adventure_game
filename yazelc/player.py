@@ -22,7 +22,7 @@ HITBOX_HEIGHT = 10
 HITBOX_WIDTH = 10
 SPRITE_SIZE = 32
 
-MAX_HEALTH = 100
+MAX_HEALTH = 10
 
 INVENTORY = {item_type: 0 for item_type in ItemType if item_type != ItemType.HEART}
 

@@ -2,6 +2,7 @@ import pygame
 
 from yazelc import components as cmp
 from yazelc import enemy
+from yazelc import hud
 from yazelc import items
 from yazelc import player
 from yazelc.gamepad import Gamepad
@@ -13,6 +14,7 @@ from yazelc.systems.animation_system import AnimationSystem
 from yazelc.systems.camera_system import CameraSystem
 from yazelc.systems.collision_system import CollisionSystem
 from yazelc.systems.combat_system import CombatSystem
+from yazelc.systems.hud_system import HUDSystem
 from yazelc.systems.input_system import InputSystem
 from yazelc.systems.inventory_system import InventorySystem
 from yazelc.systems.movement_system import MovementSystem
@@ -55,6 +57,10 @@ class GameplayScene(BaseScene):
         camera_entity = self.world.create_entity()
         self.world.add_component(camera_entity, cmp.Position(x=0, y=0))
 
+        # Initialize the HUD
+        hud_image = hud.create_hud_image(self.PLAYER_ENTITY, self.world)
+        hud_cache_values = hud.get_hud_dependant_values(self.PLAYER_ENTITY, self.world)
+
         # Create enemy
         enemy.create_jelly_at(400, 400, self.world)
 
@@ -79,10 +85,10 @@ class GameplayScene(BaseScene):
         inventory_system = InventorySystem(self.PLAYER_ENTITY)
         visual_effect_system = VisualEffectsSystem()
         transition_system = TransitionSystem(self)
-        camera_system = CameraSystem(camera_entity, entity_followed=self.PLAYER_ENTITY, max_x=overworld_map.width,
-                                     max_y=overworld_map.height)
+        camera_system = CameraSystem(camera_entity, self.PLAYER_ENTITY, overworld_map.width, overworld_map.height)
         animation_system = AnimationSystem()
         render_system = RenderSystem(window=self.window, camera_entity=camera_entity)
+        hud_system = HUDSystem(hud_image, self.PLAYER_ENTITY, cached_values=hud_cache_values)
 
         self.world.add_processor(ai_system)
         self.world.add_processor(input_system)
@@ -95,6 +101,7 @@ class GameplayScene(BaseScene):
         self.world.add_processor(transition_system)
         self.world.add_processor(camera_system)
         self.world.add_processor(animation_system)
+        self.world.add_processor(hud_system)
         self.world.add_processor(render_system)
 
     def on_exit(self):
