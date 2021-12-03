@@ -1,41 +1,42 @@
 from pathlib import Path
-from typing import Dict
 
-import esper
 import pygame
 
-from yazelc import components as cmp
 from yazelc import config as cfg
-
-WHOLE_HEART_HEALTH_POINTS = 2
-HUD_HEIGHT = 40
+from yazelc import player
 
 
-# TODO: Pattern seems to suggest that these functions may adapt better to a class since, e.g., the heart surface
-#   and really the whole hud surface may be constant which has to be updated from time to time.
+class HUD:
+    WHOLE_HEART_HEALTH_POINTS = 2
+    HUD_WIDTH = cfg.RESOLUTION[0]
+    HUD_HEIGHT = 40
+    FULL_HEART_IMAGE_PATH = Path('assets', 'sprites', 'full_heart.png')
+    HALF_HEART_IMAGE_PATH = Path('assets', 'sprites', 'half_heart.png')
+    EMPTY_HEART_IMAGE_PATH = Path('assets', 'sprites', 'empty_heart.png')
+    HEART_OFFSET = 2, 2
 
-# TODO: Include half a heart image
+    def __init__(self):
+        self.full_heart_image = pygame.image.load(self.FULL_HEART_IMAGE_PATH).convert_alpha()
+        self.half_heart_image = pygame.image.load(self.HALF_HEART_IMAGE_PATH).convert_alpha()
+        self.empty_heart_image = pygame.image.load(self.EMPTY_HEART_IMAGE_PATH).convert_alpha()
+        self.hud_surface = pygame.surface.Surface((self.HUD_WIDTH, self.HUD_HEIGHT), flags=pygame.SRCALPHA)
 
-def create_hud_image(player_entitity_id: int, world: esper.World) -> pygame.surface.Surface:
-    # Creates the backaground surface
-    hud_surface = pygame.surface.Surface((cfg.RESOLUTION[0], HUD_HEIGHT), flags=pygame.SRCALPHA)
-    # Updates the heart count
-    # TODO: very inefficient consider resources manager
-    HEART_IMAGE = pygame.image.load(Path('assets', 'sprites', 'full_heart.png')).convert_alpha()
-    health = world.component_for_entity(player_entitity_id, cmp.Health)
-    # updates other aspects of the hud
-    # ...
-    num_whole_hearts, num_medium_hearts = divmod(health.points, WHOLE_HEART_HEALTH_POINTS)
-    for idx in range(num_whole_hearts):
-        hud_surface.blit(HEART_IMAGE, (idx * HEART_IMAGE.get_width(), 0))
-    for idx in range(num_medium_hearts):
-        hud_surface.blit(HEART_IMAGE, (idx * HEART_IMAGE.get_width(), 0))
-
-    return hud_surface
-
-
-def get_hud_dependant_values(player_entity_id: int, world: esper.World) -> Dict[str, object]:
-    dictionary = {
-        'health_points': world.component_for_entity(player_entity_id, cmp.Health).points
-    }
-    return dictionary
+    def update_surface(self, health_points: int):
+        # Clear surface
+        # updates other aspects of the hud
+        # ...
+        # updates hearts
+        num_whole_hearts, num_medium_hearts = divmod(health_points, self.WHOLE_HEART_HEALTH_POINTS)
+        index = 0
+        for idx in range(num_whole_hearts):
+            index = idx
+            self.hud_surface.blit(self.full_heart_image,
+                                  (index * self.full_heart_image.get_width() + self.HEART_OFFSET[0], self.HEART_OFFSET[1]))
+        for idx in range(num_medium_hearts):
+            index += 1
+            self.hud_surface.blit(self.half_heart_image,
+                                  (index * self.half_heart_image.get_width() + self.HEART_OFFSET[0], self.HEART_OFFSET[1]))
+        for idx in range(player.MAX_HEALTH // 2 - num_medium_hearts - num_whole_hearts):
+            index += 1
+            self.hud_surface.blit(self.empty_heart_image,
+                                  (index * self.empty_heart_image.get_width() + self.HEART_OFFSET[0], self.HEART_OFFSET[1]))

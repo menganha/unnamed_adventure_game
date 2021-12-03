@@ -21,8 +21,9 @@ VELOCITY_DIAGONAL = 1
 HITBOX_HEIGHT = 10
 HITBOX_WIDTH = 10
 SPRITE_SIZE = 32
+SPRITE_DEPTH = 200
 
-MAX_HEALTH = 10
+MAX_HEALTH = 10  # Should always be divisible by two
 
 INVENTORY = {item_type: 0 for item_type in ItemType if item_type != ItemType.HEART}
 
@@ -31,6 +32,8 @@ SWORD_FRONT_RANGE = 5
 SWORD_SIDE_RANGE = 20
 SWORD_DAMAGE = 5
 SWORD_ACTIVE_FRAMES = 20
+
+BOMB_DAMAGE = 3
 
 
 def create_player_at(center_x_pos: int, center_y_pos: int, world: esper.World) -> int:
@@ -46,7 +49,7 @@ def create_player_at(center_x_pos: int, center_y_pos: int, world: esper.World) -
             delay = 4 if typ == 'attack' else 7
             kwargs.update({f'{typ}_{direction}': AnimationStrip(img_path, sprite_width=SPRITE_SIZE, delay=delay)})
 
-    world.add_component(player_entity, cmp.Renderable(image=kwargs['idle_down'][0]))
+    world.add_component(player_entity, cmp.Renderable(image=kwargs['idle_down'][0], depth=SPRITE_DEPTH))
     world.add_component(player_entity, cmp.Animation(**kwargs))
 
     # HitBox
@@ -105,7 +108,7 @@ def create_bomb_hitbox(entity: int, x_pos: int, y_pos: int, world: esper.World):
     hitbox = cmp.HitBox(0, 0, bomb_range * 2, bomb_range * 2)
     hitbox.rect.center = x_pos, y_pos
     world.add_component(entity, hitbox)
-    world.add_component(entity, cmp.Weapon(damage=10, active_frames=10))
+    world.add_component(entity, cmp.Weapon(damage=BOMB_DAMAGE, active_frames=10))
     vfx.create_explosion(hitbox.rect.centerx, hitbox.rect.centery, 60, bomb_range, cfg.C_RED, world)
 
 

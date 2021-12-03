@@ -37,7 +37,7 @@ class RenderSystem(esper.Processor):
                 hb_surface.fill(cfg.C_BLUE)
                 self.window.blit(hb_surface, (hitbox.rect.x - round(camera_pos.x), hitbox.rect.y - round(camera_pos.y)))
 
-        hud_image = self.world.get_processor(HUDSystem).hud_image
+        hud_image = self.world.get_processor(HUDSystem).hud.hud_surface
         self.window.blit(hud_image, (0, 0))
 
         pygame.display.flip()

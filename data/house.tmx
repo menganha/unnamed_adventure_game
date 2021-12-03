@@ -76,10 +76,10 @@
 </data>
  </layer>
  <objectgroup id="2" name="doors">
-  <object id="1" name="overworld" x="240" y="304" width="16" height="16">
+  <object id="1" name="overworld" x="240" y="288" width="16" height="16">
    <properties>
-    <property name="dest_x" type="int" value="24"/>
-    <property name="dest_y" type="int" value="22"/>
+    <property name="target_x" type="int" value="19"/>
+    <property name="target_y" type="int" value="19"/>
    </properties>
   </object>
  </objectgroup>

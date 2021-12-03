@@ -2,10 +2,10 @@ import pygame
 
 from yazelc import components as cmp
 from yazelc import enemy
-from yazelc import hud
 from yazelc import items
 from yazelc import player
 from yazelc.gamepad import Gamepad
+from yazelc.hud import HUD
 from yazelc.keyboard import Keyboard
 from yazelc.maps import Maps
 from yazelc.scenes.base_scene import BaseScene
@@ -58,8 +58,7 @@ class GameplayScene(BaseScene):
         self.world.add_component(camera_entity, cmp.Position(x=0, y=0))
 
         # Initialize the HUD
-        hud_image = hud.create_hud_image(self.PLAYER_ENTITY, self.world)
-        hud_cache_values = hud.get_hud_dependant_values(self.PLAYER_ENTITY, self.world)
+        hud = HUD()
 
         # Create enemy
         enemy.create_jelly_at(400, 400, self.world)
@@ -88,7 +87,7 @@ class GameplayScene(BaseScene):
         camera_system = CameraSystem(camera_entity, self.PLAYER_ENTITY, overworld_map.width, overworld_map.height)
         animation_system = AnimationSystem()
         render_system = RenderSystem(window=self.window, camera_entity=camera_entity)
-        hud_system = HUDSystem(hud_image, self.PLAYER_ENTITY, cached_values=hud_cache_values)
+        hud_system = HUDSystem(hud, self.PLAYER_ENTITY)
 
         self.world.add_processor(ai_system)
         self.world.add_processor(input_system)

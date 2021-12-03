@@ -12,7 +12,7 @@ from the main folder.
 
 ## Requirements
 
-* python >= 3.6
+* python >= 3.8
 * pygame
 * esper
 * pyTMX

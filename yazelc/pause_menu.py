@@ -23,6 +23,7 @@ QUIT_TEXT = text.Text('Quit', size=8)
 PAUSE_TEXT_POS_Y = 3
 CONTINUE_TEXT_POS_Y = 25
 QUIT_TEXT_POS_Y = 37
+SURFACE_DEPTH = 3000  # Above everything else
 
 
 def create_base_surface():
@@ -43,7 +44,7 @@ def create_entity(world: esper.World):
     base_surface = create_base_surface()
     CONTINUE_TEXT.render_at(base_surface, FG_COLOR, pos_y=CONTINUE_TEXT_POS_Y)
     QUIT_TEXT.render_at(base_surface, FG_COLOR_INACTIVE, pos_y=QUIT_TEXT_POS_Y)
-    world.add_component(entity, cmp.Renderable(image=base_surface))
+    world.add_component(entity, cmp.Renderable(image=base_surface, depth=SURFACE_DEPTH))
     world.add_component(entity, cmp.Position(menu_pos_x, menu_pos_y))
     world.add_component(entity, cmp.Menu(0, 0, 0, 2))
     world.add_component(entity, cmp.Input(handle_input_function=handle_menu_input))

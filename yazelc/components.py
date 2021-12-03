@@ -40,7 +40,7 @@ class State:
 @component
 class Renderable:
     image: pygame.Surface
-    depth: int = 100
+    depth: int = 100  # Depth is just over the background, i.e., background = 0, foreground, 1000, foreforeground = 2000
     width: int = field(init=False)
     height: int = field(init=False)
 
