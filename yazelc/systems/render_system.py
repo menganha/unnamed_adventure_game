@@ -27,7 +27,7 @@ class RenderSystem(esper.Processor):
             self.window.blit(rend.image, (round(pos.x - camera_pos.x), round(pos.y - camera_pos.y)), special_flags=flags)
 
         # Render native shapes which are (normally) associated with particle effects
-        for ent, (vfx, pos) in self.world.get_components(cmp.VisualEffectTag, cmp.Position):
+        for ent, (vfx, pos) in self.world.get_components(cmp.VisualEffect, cmp.Position):
             rect = pygame.Rect(round(pos.x - camera_pos.x), round(pos.y - camera_pos.y), 1, 1)
             pygame.draw.rect(self.window, vfx.color, rect)
 

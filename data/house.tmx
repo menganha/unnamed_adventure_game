@@ -3,7 +3,7 @@
  <tileset firstgid="1" name="overworld" tilewidth="16" tileheight="16" tilecount="480" columns="32">
   <image source="../assets/sprites/map/overworld.png" width="512" height="240"/>
  </tileset>
- <layer id="1" name="Tile Layer 1" width="30" height="20">
+ <layer id="1" name="ground" width="30" height="20">
   <data encoding="csv">
 405,437,405,405,405,405,405,405,405,405,405,405,405,405,405,405,405,405,405,405,405,405,405,405,405,405,405,405,405,405,
 437,437,437,437,437,437,437,437,437,437,437,437,437,437,437,437,437,437,437,437,437,437,437,437,437,437,437,437,437,437,
@@ -27,7 +27,7 @@
 372,373,373,373,373,373,373,373,373,373,373,373,373,373,373,0,373,373,373,373,373,373,373,373,373,373,373,373,373,437
 </data>
  </layer>
- <layer id="4" name="Tile Layer 2" width="30" height="20">
+ <layer id="4" name="middleground" width="30" height="20">
   <data encoding="csv">
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
@@ -75,7 +75,7 @@
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,373,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 </data>
  </layer>
- <objectgroup id="2" name="doors">
+ <objectgroup color="#ffff00" id="2" name="doors">
   <object id="1" name="overworld" x="240" y="288" width="16" height="16">
    <properties>
     <property name="target_x" type="int" value="19"/>

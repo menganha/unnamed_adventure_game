@@ -16,6 +16,6 @@ def create_explosion(origin_x: int, origin_y: int, n_particles: int, max_vel: in
 
         vel = cmp.Velocity(unit_vector_x * absolute_vel, unit_vector_y * absolute_vel)
         pos = cmp.Position(origin_x, origin_y)
-        tag = cmp.VisualEffectTag(color)
+        tag = cmp.VisualEffect(color)
 
         world.create_entity(vel, pos, tag)

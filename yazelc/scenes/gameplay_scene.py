@@ -1,6 +1,9 @@
+from math import copysign
+
 import pygame
 
 from yazelc import components as cmp
+from yazelc import config as cfg
 from yazelc import enemy
 from yazelc import items
 from yazelc import player
@@ -43,12 +46,12 @@ class GameplayScene(BaseScene):
         # Add player entity
         player_x_pos, player_y_pos = overworld_map.get_center_coord_from_tile(self.start_tile_x_pos,
                                                                               self.start_tile_y_pos)
-        if not self.PLAYER_ENTITY:
-            self.PLAYER_ENTITY = player.create_player_at(center_x_pos=player_x_pos, center_y_pos=player_y_pos, world=self.world)
+        if not self.PLAYER_ENTITY_ID:
+            self.PLAYER_ENTITY_ID = player.create_player_at(center_x_pos=player_x_pos, center_y_pos=player_y_pos, world=self.world)
         else:
-            position = self.world.component_for_entity(self.PLAYER_ENTITY, cmp.Position)
-            velocity = self.world.component_for_entity(self.PLAYER_ENTITY, cmp.Velocity)
-            hitbox = self.world.component_for_entity(self.PLAYER_ENTITY, cmp.HitBox)
+            position = self.world.component_for_entity(self.PLAYER_ENTITY_ID, cmp.Position)
+            velocity = self.world.component_for_entity(self.PLAYER_ENTITY_ID, cmp.Velocity)
+            hitbox = self.world.component_for_entity(self.PLAYER_ENTITY_ID, cmp.HitBox)
             velocity.x, velocity.y = (0, 0)
             hitbox.rect.center = (player_x_pos, player_y_pos)
             position.x, position.y = player.get_position_of_sprite(hitbox)
@@ -81,13 +84,13 @@ class GameplayScene(BaseScene):
         script_system = ScriptSystem()
         collision_system = CollisionSystem()
         combat_system = CombatSystem()
-        inventory_system = InventorySystem(self.PLAYER_ENTITY)
+        inventory_system = InventorySystem(self.PLAYER_ENTITY_ID)
         visual_effect_system = VisualEffectsSystem()
         transition_system = TransitionSystem(self)
-        camera_system = CameraSystem(camera_entity, self.PLAYER_ENTITY, overworld_map.width, overworld_map.height)
+        camera_system = CameraSystem(camera_entity, self.PLAYER_ENTITY_ID, overworld_map.width, overworld_map.height)
         animation_system = AnimationSystem()
         render_system = RenderSystem(window=self.window, camera_entity=camera_entity)
-        hud_system = HUDSystem(hud, self.PLAYER_ENTITY)
+        hud_system = HUDSystem(hud, self.PLAYER_ENTITY_ID)
 
         self.world.add_processor(ai_system)
         self.world.add_processor(input_system)
@@ -104,4 +107,43 @@ class GameplayScene(BaseScene):
         self.world.add_processor(render_system)
 
     def on_exit(self):
-        pass
+        if type(self.next_scene) == type(self):
+            # TODO: Fine tune all of these parameters
+            total_exit_frames = 90
+            stop_frame_num = 20
+            # Take out some processors perhaps
+            # continue running in the door
+            camera_entity = self.world.get_processor(CameraSystem).camera_entity
+            camera_pos = self.world.component_for_entity(camera_entity, cmp.Position)
+            velocity = self.world.component_for_entity(self.PLAYER_ENTITY_ID, cmp.Velocity)
+            position = self.world.component_for_entity(self.PLAYER_ENTITY_ID, cmp.HitBox).rect.copy()
+            velocity.x = 0.30 * copysign(1.0, velocity.x) if abs(velocity.x) > 1e-4 else 0
+            velocity.y = 0.30 * copysign(1.0, velocity.y) if abs(velocity.y) > 1e-4 else 0
+            self.world.remove_processor(InputSystem)
+            self.world.remove_processor(TransitionSystem)
+            self.world.remove_processor(CameraSystem)
+
+            effect_id = self.world.create_entity()
+            radius = cfg.RESOLUTION[0] - 100
+            cover_surface = pygame.Surface((cfg.RESOLUTION[0], cfg.RESOLUTION[1]))
+            cover_surface.fill(cfg.C_BLACK)
+            cover_surface.set_colorkey(cfg.C_WHITE)
+            pygame.draw.circle(cover_surface, cfg.C_WHITE, (position.x - camera_pos.x, position.y - camera_pos.y), radius)
+            renderable = cmp.Renderable(image=cover_surface, depth=6000)
+            self.world.add_component(effect_id, renderable)
+            self.world.add_component(effect_id, cmp.Position(camera_pos.x, camera_pos.y))
+
+            while total_exit_frames > 0:
+
+                self.world.process()
+
+                cover_surface.fill(cfg.C_BLACK)
+                pygame.draw.circle(cover_surface, cfg.C_WHITE, (position.x - camera_pos.x, position.y - camera_pos.y), radius)
+                self.world.component_for_entity(effect_id, cmp.Renderable).image = cover_surface
+                radius -= 5
+
+                if total_exit_frames == stop_frame_num:
+                    velocity.x = 0
+                    velocity.y = 0
+
+                total_exit_frames -= 1

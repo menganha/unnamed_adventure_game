@@ -64,7 +64,7 @@ class Menu:
 
 
 @component
-class VisualEffectTag:
+class VisualEffect:
     color: pygame.Color
 
 

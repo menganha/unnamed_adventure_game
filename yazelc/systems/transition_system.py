@@ -30,7 +30,7 @@ class TransitionSystem(esper.Processor):
         if not (component := try_signature(self.world, ent1, ent2, cmp.Door)):
             return
         ent_door, door, player_ent = component
-        if player_ent != self.current_scene.PLAYER_ENTITY:  # Check if the other entity is the players
+        if player_ent != self.current_scene.PLAYER_ENTITY_ID:  # Check if the other entity is the players
             return
         self.current_scene.in_scene = False
         player_components = self.world.components_for_entity(player_ent)

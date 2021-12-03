@@ -15,10 +15,10 @@ from yazelc.event_type import EventType
 from yazelc.items import ItemType
 from yazelc.utils.game_utils import Direction, Status
 
-VELOCITY = 1.5 - 1.e-8  # This ensures that the rounding produces the displacement pattern 1,2,1,2.. that averages a velocity of 1.5
+VELOCITY = 1.5 - 1e-8  # This ensures that the rounding produces the displacement pattern 1,2,1,2.. that averages a velocity of 1.5
 VELOCITY_DIAGONAL = 1
 
-HITBOX_HEIGHT = 10
+HITBOX_HEIGHT = 15
 HITBOX_WIDTH = 10
 SPRITE_SIZE = 32
 SPRITE_DEPTH = 200
@@ -71,7 +71,7 @@ def create_player_at(center_x_pos: int, center_y_pos: int, world: esper.World) -
 def get_position_of_sprite(hitbox: cmp.HitBox):
     """ Gets the position of the sprite from the player's Hitbox """
     relative_pos_x = SPRITE_SIZE // 2
-    relative_pos_y = 3 + SPRITE_SIZE // 2
+    relative_pos_y = SPRITE_SIZE // 2
     return hitbox.rect.centerx - relative_pos_x, hitbox.rect.centery - relative_pos_y
 
 
@@ -132,6 +132,8 @@ def create_melee_weapon(parent_hitbox: cmp.HitBox, direction: Direction, front_r
 
 
 def handle_input(player_entity: int, controller: Controller, world: esper.World):
+    # TODO: Add state system just for this operation. It decouples the input and is mostly useful if we want to
+    #   remove this process but don't want to stop the state update
     state = world.component_for_entity(player_entity, cmp.State)
     state.previous_status = state.status
     state.previous_direction = state.direction
