@@ -1,10 +1,11 @@
 import logging
 
-import esper
+import pygame.event
 
 from yazelc import components as cmp
 from yazelc import config as cfg
 from yazelc import event_manager
+from yazelc import zesper
 from yazelc.event_type import EventType
 from yazelc.utils.esper_utils import try_pair_signature
 from yazelc.utils.game_utils import Direction
@@ -12,7 +13,7 @@ from yazelc.utils.game_utils import Status
 from yazelc.visual_effects import create_explosion
 
 
-class CombatSystem(esper.Processor):
+class CombatSystem(zesper.Processor):
 
     def __init__(self):
         super().__init__()
@@ -32,8 +33,11 @@ class CombatSystem(esper.Processor):
                 health.cool_down_counter -= 1
             if health.points <= 0:  # Using the "<" condition for cases when the inflicted damage is to big that results in negative health
                 center = self.world.component_for_entity(ent, cmp.HitBox).rect.center
-                create_explosion(center[0], center[1], 50, 20, cfg.C_RED, self.world)
-                self.world.delete_entity(ent)
+                if ent == self.world.player_entity_id:
+                    pygame.event.post(pygame.event.Event(EventType.DEATH.value))
+                else:
+                    create_explosion(center[0], center[1], 50, 20, cfg.C_RED, self.world)
+                    self.world.delete_entity(ent)
 
     def on_collision(self, ent1: int, ent2: int):
 
@@ -64,5 +68,8 @@ class CombatSystem(esper.Processor):
 
             victim_health.cool_down_counter = victim_health.cool_down_frames
             victim_health.points -= attacker_weapon.damage
+
+            if victim == self.world.player_entity_id:
+                event_manager.post_event(EventType.HUD_UPDATE)
 
             logging.info(f'entity {victim} has received {attacker_weapon.damage} and has {victim_health.points} health points remaining')

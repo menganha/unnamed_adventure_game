@@ -1,11 +1,10 @@
 from math import isclose
 
-import esper
-
+from yazelc import zesper
 from yazelc.components import VisualEffect, Position, Velocity
 
 
-class VisualEffectsSystem(esper.Processor):
+class VisualEffectsSystem(zesper.Processor):
     """ Logic for visual effects """
     ABS_TOL = 1e-2
     FRICTION = 0.75

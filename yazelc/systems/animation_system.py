@@ -1,10 +1,10 @@
-import esper
+from yazelc import zesper
 
 from yazelc.components import Animation, State, Renderable
 from yazelc.utils.game_utils import Direction, Status
 
 
-class AnimationSystem(esper.Processor):
+class AnimationSystem(zesper.Processor):
 
     def process(self):
         for ent, (animation, renderable, state) in self.world.get_components(Animation, Renderable, State):

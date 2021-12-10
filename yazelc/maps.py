@@ -1,5 +1,5 @@
 """
-Module to deal with map data
+Module deals with map data
 """
 from typing import Iterator, Tuple
 
@@ -26,6 +26,8 @@ class Maps:
             for x, y, tile, in self.tmx_data.layers[layer_idx].tiles():
                 map_surface.blit(tile, (x * self.tmx_data.tilewidth, y * self.tmx_data.tileheight))
             yield map_surface
+            # TODO: Introduce the map depth in the iterator here itself so that the depth specification is encapsulated
+            #   in this class
 
     def create_solid_rectangles(self) -> Iterator[Tuple[cmp.Position, cmp.HitBox, cmp.WallTag]]:
         for obj in self.tmx_data.get_layer_by_name('solids'):

@@ -3,7 +3,9 @@ Stores all the game globals
 """
 import pygame
 
-RESOLUTION = 256, 224
+from yazelc.utils.game_utils import ImmutableVec
+
+RESOLUTION = ImmutableVec(256, 224)
 DEBUG_MODE = False
 
 C_BLACK = pygame.Color(0, 0, 0)

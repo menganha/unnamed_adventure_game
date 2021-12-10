@@ -10,17 +10,24 @@ from yazelc.utils.game_utils import Direction, Status
 
 
 @component
-class Position:
+class Vector:
     x: float = 0.0
     y: float = 0.0
-    prev_x: int = field(init=False, default=x)
-    prev_y: int = field(init=False, default=y)
 
 
 @component
-class Velocity:
-    x: float = 0.0
-    y: float = 0.0
+class Position(Vector):
+    prev_x: float = field(init=False)
+    prev_y: float = field(init=False)
+
+    def __post_init__(self):
+        self.prev_x = self.x
+        self.prev_y = self.y
+
+
+@component
+class Velocity(Vector):
+    pass
 
 
 @component

@@ -1,7 +1,11 @@
-from enum import Enum, auto
+from enum import Enum
+
+import pygame
 
 
 class EventType(Enum):
-    PAUSE = auto()
-    COLLISION = auto()
-    HUD_UPDATE = auto()
+    DEATH = pygame.event.custom_type()
+    PAUSE = pygame.event.custom_type()
+    COLLISION = pygame.event.custom_type()
+    HUD_UPDATE = pygame.event.custom_type()
+    RESTART = pygame.event.custom_type()

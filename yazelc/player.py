@@ -3,16 +3,17 @@ The module gathers functions that add commonly used entities to an input world
 """
 from pathlib import Path
 
-import esper
+import pygame
 
 from yazelc import components as cmp
 from yazelc import config as cfg
-from yazelc import event_manager
 from yazelc import visual_effects as vfx
+from yazelc import zesper
 from yazelc.animation import AnimationStrip
 from yazelc.controller import Controller, Button
 from yazelc.event_type import EventType
 from yazelc.items import ItemType
+from yazelc.menu.pause_menu_creator import PauseMenuCreator
 from yazelc.utils.game_utils import Direction, Status
 
 VELOCITY = 1.5 - 1e-8  # This ensures that the rounding produces the displacement pattern 1,2,1,2.. that averages a velocity of 1.5
@@ -36,10 +37,11 @@ SWORD_ACTIVE_FRAMES = 20
 BOMB_DAMAGE = 3
 
 
-def create_player_at(center_x_pos: int, center_y_pos: int, world: esper.World) -> int:
+def create_player_at(center_x_pos: int, center_y_pos: int, world: zesper.World):
     """ Creates the player entity centered at the given position"""
 
-    player_entity = world.create_entity()
+    player_entity_id = world.create_entity()
+    world.player_entity_id = player_entity_id
 
     # Create Animations dictionary and add it as a component
     kwargs = {}
@@ -49,23 +51,21 @@ def create_player_at(center_x_pos: int, center_y_pos: int, world: esper.World) -
             delay = 4 if typ == 'attack' else 7
             kwargs.update({f'{typ}_{direction}': AnimationStrip(img_path, sprite_width=SPRITE_SIZE, delay=delay)})
 
-    world.add_component(player_entity, cmp.Renderable(image=kwargs['idle_down'][0], depth=SPRITE_DEPTH))
-    world.add_component(player_entity, cmp.Animation(**kwargs))
+    world.add_component(player_entity_id, cmp.Renderable(image=kwargs['idle_down'][0], depth=SPRITE_DEPTH))
+    world.add_component(player_entity_id, cmp.Animation(**kwargs))
 
     # HitBox
     hitbox_component = cmp.HitBox(0, 0, HITBOX_WIDTH, HITBOX_HEIGHT)
     hitbox_component.rect.center = (center_x_pos, center_y_pos)
-    world.add_component(player_entity, hitbox_component)
+    world.add_component(player_entity_id, hitbox_component)
 
     # Other components
     x_pos, y_pos = get_position_of_sprite(hitbox_component)
-    world.add_component(player_entity, cmp.Position(x=x_pos, y=y_pos))
-    world.add_component(player_entity, cmp.Velocity(x=0, y=0))
-    world.add_component(player_entity, cmp.Input(handle_input_function=handle_input))
-    world.add_component(player_entity, cmp.Health(points=MAX_HEALTH))
-    world.add_component(player_entity, cmp.State())
-
-    return player_entity
+    world.add_component(player_entity_id, cmp.Position(x=x_pos, y=y_pos))
+    world.add_component(player_entity_id, cmp.Velocity(x=0, y=0))
+    world.add_component(player_entity_id, cmp.Input(handle_input_function=handle_input))
+    world.add_component(player_entity_id, cmp.Health(points=MAX_HEALTH))
+    world.add_component(player_entity_id, cmp.State())
 
 
 def get_position_of_sprite(hitbox: cmp.HitBox):
@@ -75,15 +75,15 @@ def get_position_of_sprite(hitbox: cmp.HitBox):
     return hitbox.rect.centerx - relative_pos_x, hitbox.rect.centery - relative_pos_y
 
 
-def create_bomb_at(ent: int, world: esper.World) -> int:
+def create_bomb(player_entity_id: int, world: zesper.World):
     bomb_entity = world.create_entity()
-    img_path = Path('assets', 'sprites', 'bomb.png')
+    img_path = Path('assets', 'sprites', 'bomb.png')  # TODO: Add to resource manager and animation strip gets from resources as well
     frame_sequence = [0] * 52 + [0, 0, 1, 1, 2, 2] * 8
     animation_stripe = AnimationStrip(img_path, sprite_width=16, frame_sequence=frame_sequence)
 
-    position = world.component_for_entity(ent, cmp.Position)
-    direction = world.component_for_entity(ent, cmp.State).direction
-    renderable = world.component_for_entity(ent, cmp.Renderable)
+    position = world.component_for_entity(player_entity_id, cmp.Position)
+    direction = world.component_for_entity(player_entity_id, cmp.State).direction
+    renderable = world.component_for_entity(player_entity_id, cmp.Renderable)
 
     bomb_renderable_component = cmp.Renderable(image=animation_stripe[0])
 
@@ -100,21 +100,20 @@ def create_bomb_at(ent: int, world: esper.World) -> int:
     world.add_component(bomb_entity, cmp.Script(delay=100, function=create_bomb_hitbox, args=script_arguments))
     world.add_component(bomb_entity, cmp.State())
 
-    return bomb_entity
 
-
-def create_bomb_hitbox(entity: int, x_pos: int, y_pos: int, world: esper.World):
+def create_bomb_hitbox(bomb_entity_id: int, x_pos: int, y_pos: int, world: zesper.World):
     bomb_range = 20
     hitbox = cmp.HitBox(0, 0, bomb_range * 2, bomb_range * 2)
     hitbox.rect.center = x_pos, y_pos
-    world.add_component(entity, hitbox)
-    world.add_component(entity, cmp.Weapon(damage=BOMB_DAMAGE, active_frames=10))
+    world.add_component(bomb_entity_id, hitbox)
+    world.add_component(bomb_entity_id, cmp.Weapon(damage=BOMB_DAMAGE, active_frames=10))
     vfx.create_explosion(hitbox.rect.centerx, hitbox.rect.centery, 60, bomb_range, cfg.C_RED, world)
 
 
 def create_melee_weapon(parent_hitbox: cmp.HitBox, direction: Direction, front_range: int, side_range: int, damage: int,
-                        active_frames: int, world: esper.World) -> int:
+                        active_frames: int, world: zesper.World) -> int:
     """ Creates a sword for the parent entity with a hitbox """
+    # TODO: pass better the entity! Ranges can be taken from the globals of this module
 
     if direction in (Direction.WEST, Direction.EAST):
         hitbox = cmp.HitBox(0, 0, front_range, side_range)
@@ -131,7 +130,7 @@ def create_melee_weapon(parent_hitbox: cmp.HitBox, direction: Direction, front_r
     return sword_ent
 
 
-def handle_input(player_entity: int, controller: Controller, world: esper.World):
+def handle_input(player_entity: int, controller: Controller, world: zesper.World):
     # TODO: Add state system just for this operation. It decouples the input and is mostly useful if we want to
     #   remove this process but don't want to stop the state update
     state = world.component_for_entity(player_entity, cmp.State)
@@ -139,7 +138,9 @@ def handle_input(player_entity: int, controller: Controller, world: esper.World)
     state.previous_direction = state.direction
 
     if controller.is_button_pressed(Button.START):
-        event_manager.post_event(EventType.PAUSE)
+        pause_menu_creator = PauseMenuCreator()
+        pause_menu_creator.create_entity(world)
+        pygame.event.post(pygame.event.Event(EventType.PAUSE.value))
 
     input_ = world.component_for_entity(player_entity, cmp.Input)
     if input_.block_counter != 0:
@@ -202,7 +203,7 @@ def handle_input(player_entity: int, controller: Controller, world: esper.World)
             vfx.create_explosion(position.x, position.y, 30, 30, cfg.C_WHITE, world)
 
         if controller.is_button_pressed(Button.X):
-            create_bomb_at(player_entity, world)
+            create_bomb(player_entity, world)
 
         if controller.is_button_pressed(Button.SELECT):
             cfg.DEBUG_MODE = not cfg.DEBUG_MODE

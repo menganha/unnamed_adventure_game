@@ -1,18 +1,16 @@
-import esper
-
 from yazelc import components as cmp
 from yazelc import event_manager
 from yazelc import player
+from yazelc import zesper
 from yazelc.event_type import EventType
 from yazelc.items import ItemType
 from yazelc.utils.esper_utils import try_signature
 
 
-class InventorySystem(esper.Processor):
+class InventorySystem(zesper.Processor):
 
-    def __init__(self, player_entity_id: int):
+    def __init__(self):
         super().__init__()
-        self.player_entity_id = player_entity_id
         event_manager.subscribe(EventType.COLLISION, self.on_collision)
 
     def process(self):
@@ -23,7 +21,7 @@ class InventorySystem(esper.Processor):
         if not (component := try_signature(self.world, ent1, ent2, cmp.Pickable)):
             return
         pickable_ent, pickable, player_ent = component
-        if player_ent != self.player_entity_id:  # Check if the other entity is the players
+        if player_ent != self.world.player_entity_id:  # Check if the other entity is the players
             return
 
         if pickable.item_type == ItemType.HEART:

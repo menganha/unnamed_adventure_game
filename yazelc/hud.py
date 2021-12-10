@@ -1,42 +1,57 @@
-from pathlib import Path
+from typing import Dict
 
 import pygame
 
 from yazelc import config as cfg
 from yazelc import player
+from yazelc import resource_manager
+from yazelc import zesper
+from yazelc.components import Vector, Renderable, Position, Health
+
+WHOLE_HEART_HEALTH_POINTS = 2
+HUD_DEPTH = 1001
+HUD_WIDTH = cfg.RESOLUTION.x
+HUD_HEIGHT = 40
+FULL_HEART_RESOURCE_NAME = 'full_heart'
+HALF_HEART_RESOURCE_NAME = 'half_heart'
+EMPTY_HEART_RESOURCE_NAME = 'empty_heart'
+
+HEART_OFFSET = Vector(2, 2)
 
 
-class HUD:
-    WHOLE_HEART_HEALTH_POINTS = 2
-    HUD_WIDTH = cfg.RESOLUTION[0]
-    HUD_HEIGHT = 40
-    FULL_HEART_IMAGE_PATH = Path('assets', 'sprites', 'full_heart.png')
-    HALF_HEART_IMAGE_PATH = Path('assets', 'sprites', 'half_heart.png')
-    EMPTY_HEART_IMAGE_PATH = Path('assets', 'sprites', 'empty_heart.png')
-    HEART_OFFSET = 2, 2
+def create_hud_entity(world: zesper.World):
+    hud_entity_id = world.create_entity()
+    world.hud_entity_id = hud_entity_id
+    hud_surface = pygame.surface.Surface((HUD_WIDTH, HUD_HEIGHT), flags=pygame.SRCALPHA)
+    world.add_component(hud_entity_id, Position(0, 0))
+    world.add_component(hud_entity_id, Renderable(hud_surface, depth=HUD_DEPTH))
+    dictionary = get_hud_dependant_values(world)
+    update_hud_entity(world, **dictionary)
 
-    def __init__(self):
-        self.full_heart_image = pygame.image.load(self.FULL_HEART_IMAGE_PATH).convert_alpha()
-        self.half_heart_image = pygame.image.load(self.HALF_HEART_IMAGE_PATH).convert_alpha()
-        self.empty_heart_image = pygame.image.load(self.EMPTY_HEART_IMAGE_PATH).convert_alpha()
-        self.hud_surface = pygame.surface.Surface((self.HUD_WIDTH, self.HUD_HEIGHT), flags=pygame.SRCALPHA)
 
-    def update_surface(self, health_points: int):
-        # Clear surface
-        # updates other aspects of the hud
-        # ...
-        # updates hearts
-        num_whole_hearts, num_medium_hearts = divmod(health_points, self.WHOLE_HEART_HEALTH_POINTS)
-        index = 0
-        for idx in range(num_whole_hearts):
-            index = idx
-            self.hud_surface.blit(self.full_heart_image,
-                                  (index * self.full_heart_image.get_width() + self.HEART_OFFSET[0], self.HEART_OFFSET[1]))
-        for idx in range(num_medium_hearts):
-            index += 1
-            self.hud_surface.blit(self.half_heart_image,
-                                  (index * self.half_heart_image.get_width() + self.HEART_OFFSET[0], self.HEART_OFFSET[1]))
-        for idx in range(player.MAX_HEALTH // 2 - num_medium_hearts - num_whole_hearts):
-            index += 1
-            self.hud_surface.blit(self.empty_heart_image,
-                                  (index * self.empty_heart_image.get_width() + self.HEART_OFFSET[0], self.HEART_OFFSET[1]))
+def update_hud_entity(world: zesper.World, **kwargs):
+    hud_image = world.component_for_entity(world.hud_entity_id, Renderable).image
+    # TODO: Is it necessary to clear the image before?
+
+    full_heart_image = resource_manager.get_resource(FULL_HEART_RESOURCE_NAME)
+    half_heart_image = resource_manager.get_resource(HALF_HEART_RESOURCE_NAME)
+    empty_heart_image = resource_manager.get_resource(EMPTY_HEART_RESOURCE_NAME)
+
+    num_whole_hearts, num_medium_hearts = divmod(kwargs['health_points'], WHOLE_HEART_HEALTH_POINTS)
+    index = 0
+    for idx in range(num_whole_hearts):
+        hud_image.blit(full_heart_image, (idx * full_heart_image.get_width() + HEART_OFFSET.x, HEART_OFFSET.y))
+        index += 1
+    for idx in range(num_medium_hearts):
+        hud_image.blit(half_heart_image, (index * half_heart_image.get_width() + HEART_OFFSET.x, HEART_OFFSET.y))
+        index += 1
+    for idx in range(player.MAX_HEALTH // 2 - num_medium_hearts - num_whole_hearts):
+        hud_image.blit(empty_heart_image, (index * empty_heart_image.get_width() + HEART_OFFSET.x, HEART_OFFSET.y))
+        index += 1
+
+
+def get_hud_dependant_values(world: zesper.World) -> Dict[str, object]:  # TODO: Should I make the keys some sort of type/class?
+    dictionary = {
+        'health_points': world.component_for_entity(world.player_entity_id, Health).points
+    }
+    return dictionary

@@ -2,10 +2,9 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-import esper
-
 from yazelc import components as cmp
 from yazelc import event_manager
+from yazelc import zesper
 from yazelc.event_type import EventType
 from yazelc.utils.esper_utils import try_signature
 
@@ -14,7 +13,7 @@ if TYPE_CHECKING:
 
 
 # TODO: Fix bug where enemies can go through doors since there are no solid hitboxes preventing movement
-class TransitionSystem(esper.Processor):
+class TransitionSystem(zesper.Processor):
     """ Transition between gameplay scenes """
 
     def __init__(self, current_scene: GameplayScene):
@@ -30,7 +29,7 @@ class TransitionSystem(esper.Processor):
         if not (component := try_signature(self.world, ent1, ent2, cmp.Door)):
             return
         ent_door, door, player_ent = component
-        if player_ent != self.current_scene.PLAYER_ENTITY_ID:  # Check if the other entity is the players
+        if player_ent != self.world.player_entity_id:  # Check if the other entity is the players
             return
         self.current_scene.in_scene = False
         player_components = self.world.components_for_entity(player_ent)

@@ -1,9 +1,9 @@
-import esper
+from yazelc import zesper
 
 from yazelc.components import Script
 
 
-class ScriptSystem(esper.Processor):
+class ScriptSystem(zesper.Processor):
     """ Handle all scripts (custom functions) that are called with certain delay """
 
     def process(self):

@@ -1,15 +1,14 @@
 from pathlib import Path
 
-import esper
-
 from yazelc import components as cmp
+from yazelc import zesper
 from yazelc.animation import AnimationStrip
 from yazelc.controller import Controller
 
 JELLY_VEL = 1
 
 
-def create_jelly_at(x_pos: int, y_pos: int, world: esper.World) -> int:
+def create_jelly_at(x_pos: int, y_pos: int, world: zesper.World) -> int:
     enemy_idle_down_image_path = Path('assets', 'sprites', 'enemy', 'jelly_idle.png')
     enemy_idle_animation = AnimationStrip(enemy_idle_down_image_path, sprite_width=16, delay=15)
     enemy_entity = world.create_entity()
@@ -27,7 +26,7 @@ def create_jelly_at(x_pos: int, y_pos: int, world: esper.World) -> int:
     return enemy_entity
 
 
-def handle_input(enemy_entity: int, controller: Controller, world: esper.World):
+def handle_input(enemy_entity: int, controller: Controller, world: zesper.World):
     state = world.component_for_entity(enemy_entity, cmp.State)
     state.previous_status = state.status
     state.previous_direction = state.direction

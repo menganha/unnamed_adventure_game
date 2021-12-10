@@ -1,12 +1,11 @@
 from random import choices
 
-import esper
-
+from yazelc import zesper
 from yazelc.components import Brain
 from yazelc.utils.game_utils import Direction
 
 
-class AISystem(esper.Processor):
+class AISystem(zesper.Processor):
 
     def process(self):
         for ent, brain in self.world.get_component(Brain):

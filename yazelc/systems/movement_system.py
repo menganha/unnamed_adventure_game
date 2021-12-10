@@ -1,9 +1,9 @@
-import esper
+from yazelc import zesper
 
 from yazelc.components import Velocity, Position, HitBox
 
 
-class MovementSystem(esper.Processor):
+class MovementSystem(zesper.Processor):
 
     def process(self):
         """

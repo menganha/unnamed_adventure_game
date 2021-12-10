@@ -1,37 +1,27 @@
-import esper
-
 import yazelc.config as cfg
-from yazelc.components import Position, Renderable
+from yazelc import zesper
+from yazelc.components import Position, Vector
 
 
-class CameraSystem(esper.Processor):
+class CameraSystem(zesper.Processor):
     """
     Updates the camera entity to center around the input entity position
     """
 
-    def __init__(self, camera_entity: int, entity_followed: int, max_x: int, max_y: int):
+    def __init__(self, entity_followed: int, offset: Vector, max_dimensions: Vector):
         super().__init__()
-        self.camera_entity = camera_entity
         self.entity_followed = entity_followed
-        self.max_x = max_x
-        self.max_y = max_y
-        self.relative_coord_with_respect_to_entity_tracked = None
+        self.max_dimensions = max_dimensions
+        self.offset = offset
 
     def process(self):
-        camera_pos = self.world.component_for_entity(self.camera_entity, Position)
+        camera_pos = self.world.component_for_entity(self.world.camera_entity_id, Position)
         entity_followed_pos = self.world.component_for_entity(self.entity_followed, Position)
 
-        # Check if the the followed entity is a visible object and then extract and memoize its dimensions
-        if not self.relative_coord_with_respect_to_entity_tracked:
-            self.relative_coord_with_respect_to_entity_tracked = [0, 0]
-            if renderable := self.world.try_component(self.entity_followed, Renderable):
-                self.relative_coord_with_respect_to_entity_tracked[0] = int((cfg.RESOLUTION[0] - renderable.width) / 2)
-                self.relative_coord_with_respect_to_entity_tracked[1] = int((cfg.RESOLUTION[1] - renderable.height) / 2)
-
-        camera_pos.x = entity_followed_pos.x - self.relative_coord_with_respect_to_entity_tracked[0]
-        camera_pos.y = entity_followed_pos.y - self.relative_coord_with_respect_to_entity_tracked[1]
+        camera_pos.x = entity_followed_pos.x - self.offset.x
+        camera_pos.y = entity_followed_pos.y - self.offset.y
 
         camera_pos.x = max(0, camera_pos.x)
         camera_pos.y = max(0, camera_pos.y)
-        camera_pos.x = min(self.max_x - cfg.RESOLUTION[0], camera_pos.x)
-        camera_pos.y = min(self.max_y - cfg.RESOLUTION[1], camera_pos.y)
+        camera_pos.x = min(self.max_dimensions.x - cfg.RESOLUTION.x, camera_pos.x)
+        camera_pos.y = min(self.max_dimensions.y - cfg.RESOLUTION.y, camera_pos.y)

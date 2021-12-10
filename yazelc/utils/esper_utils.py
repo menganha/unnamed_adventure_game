@@ -1,10 +1,11 @@
 """
 Utility functions complementing to the esper ECS library
 """
-import esper
+# TODO: Add this to the zesper module
+from yazelc import zesper
 
 
-def try_pair_signature(world: esper.World, ent_1: int, ent_2: int, component_1, component_2):
+def try_pair_signature(world: zesper.World, ent_1: int, ent_2: int, component_1, component_2):
     """
     Checks if the pair have each the corresponding input pair components in the two possible permutations.
     If found returns the entities paired with their respective components
@@ -13,17 +14,17 @@ def try_pair_signature(world: esper.World, ent_1: int, ent_2: int, component_1, 
     component_2_2 = world.try_component(ent_2, component_2)
 
     component_1_2 = world.try_component(ent_1, component_2)
-    component_2_1 = world.has_component(ent_2, component_1)
+    component_2_1 = world.try_component(ent_2, component_1)
 
     if component_1_1 and component_2_2:
         return ent_1, component_1_1, ent_2, component_2_2
     elif component_1_2 and component_2_1:
-        return ent_2, component_2_1, ent_1, component_2_1
+        return ent_2, component_2_1, ent_1, component_1_2
     else:
         return None
 
 
-def try_signature(world: esper.World, ent_1: int, ent_2: int, component):
+def try_signature(world: zesper.World, ent_1: int, ent_2: int, component):
     """
     Same as above but only checked on a single entity
     """

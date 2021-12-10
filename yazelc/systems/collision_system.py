@@ -1,11 +1,10 @@
-import esper
-
 from yazelc import components as cmp
 from yazelc import event_manager
+from yazelc import zesper
 from yazelc.event_type import EventType
 
 
-class CollisionSystem(esper.Processor):
+class CollisionSystem(zesper.Processor):
     """
     Processes collisions with non-moving solid entities
 
