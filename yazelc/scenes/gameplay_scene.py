@@ -35,6 +35,7 @@ from yazelc.systems.visual_effects_system import VisualEffectsSystem
 FULL_HEART_IMAGE_PATH = Path('assets', 'sprites', 'full_heart.png')
 HALF_HEART_IMAGE_PATH = Path('assets', 'sprites', 'half_heart.png')
 EMPTY_HEART_IMAGE_PATH = Path('assets', 'sprites', 'empty_heart.png')
+FONT_PATH = Path('assets', 'font', 'PressStart2P.ttf')
 
 
 class GameplayScene(BaseScene):
@@ -48,6 +49,7 @@ class GameplayScene(BaseScene):
         resource_manager.add_resource(FULL_HEART_IMAGE_PATH)
         resource_manager.add_resource(HALF_HEART_IMAGE_PATH)
         resource_manager.add_resource(EMPTY_HEART_IMAGE_PATH)
+        resource_manager.add_resource(FONT_PATH)
 
         # Add map entity
         overworld_map = Maps(self.map_data_file)
