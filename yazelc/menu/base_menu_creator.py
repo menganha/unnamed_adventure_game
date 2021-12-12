@@ -10,6 +10,8 @@ from yazelc.controller import Controller, Button
 from yazelc.text import Text
 
 
+# TODO: No need to create classes. We could pass some "base" functions as parameters to a "inherited" function
+#   Class state variables could be stored in a component!
 class BaseMenuCreator(ABC):
     """
     Creates translucent Menu with centered items

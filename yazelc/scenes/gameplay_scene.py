@@ -22,6 +22,7 @@ from yazelc.systems.animation_system import AnimationSystem
 from yazelc.systems.camera_system import CameraSystem
 from yazelc.systems.collision_system import CollisionSystem
 from yazelc.systems.combat_system import CombatSystem
+from yazelc.systems.dialog_system import DialogSystem
 from yazelc.systems.hud_system import HUDSystem
 from yazelc.systems.input_system import InputSystem
 from yazelc.systems.inventory_system import InventorySystem
@@ -35,7 +36,7 @@ from yazelc.systems.visual_effects_system import VisualEffectsSystem
 FULL_HEART_IMAGE_PATH = Path('assets', 'sprites', 'full_heart.png')
 HALF_HEART_IMAGE_PATH = Path('assets', 'sprites', 'half_heart.png')
 EMPTY_HEART_IMAGE_PATH = Path('assets', 'sprites', 'empty_heart.png')
-FONT_PATH = Path('assets', 'font', 'PressStart2P.ttf')
+FONT_PATH = Path('assets', 'font', 'Anonymous Pro.ttf')
 
 
 class GameplayScene(BaseScene):
@@ -64,6 +65,8 @@ class GameplayScene(BaseScene):
             self.world.create_entity(position, hitbox, wall_tag)
         for door, hitbox in overworld_map.create_doors():
             self.world.create_entity(door, hitbox)
+        for interactive_tag, text, hitbox in overworld_map.create_signs():
+            self.world.create_entity(interactive_tag, text, hitbox)
 
         # Add player entity
         player_x_pos, player_y_pos = overworld_map.get_center_coord_from_tile(self.start_tile_x_pos,
@@ -99,11 +102,13 @@ class GameplayScene(BaseScene):
             pygame.joystick.quit()
 
         # Create the systems for the scene
+        # TODO: Instantiate them already on the scene processor list!!
         ai_system = AISystem()
         input_system = InputSystem(controller)
         movement_system = MovementSystem()
         script_system = ScriptSystem()
         collision_system = CollisionSystem()
+        dialog_system = DialogSystem()
         combat_system = CombatSystem()
         inventory_system = InventorySystem()
         visual_effect_system = VisualEffectsSystem()
@@ -116,7 +121,7 @@ class GameplayScene(BaseScene):
         hud_system = HUDSystem()
 
         self.scene_processors.extend(  # Note they are added in a give order
-            [ai_system, input_system, movement_system, script_system, collision_system, combat_system, inventory_system,
+            [ai_system, input_system, movement_system, script_system, collision_system, dialog_system, combat_system, inventory_system,
              visual_effect_system, transition_system, camera_system, animation_system, hud_system, render_system]
         )
         for processor in self.scene_processors:
@@ -174,7 +179,7 @@ class GameplayScene(BaseScene):
                 self.paused = not self.paused
                 if self.paused:
                     controller = self.world.get_processor(InputSystem).controller
-                    self.world.remove_all_processors_except([RenderSystem])
+                    self.world.remove_all_processors_except(RenderSystem)
                     self.world.add_processor(MenuInputSystem(controller))
                 else:
                     self.world.clear_processors()
@@ -189,7 +194,7 @@ class GameplayScene(BaseScene):
         # Saves the status of the player (weapons, hearts, etc., wherever that is allocated in the end)
         # Removes all processors except the animation and render processor
         controller = self.world.get_processor(InputSystem).controller
-        self.world.remove_all_processors_except([RenderSystem])
+        self.world.remove_all_processors_except(RenderSystem)
         self.world.add_processor(MenuInputSystem(controller))
 
         self.world.delete_entity(self.world.hud_entity_id)

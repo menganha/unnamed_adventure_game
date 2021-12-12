@@ -6,6 +6,7 @@ import pygame
 
 from yazelc.animation import AnimationStrip, flip_strip_sprites
 from yazelc.items import ItemType
+from yazelc.text import Text
 from yazelc.utils.game_utils import Direction, Status
 
 
@@ -42,6 +43,21 @@ class State:
     def __post_init__(self):
         self.previous_direction = self.direction
         self.previous_status = self.status
+
+
+@component
+class Dialog:
+    text_string: InitVar[str]
+    text: Text = field(init=False)
+
+    def __post_init__(self, text_string: str):
+        self.text = Text(text_string)
+
+
+@component
+class InteractorTag:
+    """ Tag single entity with Hitbox to signal the player interacting with colliding object """
+    pass
 
 
 @component

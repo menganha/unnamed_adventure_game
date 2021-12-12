@@ -23,7 +23,8 @@ class ResourceManager:
         if name not in self.resources:
             if file_type == self.TRUE_TYPE_FONT_FILETYPE:
                 font = pygame.freetype.Font(path)
-                font.antialiased = False
+                # font.antialiased = True
+                font.origin = True
                 self.resources.update({name: font})
             elif file_type == self.PNG_FILETYPE:
                 self.resources.update({name: pygame.image.load(path).convert_alpha()})

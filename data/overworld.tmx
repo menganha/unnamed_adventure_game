@@ -1,14 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.5" tiledversion="1.7.2" orientation="orthogonal" renderorder="right-down" width="32" height="28" tilewidth="16" tileheight="16" infinite="0" nextlayerid="9" nextobjectid="22">
- <tileset firstgid="1" name="overworld" tilewidth="16" tileheight="16" tilecount="480" columns="32">
-  <image source="../assets/sprites/map/overworld.png" width="512" height="240"/>
-  <tile id="176">
-   <objectgroup draworder="index" id="2">
-    <object id="3" x="0" y="0" width="16" height="16"/>
-   </objectgroup>
-  </tile>
+<map version="1.5" tiledversion="1.7.2" orientation="orthogonal" renderorder="right-down" width="32" height="28" tilewidth="16" tileheight="16" infinite="0" nextlayerid="10" nextobjectid="24">
+ <tileset firstgid="1" name="overworld" tilewidth="16" tileheight="16" tilecount="768" columns="32">
+  <image source="../assets/sprites/map/overworld.png" width="512" height="384"/>
  </tileset>
- <tileset firstgid="481" name="water" tilewidth="16" tileheight="16" tilecount="324" columns="36">
+ <tileset firstgid="769" name="water" tilewidth="16" tileheight="16" tilecount="324" columns="36">
   <image source="../assets/sprites/map/water.png" width="576" height="144"/>
  </tileset>
  <layer id="1" name="ground" width="32" height="28">
@@ -64,13 +59,13 @@
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,369,0,0,0,0,0,0,0,0,371,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,401,0,0,0,0,0,0,0,0,403,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,433,434,434,403,378,401,434,434,434,435,0,0,0,0,0,0,0,
-0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,333,0,37,386,4,0,303,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,333,0,37,0,4,0,303,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,241,243,244,0,301,0,39,0,0,335,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,242,0,0,333,334,334,334,335,0,0,229,122,123,124,125,126,229,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,229,154,155,378,157,158,229,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,38,0,0,0,38,0,0,0,0,0,304,0,6,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,141,0,0,0,0,0,0,0,0,0,6,0,0,304,0,0,0,0,
-0,0,0,0,0,0,0,0,0,0,0,0,140,141,0,0,0,0,0,0,0,0,0,0,0,38,0,304,38,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,140,141,0,0,0,177,0,0,0,0,0,0,0,38,0,304,38,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,38,0,0,0,0,0,0,0,0,0,336,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 </data>
@@ -103,7 +98,7 @@
 0,0,0,0,0,0,0,0,0,0,0,0,0,108,109,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,108,77,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,334,334,334,334,334,334,334,334,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 </data>
  </layer>
@@ -125,7 +120,11 @@
   <object id="15" x="192" y="400" width="32" height="16"/>
  </objectgroup>
  <objectgroup color="#ff55ff" id="5" name="interactives">
-  <object id="19" name="enter warehouse" type="Sign" x="320" y="304" width="16" height="8"/>
+  <object id="19" name="enter cave" type="Sign" x="320" y="304" width="16" height="8">
+   <properties>
+    <property name="text" value="BEWARE! This cave is haunted. and there are ghosts inside and you better not enter. I'm telling you, please, hear me out."/>
+   </properties>
+  </object>
  </objectgroup>
  <objectgroup color="#ffff00" id="7" name="doors">
   <object id="20" name="dungeon1" x="304" y="276" width="16" height="12">
