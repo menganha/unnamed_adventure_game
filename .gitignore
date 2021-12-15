@@ -1,5 +1,6 @@
 __pycache__
-*.ase
-*.aseprite
+dev
+.idea
+Pipfile.lock
 *.tiled-project
 *.tiled-session
