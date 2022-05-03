@@ -1,9 +1,9 @@
 from yazelc import components as cmp
 from yazelc import event_manager
-from yazelc import player
 from yazelc import zesper
 from yazelc.event_type import EventType
 from yazelc.items import ItemType
+from yazelc.player import player
 
 
 class InventorySystem(zesper.Processor):
@@ -26,6 +26,7 @@ class InventorySystem(zesper.Processor):
         if pickable.item_type == ItemType.HEART:
             health = self.world.component_for_entity(player_ent, cmp.Health)
             health.points = min(player.MAX_HEALTH, health.points + 1)
+            event_manager.post_event(EventType.HUD_UPDATE)
         else:
             player.INVENTORY[pickable.item_type] += 1
 

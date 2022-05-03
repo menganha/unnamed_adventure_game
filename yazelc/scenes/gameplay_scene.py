@@ -94,7 +94,8 @@ class GameplayScene(BaseScene):
         enemy.create_jelly_at(400, 400, self.world)
 
         # Create a pickable item
-        items.create_entity(items.ItemType.HEART, 700, 700, self.world)
+        items.create_entity(items.ItemType.HEART, 300, 355, self.world)
+        items.create_entity(items.ItemType.HEART, 350, 355, self.world)
 
         # Get the input device
         pygame.joystick.init()
