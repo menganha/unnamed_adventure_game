@@ -4,7 +4,6 @@ from yazelc import player
 from yazelc import zesper
 from yazelc.event_type import EventType
 from yazelc.items import ItemType
-from yazelc.utils.esper_utils import try_signature
 
 
 class InventorySystem(zesper.Processor):
@@ -18,7 +17,7 @@ class InventorySystem(zesper.Processor):
 
     def on_collision(self, ent1: int, ent2: int):
 
-        if not (component := try_signature(self.world, ent1, ent2, cmp.Pickable)):
+        if not (component := self.world.try_signature(ent1, ent2, cmp.Pickable)):
             return
         pickable_ent, pickable, player_ent = component
         if player_ent != self.world.player_entity_id:  # Check if the other entity is the players

@@ -1,6 +1,6 @@
 """ Module extends the esper package"""
 
-from typing import TypeVar, Optional, Tuple, Union
+from typing import TypeVar, Optional, Tuple, Union, Type
 
 from esper import *
 

@@ -7,7 +7,7 @@ pygame.freetype.init()
 
 
 # TODO: HERE WE WOULD ALSO INITIALIZE THE SOUND RESOURCES
-
+# TODO: Should we use weak references?
 
 class ResourceManager:
     TRUE_TYPE_FONT_FILETYPE = '.ttf'

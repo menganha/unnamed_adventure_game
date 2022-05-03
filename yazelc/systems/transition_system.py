@@ -6,7 +6,6 @@ from yazelc import components as cmp
 from yazelc import event_manager
 from yazelc import zesper
 from yazelc.event_type import EventType
-from yazelc.utils.esper_utils import try_signature
 
 if TYPE_CHECKING:
     from yazelc.scenes.gameplay_scene import GameplayScene
@@ -26,7 +25,7 @@ class TransitionSystem(zesper.Processor):
 
     def on_collision(self, ent1: int, ent2: int):
 
-        if not (component := try_signature(self.world, ent1, ent2, cmp.Door)):
+        if not (component := self.world.try_signature(ent1, ent2, cmp.Door)):
             return
         ent_door, door, player_ent = component
         if player_ent != self.world.player_entity_id:  # Check if the other entity is the players

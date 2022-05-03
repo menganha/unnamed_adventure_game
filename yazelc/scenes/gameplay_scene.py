@@ -9,13 +9,13 @@ from yazelc import config as cfg
 from yazelc import enemy
 from yazelc import hud
 from yazelc import items
-from yazelc import player
 from yazelc import resource_manager
 from yazelc.event_type import EventType
 from yazelc.gamepad import Gamepad
 from yazelc.keyboard import Keyboard
 from yazelc.maps import Maps
 from yazelc.menu.death_menu_creator import DeathMenuCreator
+from yazelc.player import player
 from yazelc.scenes.base_scene import BaseScene
 from yazelc.systems.ai_system import AISystem
 from yazelc.systems.animation_system import AnimationSystem
@@ -37,6 +37,7 @@ FULL_HEART_IMAGE_PATH = Path('assets', 'sprites', 'full_heart.png')
 HALF_HEART_IMAGE_PATH = Path('assets', 'sprites', 'half_heart.png')
 EMPTY_HEART_IMAGE_PATH = Path('assets', 'sprites', 'empty_heart.png')
 FONT_PATH = Path('assets', 'font', 'Anonymous Pro.ttf')
+PLAYER_IMAGE_PATH = Path('assets', 'sprites', 'player')
 
 
 class GameplayScene(BaseScene):
@@ -51,6 +52,8 @@ class GameplayScene(BaseScene):
         resource_manager.add_resource(HALF_HEART_IMAGE_PATH)
         resource_manager.add_resource(EMPTY_HEART_IMAGE_PATH)
         resource_manager.add_resource(FONT_PATH)
+        # for image in PLAYER_IMAGE_PATH.glob('*.png'):
+        #     resource_manager.add_resource(image)
 
         # Add map entity
         overworld_map = Maps(self.map_data_file)

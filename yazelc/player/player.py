@@ -16,11 +16,11 @@ from yazelc.items import ItemType
 from yazelc.menu.pause_menu_creator import PauseMenuCreator
 from yazelc.utils.game_utils import Direction, Status
 
-VELOCITY = 1.5 - 1e-8  # This ensures that the rounding produces the displacement pattern 1,2,1,2.. that averages a velocity of 1.5
+VELOCITY = 1.5 - 1e-8  # This ensures that the rounding produces the displacement pattern 1,2,1,2... that averages a velocity of 1.5
 VELOCITY_DIAGONAL = 1
 
-HITBOX_HEIGHT = 15
-HITBOX_WIDTH = 10
+HITBOX_HEIGHT = 14
+HITBOX_WIDTH = 14
 SPRITE_SIZE = 32
 SPRITE_DEPTH = 200
 
@@ -32,7 +32,7 @@ INVENTORY = {item_type: 0 for item_type in ItemType if item_type != ItemType.HEA
 SWORD_FRONT_RANGE = 5
 SWORD_SIDE_RANGE = 20
 SWORD_DAMAGE = 5
-SWORD_ACTIVE_FRAMES = 20
+SWORD_ACTIVE_FRAMES = 12
 
 BOMB_DAMAGE = 3
 
@@ -49,7 +49,7 @@ def create_player_at(center_x_pos: int, center_y_pos: int, world: zesper.World):
     # Create Animations dictionary and add it as a component
     kwargs = {}
     for typ in ['idle', 'move', 'attack']:
-        for direction in ['up', 'down', 'left']:
+        for direction in ['up', 'down', 'right']:
             img_path = Path('assets', 'sprites', 'player', f'{typ}_{direction}.png')
             delay = 4 if typ == 'attack' else 7
             kwargs.update({f'{typ}_{direction}': AnimationStrip(img_path, sprite_width=SPRITE_SIZE, delay=delay)})
@@ -158,7 +158,7 @@ def handle_input(player_entity: int, controller: Controller, world: zesper.World
         velocity.y = direction_y * abs_vel
 
         # Snaps position to grid when the respective key has been released.  This allows for a deterministic movement
-        # pattern by eliminating any decimal residual accumulated when resetting the position to a integer value
+        # pattern by eliminating any decimal residual accumulated when resetting the position to an integer value
         horizontal_key_released = controller.is_button_released(Button.LEFT) or controller.is_button_released(Button.RIGHT)
         vertical_key_released = controller.is_button_released(Button.UP) or controller.is_button_released(Button.DOWN)
 
@@ -193,7 +193,7 @@ def handle_input(player_entity: int, controller: Controller, world: zesper.World
             # Creates a temporary hitbox representing the sword weapon
             create_melee_weapon(player_entity, world)
 
-            # Block input until weapon life time is over and publish attach event. We need to block it one less than
+            # Block input until weapon lifetime is over and publish attach event. We need to block it one less than
             # The active frames as we are counting already the frame when it is activated as active
             input_.block_counter = SWORD_ACTIVE_FRAMES - 1
 

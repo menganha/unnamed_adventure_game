@@ -155,6 +155,19 @@ class Script:
     delay: int
 
 
+# @component
+# class Action:
+#     function: Callable[..., None]
+#     args: Tuple[Any, ...]
+#
+#
+# @component
+# class Script:
+#     """ Calls a function with the parent entity ID passed as an argument """
+#     action_list: List[Action]
+#     delay: int = 0
+
+
 @component
 class Door:
     target_map: str
@@ -174,27 +187,27 @@ class Animation:
 
     idle_down: InitVar[AnimationStrip]
     idle_up: InitVar[Optional[AnimationStrip]] = None
-    idle_left: InitVar[Optional[AnimationStrip]] = None
+    idle_right: InitVar[Optional[AnimationStrip]] = None
 
     move_down: InitVar[Optional[AnimationStrip]] = None
     move_up: InitVar[Optional[AnimationStrip]] = None
-    move_left: InitVar[Optional[AnimationStrip]] = None
+    move_right: InitVar[Optional[AnimationStrip]] = None
 
     attack_down: InitVar[Optional[AnimationStrip]] = None
     attack_up: InitVar[Optional[AnimationStrip]] = None
-    attack_left: InitVar[Optional[AnimationStrip]] = None
+    attack_right: InitVar[Optional[AnimationStrip]] = None
 
-    def __post_init__(self, idle_down, idle_up, idle_left, move_down, move_up, move_left, attack_down, attack_up, attack_left):
+    def __post_init__(self, idle_down, idle_up, idle_right, move_down, move_up, move_right, attack_down, attack_up, attack_right):
         """
         Creates a dictionary with the as values images surfaces and the states as keys
         """
-        idle_right = move_right = attack_right = None
-        if idle_left:
-            idle_right = flip_strip_sprites(idle_left)
-        if move_left:
-            move_right = flip_strip_sprites(move_left)
-        if attack_left:
-            attack_right = flip_strip_sprites(attack_left, reverse_order=False)  # May not be in general the situation
+        idle_left = move_left = attack_left = None
+        if idle_right:
+            idle_left = flip_strip_sprites(idle_right)
+        if move_right:
+            move_left = flip_strip_sprites(move_right)
+        if attack_right:
+            attack_left = flip_strip_sprites(attack_right, reverse_order=False)  # May not be in general the situation
 
         self.strips = {
             Status.IDLE: {Direction.NORTH: idle_up, Direction.WEST: idle_left,

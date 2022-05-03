@@ -3,10 +3,10 @@ from typing import Dict
 import pygame
 
 from yazelc import config as cfg
-from yazelc import player
 from yazelc import resource_manager
 from yazelc import zesper
 from yazelc.components import Vector, Renderable, Position, Health
+from yazelc.player import player
 
 WHOLE_HEART_HEALTH_POINTS = 2
 HUD_DEPTH = 1001

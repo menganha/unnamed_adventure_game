@@ -7,7 +7,6 @@ from yazelc import config as cfg
 from yazelc import event_manager
 from yazelc import zesper
 from yazelc.event_type import EventType
-from yazelc.utils.esper_utils import try_pair_signature
 from yazelc.utils.game_utils import Direction
 from yazelc.utils.game_utils import Status
 from yazelc.visual_effects import create_explosion
@@ -41,7 +40,7 @@ class CombatSystem(zesper.Processor):
 
     def on_collision(self, ent1: int, ent2: int):
 
-        if components := try_pair_signature(self.world, ent1, ent2, cmp.Health, cmp.Weapon):
+        if components := self.world.try_pair_signature(ent1, ent2, cmp.Health, cmp.Weapon):
 
             victim, victim_health, attacker, attacker_weapon = components
 
