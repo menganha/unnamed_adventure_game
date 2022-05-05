@@ -1,5 +1,6 @@
 import pygame
 
+from yazelc import event_manager
 from yazelc import zesper
 from yazelc.components import Renderable
 from yazelc.controller import Controller, Button
@@ -27,11 +28,11 @@ class PauseMenuCreator(BaseMenuCreator):
         # Menu Logic
         if controller.is_button_pressed(Button.A):
             if menu.item_y == 0:
-                pygame.event.post(pygame.event.Event(EventType.PAUSE.value))
+                event_manager.post_event(EventType.PAUSE)
                 world.delete_entity(entity)
             elif menu.item_y == 1:
                 quit_event = pygame.event.Event(pygame.QUIT)
                 pygame.event.post(quit_event)
         elif controller.is_button_pressed(Button.START):
-            pygame.event.post(pygame.event.Event(EventType.PAUSE.value))
+            event_manager.post_event(EventType.PAUSE)
             world.delete_entity(entity)

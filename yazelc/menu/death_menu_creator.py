@@ -1,5 +1,6 @@
 import pygame
 
+from yazelc import event_manager
 from yazelc import zesper
 from yazelc.components import Renderable
 from yazelc.controller import Controller, Button
@@ -29,8 +30,7 @@ class DeathMenuCreator(BaseMenuCreator):
         if controller.is_button_pressed(Button.A):
             if menu.item_y == 0:
                 world.delete_entity(entity)
-                restart_event = pygame.event.Event(EventType.RESTART.value)
-                pygame.event.post(restart_event)
+                event_manager.post_event(EventType.RESTART)
             elif menu.item_y == 1:
                 quit_event = pygame.event.Event(pygame.QUIT)
                 pygame.event.post(quit_event)

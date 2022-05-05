@@ -1,7 +1,5 @@
 import logging
 
-import pygame.event
-
 from yazelc import components as cmp
 from yazelc import config as cfg
 from yazelc import event_manager
@@ -33,7 +31,7 @@ class CombatSystem(zesper.Processor):
             if health.points <= 0:  # Using the "<" condition for cases when the inflicted damage is to big that results in negative health
                 center = self.world.component_for_entity(ent, cmp.HitBox).rect.center
                 if ent == self.world.player_entity_id:
-                    pygame.event.post(pygame.event.Event(EventType.DEATH.value))
+                    event_manager.post_event(EventType.DEATH)
                 else:
                     create_explosion(center[0], center[1], 50, 20, cfg.C_RED, self.world)
                     self.world.delete_entity(ent)

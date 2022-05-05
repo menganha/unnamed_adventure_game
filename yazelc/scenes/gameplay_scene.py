@@ -7,6 +7,7 @@ from yazelc import camera
 from yazelc import components as cmp
 from yazelc import config as cfg
 from yazelc import enemy
+from yazelc import event_manager
 from yazelc import hud
 from yazelc import items
 from yazelc import resource_manager
@@ -54,6 +55,11 @@ class GameplayScene(BaseScene):
         resource_manager.add_resource(FONT_PATH)
         # for image in PLAYER_IMAGE_PATH.glob('*.png'):
         #     resource_manager.add_resource(image)
+
+        # Register some events
+        event_manager.subscribe(EventType.DEATH, self.on_death)
+        event_manager.subscribe(EventType.RESTART, self.on_restart)
+        event_manager.subscribe(EventType.PAUSE, self.on_pause)
 
         # Add map entity
         overworld_map = Maps(self.map_data_file)
@@ -172,29 +178,23 @@ class GameplayScene(BaseScene):
 
                 total_exit_frames -= 1
 
-    def handle_events(self):
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                self.in_scene = False
-                self.next_scene = None
-            elif event.type == EventType.DEATH.value:
-                self.handle_death()
-            elif event.type == EventType.PAUSE.value:
-                self.paused = not self.paused
-                if self.paused:
-                    controller = self.world.get_processor(InputSystem).controller
-                    self.world.remove_all_processors_except(RenderSystem)
-                    self.world.add_processor(MenuInputSystem(controller))
-                else:
-                    self.world.clear_processors()
-                    for proc in self.scene_processors:
-                        self.world.add_processor(proc)
-            elif event.type == EventType.RESTART.value:
-                self.in_scene = False
-                self.next_scene = self
-                self.world.clear_database()  # TODO: Should one keep the player or store some information here?
+    def on_pause(self):
+        self.paused = not self.paused
+        if self.paused:
+            controller = self.world.get_processor(InputSystem).controller
+            self.world.remove_all_processors_except(RenderSystem)
+            self.world.add_processor(MenuInputSystem(controller))
+        else:
+            self.world.clear_processors()
+            for proc in self.scene_processors:
+                self.world.add_processor(proc)
 
-    def handle_death(self):
+    def on_restart(self):
+        self.in_scene = False
+        self.next_scene = self
+        self.world.clear_database()  # TODO: Should one keep the player or store some information here?
+
+    def on_death(self):
         # Saves the status of the player (weapons, hearts, etc., wherever that is allocated in the end)
         # Removes all processors except the animation and render processor
         controller = self.world.get_processor(InputSystem).controller

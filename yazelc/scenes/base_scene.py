@@ -33,15 +33,12 @@ class BaseScene(abc.ABC):
 
     def run(self):
         while self.in_scene:
-            self.handle_events()
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    self.in_scene = False
+                    self.next_scene = None
             self.world.process()
         event_manager.clear_subscribers()
-
-    def handle_events(self):
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                self.in_scene = False
-                self.next_scene = None
 
     @abc.abstractmethod
     def on_exit(self):

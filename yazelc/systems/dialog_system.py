@@ -1,5 +1,3 @@
-import pygame
-
 from yazelc import dialog
 from yazelc import event_manager
 from yazelc import zesper
@@ -22,4 +20,4 @@ class DialogSystem(zesper.Processor):
             interactor_entity_id, _, dialog_entity_id, text_dialog = components
             # Create some type of menu or thing that can be controlled
             dialog.create_dialog(dialog_entity_id, self.world)
-            pygame.event.post(pygame.event.Event(EventType.PAUSE.value))
+            event_manager.post_event(EventType.PAUSE)

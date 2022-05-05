@@ -2,6 +2,7 @@ import pygame
 
 from yazelc import components as cmp
 from yazelc import config as cfg
+from yazelc import event_manager
 from yazelc import zesper
 from yazelc.controller import Controller, Button
 from yazelc.event_type import EventType
@@ -41,7 +42,7 @@ def handle_dialog_controllers(entity_id: int, controller: Controller, world: zes
         is_finished = text.render_fitted_chunks(image_surface, DIALOG_FONT_COLOR, X_MARGIN, Y_MARGIN)
         if is_finished:
             world.delete_entity(entity_id)
-            pygame.event.post(pygame.event.Event(EventType.PAUSE.value))
+            event_manager.post_event(EventType.PAUSE)
         else:
             world.add_component(entity_id, cmp.Renderable(image=image_surface, depth=SURFACE_DEPTH))
 

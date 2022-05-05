@@ -3,10 +3,9 @@ The module gathers functions that add commonly used entities to an input world
 """
 from pathlib import Path
 
-import pygame
-
 from yazelc import components as cmp
 from yazelc import config as cfg
+from yazelc import event_manager
 from yazelc import visual_effects as vfx
 from yazelc import zesper
 from yazelc.animation import AnimationStrip
@@ -140,7 +139,8 @@ def handle_input(player_entity: int, controller: Controller, world: zesper.World
     if controller.is_button_pressed(Button.START):
         pause_menu_creator = PauseMenuCreator()
         pause_menu_creator.create_entity(world)
-        pygame.event.post(pygame.event.Event(EventType.PAUSE.value))
+        event_manager.post_event(EventType.PAUSE)
+        return
 
     input_ = world.component_for_entity(player_entity, cmp.Input)
     if input_.block_counter != 0:
