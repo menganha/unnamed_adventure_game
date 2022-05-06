@@ -11,10 +11,10 @@ class EventManager:
 
     def __init__(self):
         # Uses defaultdict to initialize a list when using a new (missing) key in the dict
-        self.subscribers = defaultdict(list)
+        self.subscribers = defaultdict(set)
 
     def subscribe(self, event_type: EventType, listener: Callable):
-        self.subscribers[event_type].append(listener)
+        self.subscribers[event_type].add(listener)
 
     def post_event(self, event_type: EventType, *args, **kwargs):
         if event_type in self.subscribers:
@@ -22,7 +22,7 @@ class EventManager:
                 listener(*args, **kwargs)
 
     def clear(self):
-        self.subscribers = defaultdict(list)
+        self.subscribers = defaultdict(set)
 
 
 _event_manager = EventManager()
