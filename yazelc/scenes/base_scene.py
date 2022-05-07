@@ -37,6 +37,7 @@ class BaseScene(abc.ABC):
                 if event.type == pygame.QUIT:
                     self.in_scene = False
                     self.next_scene = None
+            event_manager.post_cached_events()
             self.world.process()
         event_manager.clear_subscribers()
 
