@@ -195,8 +195,11 @@ class GameplayScene(BaseScene):
         self.world.clear_database()  # TODO: Should one keep the player or store some information here?
 
     def on_death(self):
-        # Saves the status of the player (weapons, hearts, etc., wherever that is allocated in the end)
-        # Removes all processors except the animation and render processor
+        """
+        Saves the status of the player (weapons, hearts, etc., wherever that is allocated in the end), removes all processors
+        except the animation and render processor, and creates a death menu
+        """
+
         controller = self.world.get_processor(InputSystem).controller
         self.world.remove_all_processors_except(RenderSystem)
         self.world.add_processor(MenuInputSystem(controller))
@@ -207,9 +210,3 @@ class GameplayScene(BaseScene):
 
         death_menu_creator = DeathMenuCreator()
         death_menu_creator.create_entity(self.world)
-        # Creates a script to be run every frame such that when it ends shows a menu with either continue or exits the game
-        # self.world.remove_component(self.world.player_entity_id, cmp.Health)
-        # world.remove_component(world.player_entity_id, cmp.Animation)
-        # Creates a new menu entity with the continue or quit message. That entity controls the actions of restarting the
-        # game, etc.
-        # ...
