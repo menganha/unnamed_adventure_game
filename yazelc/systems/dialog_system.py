@@ -12,7 +12,7 @@ class DialogSystem(zesper.Processor):
         event_manager.subscribe(EventType.COLLISION, self.on_collision)
 
     def process(self):
-        pass  # Something should be cleaned up here
+        pass
 
     def on_collision(self, ent1: int, ent2: int):
         """ Handles collision when interacting with entities with the Dialog component """

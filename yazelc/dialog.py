@@ -24,7 +24,7 @@ def create_dialog(interactive_entity_id, world: zesper.World):
     image_surface = _create_image_surface()
     text_string = world.component_for_entity(interactive_entity_id, cmp.Dialog).text.text
     dialog = cmp.Dialog(text_string)
-    dialog.text.render_fitted_chunks(image_surface, DIALOG_FONT_COLOR, X_MARGIN, Y_MARGIN)
+    dialog.idle = dialog.text.render_fitted_word(image_surface, DIALOG_FONT_COLOR, X_MARGIN, Y_MARGIN)
     # TODO: Add some kind of blinking arrow
 
     dialog_entity_id = world.create_entity()
@@ -36,15 +36,15 @@ def create_dialog(interactive_entity_id, world: zesper.World):
 
 
 def handle_dialog_controllers(entity_id: int, controller: Controller, world: zesper.World):
-    if controller.is_button_pressed(Button.A):
-        text = world.component_for_entity(entity_id, cmp.Dialog).text
-        image_surface = _create_image_surface()
-        is_finished = text.render_fitted_chunks(image_surface, DIALOG_FONT_COLOR, X_MARGIN, Y_MARGIN)
-        if is_finished:
+    dialog_ = world.component_for_entity(entity_id, cmp.Dialog)
+    if controller.is_button_pressed(Button.A) and dialog_.idle:
+        if dialog_.text.is_empty():
             world.delete_entity(entity_id)
             event_manager.post_event(EventType.PAUSE)
         else:
-            world.add_component(entity_id, cmp.Renderable(image=image_surface, depth=SURFACE_DEPTH))
+            dialog_.idle = False
+            surface = world.component_for_entity(entity_id, cmp.Renderable).image
+            surface.fill(cfg.C_BLACK)
 
 
 def _create_image_surface() -> pygame.Surface:

@@ -49,6 +49,7 @@ class State:
 class Dialog:
     text_string: InitVar[str]
     text: Text = field(init=False)
+    idle: bool = False
 
     def __post_init__(self, text_string: str):
         self.text = Text(text_string)

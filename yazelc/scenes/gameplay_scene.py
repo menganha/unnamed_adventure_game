@@ -27,7 +27,7 @@ from yazelc.systems.dialog_system import DialogSystem
 from yazelc.systems.hud_system import HUDSystem
 from yazelc.systems.input_system import InputSystem
 from yazelc.systems.inventory_system import InventorySystem
-from yazelc.systems.menu_input_system import MenuInputSystem
+from yazelc.systems.menu_dialog_input_system import MenuDialogInputSystem
 from yazelc.systems.movement_system import MovementSystem
 from yazelc.systems.render_system import RenderSystem
 from yazelc.systems.script_system import ScriptSystem
@@ -182,8 +182,8 @@ class GameplayScene(BaseScene):
         self.paused = not self.paused
         if self.paused:
             controller = self.world.get_processor(InputSystem).controller
-            self.world.remove_all_processors_except(RenderSystem)
-            self.world.add_processor(MenuInputSystem(controller))
+            self.world.remove_all_processors_except(RenderSystem, DialogSystem)
+            self.world.add_processor(MenuDialogInputSystem(controller))
         else:
             self.world.clear_processors()
             for proc in self.scene_processors:
@@ -202,7 +202,7 @@ class GameplayScene(BaseScene):
 
         controller = self.world.get_processor(InputSystem).controller
         self.world.remove_all_processors_except(RenderSystem)
-        self.world.add_processor(MenuInputSystem(controller))
+        self.world.add_processor(MenuDialogInputSystem(controller))
 
         self.world.delete_entity(self.world.hud_entity_id)
         for entity_id in self.world.map_layers_entity_id:
