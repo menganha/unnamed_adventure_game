@@ -4,6 +4,8 @@ from typing import TypeVar, Optional, Tuple, Union, Type
 
 from esper import *
 
+from yazelc.resource_manager import ResourceManager
+
 C = TypeVar('C')
 C_alt = TypeVar('C_alt')  # alternative component
 
@@ -22,6 +24,7 @@ class World(World):
         self.camera_entity_id = None
         self.hud_entity_id = None
         self.map_layers_entity_id = []
+        self.resource_manager = ResourceManager()
 
     def try_pair_signature(self, ent_1: int, ent_2: int, component_type_1: Type[C], component_type_2: Type[C_alt]) \
             -> Union[Tuple[int, C, int, C_alt], Tuple[int, C_alt, int, C], None]:

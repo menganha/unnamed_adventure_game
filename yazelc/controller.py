@@ -1,7 +1,7 @@
 import abc
 from enum import Enum, auto
 
-
+# noinspection PyArgumentList
 class Button(Enum):
     """ Buttons on the controller. These are the only inputs the game will recognize """
     A = auto()

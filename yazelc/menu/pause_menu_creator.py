@@ -18,11 +18,11 @@ class PauseMenuCreator(BaseMenuCreator):
         self.add_menu_item(self.CONTINUE_TEXT)
         self.add_menu_item(self.QUIT_TEXT)
 
-    def handle_menu_input(self, entity: int, controller: Controller, world: zesper.World):
+    def handle_menu_input(self, entity: int, controller: Controller, world: zesper.World, text_renderer):
         menu, has_changed = self._handle_menu_controllers(entity, controller, world)
 
         if has_changed:
-            image_surface = self._create_image_surface(menu.item_y)
+            image_surface = self._create_image_surface(text_renderer, menu.item_y)
             world.component_for_entity(entity, Renderable).image = image_surface
 
         # Menu Logic

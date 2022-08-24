@@ -6,7 +6,6 @@ import pygame
 
 from yazelc.animation import AnimationStrip, flip_strip_sprites
 from yazelc.items import ItemType
-from yazelc.text import Text
 from yazelc.utils.game_utils import Direction, Status
 
 
@@ -47,12 +46,14 @@ class State:
 
 @component
 class Dialog:
-    text_string: InitVar[str]
-    text: Text = field(init=False)
-    idle: bool = False
+    """ Used for dialogs or signs in game """
+    text: str
+    index: int = 0  # Word at which the rendered text is actually in
+    index_start: int = 0
+    idle: bool = True  # If the text has not been displayed fully yet is waiting to be printed
+    frame_tick: int = 0  # Tick integer that count the amount of frame between word printing
+    frame_delay: int = 5  # How many frame to waint unitl the next printing of a workd
 
-    def __post_init__(self, text_string: str):
-        self.text = Text(text_string)
 
 
 @component

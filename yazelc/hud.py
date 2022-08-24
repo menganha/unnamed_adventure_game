@@ -3,7 +3,6 @@ from typing import Dict
 import pygame
 
 from yazelc import config as cfg
-from yazelc import resource_manager
 from yazelc import zesper
 from yazelc.components import Vector, Renderable, Position, Health
 from yazelc.player import player
@@ -33,9 +32,9 @@ def update_hud_entity(world: zesper.World, **kwargs):
     hud_image = world.component_for_entity(world.hud_entity_id, Renderable).image
     # TODO: Is it necessary to clear the image before?
 
-    full_heart_image = resource_manager.get_resource(FULL_HEART_RESOURCE_NAME)
-    half_heart_image = resource_manager.get_resource(HALF_HEART_RESOURCE_NAME)
-    empty_heart_image = resource_manager.get_resource(EMPTY_HEART_RESOURCE_NAME)
+    full_heart_image = world.resource_manager.get_texture(FULL_HEART_RESOURCE_NAME)
+    half_heart_image = world.resource_manager.get_texture(HALF_HEART_RESOURCE_NAME)
+    empty_heart_image = world.resource_manager.get_texture(EMPTY_HEART_RESOURCE_NAME)
 
     num_whole_hearts, num_medium_hearts = divmod(kwargs['health_points'], WHOLE_HEART_HEALTH_POINTS)
     index = 0

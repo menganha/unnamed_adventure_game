@@ -1,6 +1,5 @@
 import abc
-from pathlib import Path
-from typing import List, Optional
+from typing import Optional
 
 import pygame
 
@@ -9,23 +8,16 @@ from yazelc import zesper
 
 
 class BaseScene(abc.ABC):
-    """ Base implementation for all scenes. This class is abstract and should not be instantiated """
+    """
+    Base implementation for all scenes. This class is abstract and should not be instantiated.
+    """
 
-    def __init__(self, window: pygame.Surface, map_name: str, start_tile_x_pos: int, start_tile_y_pos: int,
-                 player_components: Optional[List[object]] = None):
+    def __init__(self, window: pygame.Surface):
         self.window = window
-        self.map_data_file = Path('data', f'{map_name}.tmx')
         self.world = zesper.World()
-        self.start_tile_x_pos = start_tile_x_pos
-        self.start_tile_y_pos = start_tile_y_pos
-
         self.in_scene = True
         self.paused = False
         self.next_scene: Optional['BaseScene'] = None
-        self.scene_processors: List[zesper.Processor] = []
-
-        if player_components:
-            self.world.player_entity_id = self.world.create_entity(*player_components)
 
     @abc.abstractmethod
     def on_enter(self):

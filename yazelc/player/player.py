@@ -138,7 +138,7 @@ def handle_input(player_entity: int, controller: Controller, world: zesper.World
 
     if controller.is_button_pressed(Button.START):
         pause_menu_creator = PauseMenuCreator()
-        pause_menu_creator.create_entity(world)
+        pause_menu_creator.create_entity(world, text_renderer)
         event_manager.post_event(EventType.PAUSE)
         return
 

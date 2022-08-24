@@ -1,45 +1,41 @@
 from pathlib import Path
 
 import pygame
-import pygame.freetype
 
-pygame.freetype.init()
-
-
-# TODO: HERE WE WOULD ALSO INITIALIZE THE SOUND RESOURCES
-# TODO: Should we use weak references?
 
 class ResourceManager:
+    # TODO: HERE WE WOULD ALSO INITIALIZE THE SOUND RESOURCES
     TRUE_TYPE_FONT_FILETYPE = '.ttf'
     PNG_FILETYPE = '.png'
 
     def __init__(self):
-        self.resources = {}
+        self._textures = {}
+        self._fonts = {}
 
-    def add_resource(self, path: Path, **options) -> object:
-        name = path.stem
+    def add_texture(self, path: Path, explicit_name: str = None):
+        """ Uses file name stem if explicit name is not passed """
+        name = path.stem if not explicit_name else explicit_name
         file_type = path.suffix
-        # Options depending on the file type/options
-        if name not in self.resources:
+        if name not in self._textures:
+            if file_type == self.PNG_FILETYPE:
+                self._textures.update({name: pygame.image.load(path).convert_alpha()})
+            else:
+                raise ValueError(f'Unknown texture filetype: {path}')
+
+    def add_font(self, path: Path, explicit_name: str = None):
+        """ Uses file name stem if explicit name is not passed """
+        name = path.stem if not explicit_name else explicit_name
+        file_type = path.suffix
+        if name not in self._fonts:
             if file_type == self.TRUE_TYPE_FONT_FILETYPE:
                 font = pygame.freetype.Font(path)
-                # font.antialiased = True
                 font.origin = True
-                self.resources.update({name: font})
-            elif file_type == self.PNG_FILETYPE:
-                self.resources.update({name: pygame.image.load(path).convert_alpha()})
-        return self.resources[name]
+                self._fonts.update({name: font})
+            else:
+                raise ValueError(f'Unknown font filetype: {path}')
 
-    def get_resource(self, name: str):
-        return self.resources[name]
+    def get_texture(self, name: str):
+        return self._textures[name]
 
-
-_resource_manager = ResourceManager()
-
-
-def add_resource(path: Path, **options) -> object:
-    return _resource_manager.add_resource(path, **options)
-
-
-def get_resource(name: str):
-    return _resource_manager.get_resource(name)
+    def get_font(self, name: str):
+        return self._fonts[name]

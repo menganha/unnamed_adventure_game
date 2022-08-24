@@ -1,5 +1,6 @@
 from math import copysign
 from pathlib import Path
+from typing import List, Optional, Tuple
 
 import pygame
 
@@ -11,6 +12,8 @@ from yazelc import event_manager
 from yazelc import hud
 from yazelc import items
 from yazelc import resource_manager
+from yazelc import zesper
+from yazelc.components import Input
 from yazelc.event_type import EventType
 from yazelc.gamepad import Gamepad
 from yazelc.keyboard import Keyboard
@@ -27,7 +30,6 @@ from yazelc.systems.dialog_system import DialogSystem
 from yazelc.systems.hud_system import HUDSystem
 from yazelc.systems.input_system import InputSystem
 from yazelc.systems.inventory_system import InventorySystem
-from yazelc.systems.menu_dialog_input_system import MenuDialogInputSystem
 from yazelc.systems.movement_system import MovementSystem
 from yazelc.systems.render_system import RenderSystem
 from yazelc.systems.script_system import ScriptSystem
@@ -37,11 +39,22 @@ from yazelc.systems.visual_effects_system import VisualEffectsSystem
 FULL_HEART_IMAGE_PATH = Path('assets', 'sprites', 'full_heart.png')
 HALF_HEART_IMAGE_PATH = Path('assets', 'sprites', 'half_heart.png')
 EMPTY_HEART_IMAGE_PATH = Path('assets', 'sprites', 'empty_heart.png')
-FONT_PATH = Path('assets', 'font', 'Anonymous Pro.ttf')
 PLAYER_IMAGE_PATH = Path('assets', 'sprites', 'player')
+FONT_PATH = Path('assets', 'font', 'Anonymous Pro.ttf')
 
 
 class GameplayScene(BaseScene):
+
+    def __init__(self, window: pygame.Surface, map_name: str, start_tile_x_pos: int, start_tile_y_pos: int,
+                 player_components: Optional[List[object]] = None):
+        super().__init__(window)
+        self.map_data_file = Path('data', f'{map_name}.tmx')
+        self.start_tile_x_pos = start_tile_x_pos
+        self.start_tile_y_pos = start_tile_y_pos
+        self.scene_processors: List[zesper.Processor] = []
+        self._input_storage: List[Tuple[int, Input]] = []  # Stores the input components removed temporarily during a pause state
+        if player_components:
+            self.world.player_entity_id = self.world.create_entity(*player_components)
 
     def on_enter(self):
         # Initialize some values
@@ -49,12 +62,10 @@ class GameplayScene(BaseScene):
         self.scene_processors = []
 
         # Add resources (TODO: maybe do this in a separate module as they seem to be all over the place)
-        resource_manager.add_resource(FULL_HEART_IMAGE_PATH)
-        resource_manager.add_resource(HALF_HEART_IMAGE_PATH)
-        resource_manager.add_resource(EMPTY_HEART_IMAGE_PATH)
-        resource_manager.add_resource(FONT_PATH)
-        # for image in PLAYER_IMAGE_PATH.glob('*.png'):
-        #     resource_manager.add_resource(image)
+        self.world.resource_manager.add_texture(FULL_HEART_IMAGE_PATH)
+        self.world.resource_manager.add_texture(HALF_HEART_IMAGE_PATH)
+        self.world.resource_manager.add_texture(EMPTY_HEART_IMAGE_PATH)
+        self.world.resource_manager.add_font(FONT_PATH)
 
         # Register some events
         event_manager.subscribe(EventType.DEATH, self.on_death)
@@ -181,10 +192,17 @@ class GameplayScene(BaseScene):
     def on_pause(self):
         self.paused = not self.paused
         if self.paused:
-            controller = self.world.get_processor(InputSystem).controller
-            self.world.remove_all_processors_except(RenderSystem, DialogSystem)
-            self.world.add_processor(MenuDialogInputSystem(controller))
+            # Remove all control form other entities unless it has a dialog component. We store these components locally
+            # for later reinsertion
+            for entity, input_ in self.world.get_component(cmp.Input):
+                if not self.world.has_component(entity, cmp.Dialog):
+                    self._input_storage.append((entity, input_))
+                    self.world.remove_component(entity, cmp.Input)
+            self.world.remove_all_processors_except(RenderSystem, DialogSystem, InputSystem)
         else:
+            for entity, input_ in self._input_storage:
+                self.world.add_component(entity, input_)
+            self._input_storage = []
             self.world.clear_processors()
             for proc in self.scene_processors:
                 self.world.add_processor(proc)
@@ -202,11 +220,11 @@ class GameplayScene(BaseScene):
 
         controller = self.world.get_processor(InputSystem).controller
         self.world.remove_all_processors_except(RenderSystem)
-        self.world.add_processor(MenuDialogInputSystem(controller))
 
         self.world.delete_entity(self.world.hud_entity_id)
         for entity_id in self.world.map_layers_entity_id:
             self.world.delete_entity(entity_id)
 
         death_menu_creator = DeathMenuCreator()
-        death_menu_creator.create_entity(self.world)
+        death_menu_creator.create_entity(self.world,
+                                         resource_manager['Anonymous Pro'])  # Not so nice, is not symmetrical with the add resource call

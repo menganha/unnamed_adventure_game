@@ -8,8 +8,8 @@ class EventManager:
     """
     Inspired by https://jakubszwajka.github.io/How-to-build-event-system-python/_.
 
-    This event manager is a mix of two main types: events triggering instanstaneously and events accumulating
-    and triggered at the end of a frame cycle. These are controlled simply by the variable EVENT_END_OF_FRAME
+    This event manager is a mix of two main types: events triggering instantaneously and events accumulating
+    and triggered at the end of a frame cycle. These are controlled by being part of the group EVENT_END_OF_FRAME
     """
     EVENT_END_OF_FRAME = [EventType.DEATH, EventType.PAUSE, EventType.RESTART]
 
@@ -22,6 +22,7 @@ class EventManager:
         self.subscribers[event_type].add(listener)
 
     def post_event(self, event_type: EventType, *args, **kwargs):
+        """ If the event is of the type end of frame then add them to the cached events list """
         if event_type in self.subscribers:
             if (event_type in self.EVENT_END_OF_FRAME) and event_type not in self.cached_events:
                 self.cached_events.append((event_type, args, kwargs))

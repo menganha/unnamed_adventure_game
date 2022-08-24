@@ -5,9 +5,9 @@ import pygame
 
 from yazelc import components as cmp
 from yazelc import config as cfg
+from yazelc import text_renderer
 from yazelc import zesper
 from yazelc.controller import Controller, Button
-from yazelc.text import Text
 
 
 # TODO: No need to create classes. We could pass some "base" functions as parameters to a "inherited" function
@@ -31,10 +31,10 @@ class BaseMenuCreator(ABC):
     def __init__(self, title_text: str):
         self.menu_items = []
         self.height = self.INITIAL_HEIGHT
-        self.title = Text(title_text)
+        self.title_text = title_text
 
     def add_menu_item(self, text: str):
-        self.menu_items.append(Text(text))
+        self.menu_items.append(text)
         self.height += self.ROW_HEIGHT_INCREMENT
 
     @abstractmethod
@@ -59,11 +59,11 @@ class BaseMenuCreator(ABC):
         """ Creates and returns the Menu Image """
         surface = pygame.Surface((self.WIDTH, self.height), pygame.SRCALPHA)
         surface.fill(BaseMenuCreator.BG_COLOR)
-        self.title.render_at(surface, self.FG_COLOR, pos_y=self.TITLE_TEXT_POS_Y)
+        text_renderer.render_text_at(self.title_text, surface, self.FG_COLOR, pos_y=self.TITLE_TEXT_POS_Y)
         pos_y = self.INITIAL_ITEM_POS_Y
-        for idx, item in enumerate(self.menu_items):
+        for idx, text in enumerate(self.menu_items):
             color = self.FG_COLOR if idx == highlight_item_n else self.FG_COLOR_INACTIVE
-            item.render_at(surface, color, pos_y=pos_y)
+            text_renderer.render_text_at(text, surface, color, pos_y=pos_y)
             pos_y += self.ITEM_SEP_Y
         return surface
 
