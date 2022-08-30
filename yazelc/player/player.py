@@ -12,7 +12,7 @@ from yazelc.animation import AnimationStrip
 from yazelc.controller import Controller, Button
 from yazelc.event_type import EventType
 from yazelc.items import ItemType
-from yazelc.menu.pause_menu_creator import PauseMenuCreator
+from yazelc.menu import menu_box
 from yazelc.utils.game_utils import Direction, Status
 
 VELOCITY = 1.5 - 1e-8  # This ensures that the rounding produces the displacement pattern 1,2,1,2... that averages a velocity of 1.5
@@ -137,8 +137,7 @@ def handle_input(player_entity: int, controller: Controller, world: zesper.World
     state.previous_direction = state.direction
 
     if controller.is_button_pressed(Button.START):
-        pause_menu_creator = PauseMenuCreator()
-        pause_menu_creator.create_entity(world, text_renderer)
+        menu_box.create_pause_menu(world)
         event_manager.post_event(EventType.PAUSE)
         return
 

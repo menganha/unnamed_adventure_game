@@ -1,12 +1,14 @@
 """
 Module deals with map data
 """
+from pathlib import Path
 from typing import Iterator, Tuple
 
 import pygame
 from pytmx.util_pygame import load_pygame
 
 from yazelc import components as cmp
+from yazelc.font import Font
 
 
 class Maps:
@@ -15,8 +17,8 @@ class Maps:
 
     # TODO: Move the "magic" strings below to here
 
-    def __init__(self, map_file: str):
-        self.tmx_data = load_pygame(map_file)
+    def __init__(self, map_file: Path):
+        self.tmx_data = load_pygame(str(map_file))
         self.width = self.tmx_data.width * self.tmx_data.tilewidth
         self.height = self.tmx_data.height * self.tmx_data.tileheight
 
@@ -41,7 +43,8 @@ class Maps:
             target_y = obj.properties[self.DOOR_TARGET_Y_STR]
             yield cmp.Door(obj.name, target_x, target_y), cmp.HitBox(obj.x, obj.y, obj.width, obj.height)
 
-    def create_signs(self) -> Iterator[Tuple[cmp.InteractorTag, cmp.Dialog, cmp.HitBox]]:  # TODO: May be generazible to all NPC etc
+    def create_signs(self, font: Font) -> Iterator[
+        Tuple[cmp.InteractorTag, cmp.Dialog, cmp.HitBox]]:  # TODO: May be generazible to all NPC etc
         # TODO: TEMPORARY FIX!!!!
         try:
             self.tmx_data.get_layer_by_name('interactives')
@@ -49,7 +52,7 @@ class Maps:
             return
 
         for obj in self.tmx_data.get_layer_by_name('interactives'):
-            yield cmp.InteractorTag(), cmp.Dialog(obj.properties['text']), cmp.HitBox(obj.x, obj.y, obj.width, obj.height)
+            yield cmp.InteractorTag(), cmp.Dialog(obj.properties['text'], font), cmp.HitBox(obj.x, obj.y, obj.width, obj.height)
 
     def get_center_coord_from_tile(self, tile_x_pos: int, tile_y_pos: int) -> (int, int):
         """

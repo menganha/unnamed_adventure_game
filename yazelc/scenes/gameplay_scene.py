@@ -7,18 +7,18 @@ import pygame
 from yazelc import camera
 from yazelc import components as cmp
 from yazelc import config as cfg
+from yazelc import dialog_box
 from yazelc import enemy
 from yazelc import event_manager
 from yazelc import hud
 from yazelc import items
-from yazelc import resource_manager
 from yazelc import zesper
 from yazelc.components import Input
 from yazelc.event_type import EventType
 from yazelc.gamepad import Gamepad
 from yazelc.keyboard import Keyboard
 from yazelc.maps import Maps
-from yazelc.menu.death_menu_creator import DeathMenuCreator
+from yazelc.menu import menu_box
 from yazelc.player import player
 from yazelc.scenes.base_scene import BaseScene
 from yazelc.systems.ai_system import AISystem
@@ -41,6 +41,8 @@ HALF_HEART_IMAGE_PATH = Path('assets', 'sprites', 'half_heart.png')
 EMPTY_HEART_IMAGE_PATH = Path('assets', 'sprites', 'empty_heart.png')
 PLAYER_IMAGE_PATH = Path('assets', 'sprites', 'player')
 FONT_PATH = Path('assets', 'font', 'Anonymous Pro.ttf')
+FONT_SIZE = 12
+FONT_COLOR = cfg.C_WHITE
 
 
 class GameplayScene(BaseScene):
@@ -65,7 +67,8 @@ class GameplayScene(BaseScene):
         self.world.resource_manager.add_texture(FULL_HEART_IMAGE_PATH)
         self.world.resource_manager.add_texture(HALF_HEART_IMAGE_PATH)
         self.world.resource_manager.add_texture(EMPTY_HEART_IMAGE_PATH)
-        self.world.resource_manager.add_font(FONT_PATH)
+        self.world.resource_manager.add_font(FONT_PATH, FONT_SIZE, FONT_COLOR, dialog_box.DIALOG_FONT_ID)
+        self.world.resource_manager.add_font(FONT_PATH, FONT_SIZE, FONT_COLOR, menu_box.MENU_FONT_ID)
 
         # Register some events
         event_manager.subscribe(EventType.DEATH, self.on_death)
@@ -85,7 +88,8 @@ class GameplayScene(BaseScene):
             self.world.create_entity(position, hitbox, wall_tag)
         for door, hitbox in overworld_map.create_doors():
             self.world.create_entity(door, hitbox)
-        for interactive_tag, text, hitbox in overworld_map.create_signs():
+        dialog_font = self.world.resource_manager.get_font(dialog_box.DIALOG_FONT_ID)
+        for interactive_tag, text, hitbox in overworld_map.create_signs(dialog_font):
             self.world.create_entity(interactive_tag, text, hitbox)
 
         # Add player entity
@@ -192,10 +196,10 @@ class GameplayScene(BaseScene):
     def on_pause(self):
         self.paused = not self.paused
         if self.paused:
-            # Remove all control form other entities unless it has a dialog component. We store these components locally
-            # for later reinsertion
+            # Removes all control form other entities unless it has a dialog component
+            # We store these components locally for later reinsertion
             for entity, input_ in self.world.get_component(cmp.Input):
-                if not self.world.has_component(entity, cmp.Dialog):
+                if not self.world.has_component(entity, cmp.Dialog) and not self.world.has_component(entity, cmp.Menu):
                     self._input_storage.append((entity, input_))
                     self.world.remove_component(entity, cmp.Input)
             self.world.remove_all_processors_except(RenderSystem, DialogSystem, InputSystem)
@@ -217,14 +221,10 @@ class GameplayScene(BaseScene):
         Saves the status of the player (weapons, hearts, etc., wherever that is allocated in the end), removes all processors
         except the animation and render processor, and creates a death menu
         """
-
-        controller = self.world.get_processor(InputSystem).controller
-        self.world.remove_all_processors_except(RenderSystem)
+        self.world.remove_all_processors_except(RenderSystem, InputSystem)
 
         self.world.delete_entity(self.world.hud_entity_id)
         for entity_id in self.world.map_layers_entity_id:
             self.world.delete_entity(entity_id)
 
-        death_menu_creator = DeathMenuCreator()
-        death_menu_creator.create_entity(self.world,
-                                         resource_manager['Anonymous Pro'])  # Not so nice, is not symmetrical with the add resource call
+        menu_box.create_death_menu(self.world)

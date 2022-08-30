@@ -5,6 +5,7 @@ from typing import Dict, Callable, List, Optional, Tuple, Any
 import pygame
 
 from yazelc.animation import AnimationStrip, flip_strip_sprites
+from yazelc.font import Font
 from yazelc.items import ItemType
 from yazelc.utils.game_utils import Direction, Status
 
@@ -48,12 +49,27 @@ class State:
 class Dialog:
     """ Used for dialogs or signs in game """
     text: str
-    index: int = 0  # Word at which the rendered text is actually in
+    font: Font
+    index: int = 0  # Index of the char at which the rendered text is actually in
     index_start: int = 0
+    x_pos: int = 0
+    y_pos: int = 0
     idle: bool = True  # If the text has not been displayed fully yet is waiting to be printed
-    frame_tick: int = 0  # Tick integer that count the amount of frame between word printing
-    frame_delay: int = 5  # How many frame to waint unitl the next printing of a workd
+    frame_tick: int = 0  # Tick integer that count the amount of frames between printing a char
+    frame_delay: int = 1  # How many frames to wait until the next letter printing
 
+    def next_char(self) -> str:
+        return self.text[self.index]
+
+    def is_at_end(self) -> bool:
+        return self.index >= len(self.text)
+
+    def current_sentence(self) -> str:
+        """ Gives the sentence until the word (including it) at which the index is """
+        sentence = self.text[self.index_start:self.index + 1]
+        n_words = len(sentence.rstrip().split(' '))
+        words = self.text[self.index_start:].split(' ')[:n_words]
+        return ' '.join(words)
 
 
 @component
@@ -82,10 +98,14 @@ class WallTag:
 
 @component
 class Menu:
-    item_x: int
-    item_y: int
-    item_max_x: int
-    item_max_y: int
+    title: str
+    items: list[str]
+    font: Font
+    item_idx_x: int = 0
+    item_idx_y: int = 0
+
+    def __len__(self):
+        return len(self.items)
 
 
 @component
