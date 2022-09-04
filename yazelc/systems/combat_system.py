@@ -48,7 +48,8 @@ class CombatSystem(zesper.Processor):
             if self.world.has_component(victim, cmp.EnemyTag) and self.world.has_component(attacker, cmp.EnemyTag):
                 return
 
-            self.world.component_for_entity(victim, cmp.State).status = Status.IDLE
+            if animation := self.world.try_component(victim, cmp.Animation):
+                animation.status = Status.IDLE
 
             if input_ := self.world.try_component(victim, cmp.Input):
                 input_.block_counter = attacker_weapon.freeze_frames

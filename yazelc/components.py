@@ -32,20 +32,6 @@ class Velocity(Vector):
 
 
 @component
-class State:
-    """ State of being (usually a "moving" entity) used in different systems """
-    direction: Direction = Direction.SOUTH
-    status: Status = Status.IDLE
-
-    previous_direction: Direction = field(init=False)
-    previous_status: Status = field(init=False)
-
-    def __post_init__(self):
-        self.previous_direction = self.direction
-        self.previous_status = self.status
-
-
-@component
 class Dialog:
     """ Used for dialogs or signs in game """
     text: str
@@ -203,10 +189,6 @@ class Animation:
     Needs at least to get one animation stripe (idle_down) to instantiate this component. No need of "left" animation
     stripe as we can just "flip" the right one
     """
-    index: int = field(init=False, default=0)
-    frame_counter: int = field(init=False, default=0)
-    strips: Dict[Status, Dict[Direction, List[AnimationStrip]]] = field(init=False)
-
     idle_down: InitVar[AnimationStrip]
     idle_up: InitVar[Optional[AnimationStrip]] = None
     idle_right: InitVar[Optional[AnimationStrip]] = None
@@ -219,10 +201,23 @@ class Animation:
     attack_up: InitVar[Optional[AnimationStrip]] = None
     attack_right: InitVar[Optional[AnimationStrip]] = None
 
+    direction: Direction = Direction.SOUTH
+    status: Status = Status.IDLE
+
+    index: int = field(init=False, default=0)
+    frame_counter: int = field(init=False, default=0)
+    strips: Dict[Status, Dict[Direction, List[AnimationStrip]]] = field(init=False)
+
+    previous_direction: Direction = field(init=False)
+    previous_status: Status = field(init=False)
+
     def __post_init__(self, idle_down, idle_up, idle_right, move_down, move_up, move_right, attack_down, attack_up, attack_right):
         """
         Creates a dictionary with the as values images surfaces and the states as keys
         """
+        self.previous_direction = self.direction
+        self.previous_status = self.status
+
         idle_left = move_left = attack_left = None
         if idle_right:
             idle_left = flip_strip_sprites(idle_right)

@@ -55,7 +55,8 @@ class GameplayScene(BaseScene):
         self.start_tile_y_pos = start_tile_y_pos
         self._cached_scene_processors: List[zesper.Processor] = []
         self._input_storage: List[Tuple[int, Input]] = []  # Stores the input components removed temporarily during a pause state
-        if player_components: self.world.player_entity_id = self.world.create_entity(*player_components)
+        if player_components:
+            self.world.player_entity_id = self.world.create_entity(*player_components)
 
     def on_enter(self):
         # Initialize some values

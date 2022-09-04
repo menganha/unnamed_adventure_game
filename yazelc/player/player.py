@@ -67,7 +67,6 @@ def create_player_at(center_x_pos: int, center_y_pos: int, world: zesper.World):
     world.add_component(player_entity_id, cmp.Velocity(x=0, y=0))
     world.add_component(player_entity_id, cmp.Input(handle_input_function=handle_input))
     world.add_component(player_entity_id, cmp.Health(points=MAX_HEALTH))
-    world.add_component(player_entity_id, cmp.State())
 
 
 def get_position_of_sprite(hitbox: cmp.HitBox):
@@ -84,7 +83,7 @@ def create_bomb(player_entity_id: int, world: zesper.World):
     animation_stripe = AnimationStrip(img_path, sprite_width=16, frame_sequence=frame_sequence)
 
     position = world.component_for_entity(player_entity_id, cmp.Position)
-    direction = world.component_for_entity(player_entity_id, cmp.State).direction
+    direction = world.component_for_entity(player_entity_id, cmp.Animation).direction
     renderable = world.component_for_entity(player_entity_id, cmp.Renderable)
 
     bomb_renderable_component = cmp.Renderable(image=animation_stripe[0])
@@ -100,7 +99,6 @@ def create_bomb(player_entity_id: int, world: zesper.World):
     world.add_component(bomb_entity, cmp.Animation(idle_down=animation_stripe))
     world.add_component(bomb_entity, cmp.Position(bomb_position_x, bomb_position_y))
     world.add_component(bomb_entity, cmp.Script(delay=100, function=create_bomb_hitbox, args=script_arguments))
-    world.add_component(bomb_entity, cmp.State())
 
 
 def create_bomb_hitbox(bomb_entity_id: int, x_pos: int, y_pos: int, world: zesper.World):
@@ -132,9 +130,9 @@ def create_interactive_hitbox(player_entity_id: int, world: zesper.World):
 def handle_input(player_entity: int, controller: Controller, world: zesper.World):
     # TODO: Add state system just for this operation. It decouples the input and is mostly useful if we want to
     #   remove this process but don't want to stop the state update
-    state = world.component_for_entity(player_entity, cmp.State)
-    state.previous_status = state.status
-    state.previous_direction = state.direction
+    animation = world.component_for_entity(player_entity, cmp.Animation)
+    animation.previous_status = animation.status
+    animation.previous_direction = animation.direction
 
     if controller.is_button_pressed(Button.START):
         menu_box.create_pause_menu(world)
@@ -167,27 +165,27 @@ def handle_input(player_entity: int, controller: Controller, world: zesper.World
             position.y = round(position.y)
 
         # Attempt to change direction only when a key is released or the status of the entity is not moving
-        if horizontal_key_released or vertical_key_released or state.status != Status.MOVING:
+        if horizontal_key_released or vertical_key_released or animation.status != Status.MOVING:
             if direction_x > 0:
-                state.direction = Direction.EAST
+                animation.direction = Direction.EAST
             elif direction_x < 0:
-                state.direction = Direction.WEST
+                animation.direction = Direction.WEST
             if direction_y > 0:
-                state.direction = Direction.SOUTH
+                animation.direction = Direction.SOUTH
             elif direction_y < 0:
-                state.direction = Direction.NORTH
+                animation.direction = Direction.NORTH
 
         # Set entity status for animation system
         if not direction_x and not direction_y:
-            state.status = Status.IDLE
+            animation.status = Status.IDLE
         else:
-            state.status = Status.MOVING
+            animation.status = Status.MOVING
 
         if controller.is_button_pressed(Button.B):
             # Stop player when is attacking
             velocity.x = 0
             velocity.y = 0
-            state.status = Status.ATTACKING
+            animation.status = Status.ATTACKING
 
             # Creates a temporary hitbox representing the sword weapon
             create_melee_weapon(player_entity, world)
@@ -211,7 +209,7 @@ def handle_input(player_entity: int, controller: Controller, world: zesper.World
 
 def _create_hitbox_in_front(player_entity_id: int, front_range: int, side_range: int, world: zesper.World) -> int:
     """ Creates a hitbox in the direction the player is facing """
-    direction = world.component_for_entity(player_entity_id, cmp.State).direction
+    direction = world.component_for_entity(player_entity_id, cmp.Animation).direction
     if direction in (Direction.WEST, Direction.EAST):
         hitbox = cmp.HitBox(0, 0, front_range, side_range)
     else:

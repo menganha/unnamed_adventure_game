@@ -13,7 +13,6 @@ def create_jelly_at(x_pos: int, y_pos: int, world: zesper.World) -> int:
     enemy_idle_animation = AnimationStrip(enemy_idle_down_image_path, sprite_width=16, delay=15)
     enemy_entity = world.create_entity()
     world.add_component(enemy_entity, cmp.Brain(think_frames=50))
-    world.add_component(enemy_entity, cmp.State())
     world.add_component(enemy_entity, cmp.Velocity())
     world.add_component(enemy_entity, cmp.Health())
     world.add_component(enemy_entity, cmp.Weapon(damage=1, active_frames=-1, freeze_frames=7, recoil_velocity=3))
@@ -27,15 +26,15 @@ def create_jelly_at(x_pos: int, y_pos: int, world: zesper.World) -> int:
 
 
 def handle_input(enemy_entity: int, controller: Controller, world: zesper.World):
-    state = world.component_for_entity(enemy_entity, cmp.State)
-    state.previous_status = state.status
-    state.previous_direction = state.direction
+    animation = world.component_for_entity(enemy_entity, cmp.Animation)
+    animation.previous_status = animation.status
+    animation.previous_direction = animation.direction
 
     brain = world.component_for_entity(enemy_entity, cmp.Brain)
     velocity = world.component_for_entity(enemy_entity, cmp.Velocity)
 
-    state.direction = brain.direction
-    if state.direction:
+    animation.direction = brain.direction
+    if animation.direction:
         velocity.x = brain.direction.value.x
         velocity.y = brain.direction.value.y
     else:

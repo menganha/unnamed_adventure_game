@@ -43,8 +43,8 @@ class Maps:
             target_y = obj.properties[self.DOOR_TARGET_Y_STR]
             yield cmp.Door(obj.name, target_x, target_y), cmp.HitBox(obj.x, obj.y, obj.width, obj.height)
 
-    def create_signs(self, font: Font) -> Iterator[
-        Tuple[cmp.InteractorTag, cmp.Dialog, cmp.HitBox]]:  # TODO: May be generazible to all NPC etc
+    def create_signs(self, font: Font) -> Iterator[Tuple[cmp.InteractorTag, cmp.Dialog, cmp.HitBox]]:
+        # TODO: May be generazible to all NPC etc
         # TODO: TEMPORARY FIX!!!!
         try:
             self.tmx_data.get_layer_by_name('interactives')
