@@ -1,6 +1,6 @@
 """ Module extends the esper package"""
 
-from typing import TypeVar, Optional, Tuple, Union, Type
+from typing import TypeVar, Optional, Tuple, Union, Type, List
 
 from esper import *
 
@@ -58,12 +58,12 @@ class World(World):
         else:
             return None
 
-    def remove_all_processors_except(self, *excluded_processor_types: Type[Processor]) -> None:
+    def remove_all_processors_except(self, *excluded_processor_types: Type[Processor]) -> List[Type[Processor]]:
         """ No similar function on the esper Lib."""
         processors_to_remove = [proc for proc in self._processors if type(proc) not in excluded_processor_types]
         for processor in processors_to_remove:
-            processor.world = None
             self._processors.remove(processor)
+        return processors_to_remove
 
     def clear_processors(self):
         self._processors = []

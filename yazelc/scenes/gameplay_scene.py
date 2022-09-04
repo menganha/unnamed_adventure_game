@@ -53,15 +53,13 @@ class GameplayScene(BaseScene):
         self.map_data_file = Path('data', f'{map_name}.tmx')
         self.start_tile_x_pos = start_tile_x_pos
         self.start_tile_y_pos = start_tile_y_pos
-        self.scene_processors: List[zesper.Processor] = []
+        self._cached_scene_processors: List[zesper.Processor] = []
         self._input_storage: List[Tuple[int, Input]] = []  # Stores the input components removed temporarily during a pause state
-        if player_components:
-            self.world.player_entity_id = self.world.create_entity(*player_components)
+        if player_components: self.world.player_entity_id = self.world.create_entity(*player_components)
 
     def on_enter(self):
         # Initialize some values
         self.in_scene = True
-        self.scene_processors = []
 
         # Add resources (TODO: maybe do this in a separate module as they seem to be all over the place)
         self.world.resource_manager.add_texture(FULL_HEART_IMAGE_PATH)
@@ -145,11 +143,12 @@ class GameplayScene(BaseScene):
         render_system = RenderSystem(window=self.window)
         hud_system = HUDSystem()
 
-        self.scene_processors.extend(  # Note they are added in a give order
+        scene_processors = []
+        scene_processors.extend(  # Note they are added in a give order
             [ai_system, input_system, movement_system, script_system, collision_system, dialog_system, combat_system, inventory_system,
              visual_effect_system, transition_system, camera_system, animation_system, hud_system, render_system]
         )
-        for processor in self.scene_processors:
+        for processor in scene_processors:
             self.world.add_processor(processor)
 
     def on_exit(self):
@@ -196,20 +195,20 @@ class GameplayScene(BaseScene):
     def on_pause(self):
         self.paused = not self.paused
         if self.paused:
-            # Removes all control form other entities unless it has a dialog component
+            # Removes all control form other entities unless it has a dialog or menu component
             # We store these components locally for later reinsertion
             for entity, input_ in self.world.get_component(cmp.Input):
                 if not self.world.has_component(entity, cmp.Dialog) and not self.world.has_component(entity, cmp.Menu):
                     self._input_storage.append((entity, input_))
                     self.world.remove_component(entity, cmp.Input)
-            self.world.remove_all_processors_except(RenderSystem, DialogSystem, InputSystem)
+            self._cached_scene_processors = self.world.remove_all_processors_except(RenderSystem, DialogSystem, InputSystem)
         else:
             for entity, input_ in self._input_storage:
                 self.world.add_component(entity, input_)
             self._input_storage = []
-            self.world.clear_processors()
-            for proc in self.scene_processors:
+            for proc in self._cached_scene_processors:
                 self.world.add_processor(proc)
+            self._cached_scene_processors = []
 
     def on_restart(self):
         self.in_scene = False
