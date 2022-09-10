@@ -5,6 +5,7 @@ from yazelc import config as cfg
 from yazelc import event_manager
 from yazelc import zesper
 from yazelc.event_type import EventType
+from yazelc.items import PickableItemType
 from yazelc.utils.game_utils import Direction
 from yazelc.utils.game_utils import Status
 from yazelc.visual_effects import create_explosion
@@ -12,8 +13,8 @@ from yazelc.visual_effects import create_explosion
 
 class CombatSystem(zesper.Processor):
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, player_entity_id: int):
+        self.player_entity_id = player_entity_id
         event_manager.subscribe(EventType.COLLISION, self.on_collision)
 
     def process(self):
@@ -67,7 +68,7 @@ class CombatSystem(zesper.Processor):
             victim_health.cool_down_counter = victim_health.cool_down_frames
             victim_health.points -= attacker_weapon.damage
 
-            if victim == self.world.player_entity_id:
-                event_manager.post_event(EventType.HUD_UPDATE)
+            if victim == self.player_entity_id:
+                event_manager.post_event(EventType.HUD_UPDATE, PickableItemType.HEART, victim_health.points)
 
             logging.info(f'entity {victim} has received {attacker_weapon.damage} and has {victim_health.points} health points remaining')

@@ -20,10 +20,6 @@ class World(World):
 
     def __init__(self):
         super().__init__()
-        self.player_entity_id = None
-        self.camera_entity_id = None
-        self.hud_entity_id = None
-        self.map_layers_entity_id = []
         self.resource_manager = ResourceManager()
 
     def try_pair_signature(self, ent_1: int, ent_2: int, component_type_1: Type[C], component_type_2: Type[C_alt]) \
@@ -70,8 +66,4 @@ class World(World):
 
     def clear_database(self) -> None:
         super().clear_database()
-        self.player_entity_id = None
-        self.camera_entity_id = None
-        self.hud_entity_id = None
-        self.map_layers_entity_id = []
         self.clear_processors()

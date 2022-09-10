@@ -3,9 +3,11 @@ from yazelc import zesper
 from yazelc.components import Position, Renderable, Vector
 
 
-def create_camera(world: zesper.World):
-    world.camera_entity_id = world.create_entity()
-    world.add_component(world.camera_entity_id, Position(0, 0))
+# TODO: I don't like the camera entity id to be part of the world. It makes it less general!!!
+def create_camera(world: zesper.World) -> int:
+    camera_entity_id = world.create_entity()
+    world.add_component(camera_entity_id, Position(0, 0))
+    return camera_entity_id
 
 
 def get_position_of_entity_to_track(entity_id_to_follow: int, world: zesper.World) -> Vector:

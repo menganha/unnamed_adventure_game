@@ -8,14 +8,14 @@ class CameraSystem(zesper.Processor):
     Updates the camera entity to center around the input entity position
     """
 
-    def __init__(self, entity_followed: int, offset: Vector, max_dimensions: Vector):
-        super().__init__()
+    def __init__(self, camera_entity_id: int, entity_followed: int, offset: Vector, max_dimensions: Vector):
+        self.camera_entity_id = camera_entity_id
         self.entity_followed = entity_followed
-        self.max_dimensions = max_dimensions
         self.offset = offset
+        self.max_dimensions = max_dimensions
 
     def process(self):
-        camera_pos = self.world.component_for_entity(self.world.camera_entity_id, Position)
+        camera_pos = self.world.component_for_entity(self.camera_entity_id, Position)
         entity_followed_pos = self.world.component_for_entity(self.entity_followed, Position)
 
         camera_pos.x = entity_followed_pos.x - self.offset.x

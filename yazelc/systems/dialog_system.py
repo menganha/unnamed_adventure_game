@@ -9,8 +9,8 @@ class DialogSystem(zesper.Processor):
     """ Handles all text dialog. NPC and signs """
 
     def __init__(self):
-        event_manager.subscribe(EventType.COLLISION, self.on_collision)
         self.tick_counter = 0
+        event_manager.subscribe(EventType.COLLISION, self.on_collision)
 
     def process(self):
         for entity, (dialog, renderable_cmp) in self.world.get_components(Dialog, Renderable):

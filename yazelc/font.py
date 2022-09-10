@@ -10,7 +10,7 @@ class Font:
     REFERENCE_CHAR = 'B'
 
     def __init__(self, font: pygame.freetype.Font, size: int, color: pygame.Color):
-        font.origin = True
+        # font.origin = True
         self.font = font
         self.size = size
         self.color = color
@@ -37,10 +37,13 @@ class Font:
         Returns the position of the top-left corner of the rendered text surface such that it is centered in a rectangle
         of the input dimensions
         """
-        rect = self.font.get_rect(text, size=self.size)
+        rect = self.get_rect(text)
         coord_x = (-rect.width + width) // 2
         coord_y = (-rect.height + height) // 2
         return coord_x, coord_y
+
+    def get_rect(self, text) -> pygame.Rect:
+        return self.font.get_rect(text, size=self.size)
 
     def render_fitted_word(self, text: str, target_surface: pygame.Surface, x_margin: int = 0, y_margin: int = 0,
                            delta_line_spacing: int = 7) -> bool:

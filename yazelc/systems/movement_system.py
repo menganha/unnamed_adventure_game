@@ -7,13 +7,12 @@ class MovementSystem(zesper.Processor):
 
     def process(self):
         """
-         If it has a hitbox then check for collisions and modify the entity's velocity otherwise just move
+         Moves all entities with positions. If it has a Hitbox component, then updates their internal position as well
         """
-        for ent, (vel, pos) in self.world.get_components(Velocity, Position):
-            pos.prev_x = pos.x
-            pos.prev_y = pos.y
-            pos.x += vel.x
-            pos.y += vel.y
-
-        for ent, (hitbox, position, _) in self.world.get_components(HitBox, Position, Velocity):
-            hitbox.rect.move_ip(round(position.x) - round(position.prev_x), round(position.y) - round(position.prev_y))
+        for ent, (velocity, position) in self.world.get_components(Velocity, Position):
+            position.prev_x = position.x
+            position.prev_y = position.y
+            position.x += velocity.x
+            position.y += velocity.y
+            if hitbox := self.world.try_component(ent, HitBox):
+                hitbox.rect.move_ip(round(position.x) - round(position.prev_x), round(position.y) - round(position.prev_y))

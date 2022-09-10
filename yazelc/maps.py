@@ -35,7 +35,7 @@ class Maps:
 
     def create_solid_rectangles(self) -> Iterator[Tuple[cmp.Position, cmp.HitBox, cmp.WallTag]]:
         for obj in self.tmx_data.get_layer_by_name('solids'):
-            yield cmp.Position(obj.x, obj.y), cmp.HitBox(obj.x, obj.y, obj.width, obj.height), cmp.WallTag()
+            yield cmp.HitBox(obj.x, obj.y, obj.width, obj.height), cmp.WallTag()
 
     def create_doors(self):
         for obj in self.tmx_data.get_layer_by_name('doors'):

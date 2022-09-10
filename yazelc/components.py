@@ -6,7 +6,7 @@ import pygame
 
 from yazelc.animation import AnimationStrip, flip_strip_sprites
 from yazelc.font import Font
-from yazelc.items import ItemType
+from yazelc.items import PickableItemType
 from yazelc.utils.game_utils import Direction, Status
 
 
@@ -18,6 +18,7 @@ class Vector:
 
 @component
 class Position(Vector):
+    """ Absolute position of the entity, i.e., not the one relative to the window """
     prev_x: float = field(init=False)
     prev_y: float = field(init=False)
 
@@ -25,10 +26,17 @@ class Position(Vector):
         self.prev_x = self.x
         self.prev_y = self.y
 
+    def __add__(self, other_position):
+        return Position(self.x + other_position.x, self.y + other_position.y)
+
+    def __sub__(self, other_position):
+        return Position(self.x - other_position.x, self.y - other_position.y)
+
 
 @component
 class Velocity(Vector):
     pass
+    # TODO: Make velocity and position to be strictly an integer. It is possible and more consistent
 
 
 @component
@@ -60,7 +68,13 @@ class Dialog:
 
 @component
 class InteractorTag:
-    """ Tag single entity with Hitbox to signal the player interacting with colliding object """
+    """ Tag entity with Hitbox to signal the player interacting with colliding object """
+    pass
+
+
+@component
+class InteractableTag:
+    """ Tag entity which can be interacted """
     pass
 
 
@@ -74,12 +88,6 @@ class Renderable:
     def __post_init__(self):
         self.width = self.image.get_width()
         self.height = self.image.get_height()
-
-
-@component
-class WallTag:
-    """ Tag to keep track of collidable walls"""
-    pass
 
 
 @component
@@ -108,6 +116,13 @@ class Health:
 
 @component
 class HitBox:
+    """
+    Pygame is made such that hitboxes contain also a position. Therefore, is difficult to separate the components, i.e.,
+    Position and a "Hitbox" component in a "clean way".
+    We have opted for the approach where the Hitbox has a position embedded in the component but does not count as a
+    real Position component. Nevertheless, this internal position of the Hitbox also represent the absolute position of
+    it.
+    """
     x_pos: InitVar[int]
     y_pos: InitVar[int]
     width: InitVar[int]
@@ -131,7 +146,8 @@ class Brain:
 @component
 class Pickable:
     """ Pickable items tag """
-    item_type: ItemType
+    item_type: PickableItemType
+    value: int = 1
 
 
 @component

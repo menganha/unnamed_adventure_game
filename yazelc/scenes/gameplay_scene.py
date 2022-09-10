@@ -11,7 +11,6 @@ from yazelc import dialog_box
 from yazelc import enemy
 from yazelc import event_manager
 from yazelc import hud
-from yazelc import items
 from yazelc import zesper
 from yazelc.components import Input
 from yazelc.event_type import EventType
@@ -20,6 +19,7 @@ from yazelc.keyboard import Keyboard
 from yazelc.maps import Maps
 from yazelc.menu import menu_box
 from yazelc.player import player
+from yazelc.player.inventory import Inventory
 from yazelc.scenes.base_scene import BaseScene
 from yazelc.systems.ai_system import AISystem
 from yazelc.systems.animation_system import AnimationSystem
@@ -27,7 +27,6 @@ from yazelc.systems.camera_system import CameraSystem
 from yazelc.systems.collision_system import CollisionSystem
 from yazelc.systems.combat_system import CombatSystem
 from yazelc.systems.dialog_system import DialogSystem
-from yazelc.systems.hud_system import HUDSystem
 from yazelc.systems.input_system import InputSystem
 from yazelc.systems.inventory_system import InventorySystem
 from yazelc.systems.movement_system import MovementSystem
@@ -55,8 +54,9 @@ class GameplayScene(BaseScene):
         self.start_tile_y_pos = start_tile_y_pos
         self._cached_scene_processors: List[zesper.Processor] = []
         self._input_storage: List[Tuple[int, Input]] = []  # Stores the input components removed temporarily during a pause state
+        self.player_entity_id = None
         if player_components:
-            self.world.player_entity_id = self.world.create_entity(*player_components)
+            self.player_entity_id = self.world.create_entity(*player_components)
 
     def on_enter(self):
         # Initialize some values
@@ -81,10 +81,10 @@ class GameplayScene(BaseScene):
             self.world.add_component(layer_entity_id, cmp.Position(x=0, y=0))
             depth = 1000 * (idx - 1)
             self.world.add_component(layer_entity_id, cmp.Renderable(image=map_layer, depth=depth))
-            self.world.map_layers_entity_id.append(layer_entity_id)
+            # self.world.map_layers_entity_id.append(layer_entity_id)
 
-        for position, hitbox, wall_tag in overworld_map.create_solid_rectangles():
-            self.world.create_entity(position, hitbox, wall_tag)
+        for hitbox, wall_tag in overworld_map.create_solid_rectangles():
+            self.world.create_entity(hitbox, wall_tag)
         for door, hitbox in overworld_map.create_doors():
             self.world.create_entity(door, hitbox)
         dialog_font = self.world.resource_manager.get_font(dialog_box.DIALOG_FONT_ID)
@@ -94,18 +94,18 @@ class GameplayScene(BaseScene):
         # Add player entity
         player_x_pos, player_y_pos = overworld_map.get_center_coord_from_tile(self.start_tile_x_pos,
                                                                               self.start_tile_y_pos)
-        if self.world.player_entity_id is None:
-            player.create_player_at(center_x_pos=player_x_pos, center_y_pos=player_y_pos, world=self.world)
+        if self.player_entity_id is None:
+            self.player_entity_id = player.create_player_at(center_x_pos=player_x_pos, center_y_pos=player_y_pos, world=self.world)
         else:
-            position = self.world.component_for_entity(self.world.player_entity_id, cmp.Position)
-            velocity = self.world.component_for_entity(self.world.player_entity_id, cmp.Velocity)
-            hitbox = self.world.component_for_entity(self.world.player_entity_id, cmp.HitBox)
+            position = self.world.component_for_entity(self.player_entity_id, cmp.Position)
+            velocity = self.world.component_for_entity(self.player_entity_id, cmp.Velocity)
+            hitbox = self.world.component_for_entity(self.player_entity_id, cmp.HitBox)
             velocity.x, velocity.y = (0, 0)
             hitbox.rect.center = (player_x_pos, player_y_pos)
             position.x, position.y = player.get_position_of_sprite(hitbox)
 
         # Add camera entity
-        camera.create_camera(self.world)
+        camera_entity_id = camera.create_camera(self.world)
 
         # Initialize the HUD
         hud.create_hud_entity(self.world)
@@ -114,8 +114,9 @@ class GameplayScene(BaseScene):
         enemy.create_jelly_at(400, 400, self.world)
 
         # Create a pickable item
-        items.create_entity(items.ItemType.HEART, 300, 355, self.world)
-        items.create_entity(items.ItemType.HEART, 350, 355, self.world)
+        # items.create_entity(items.PickableItemType.HEART, 300, 355, self.world)
+        # items.create_entity(items.PickableItemType.HEART, 350, 355, self.world)
+        inventory = Inventory()
 
         # Get the input device
         pygame.joystick.init()
@@ -133,21 +134,20 @@ class GameplayScene(BaseScene):
         script_system = ScriptSystem()
         collision_system = CollisionSystem()
         dialog_system = DialogSystem()
-        combat_system = CombatSystem()
-        inventory_system = InventorySystem()
+        combat_system = CombatSystem(self.player_entity_id)
+        inventory_system = InventorySystem(self.player_entity_id, inventory)
         visual_effect_system = VisualEffectsSystem()
         transition_system = TransitionSystem(self)
-        camera_system = CameraSystem(self.world.player_entity_id,
-                                     camera.get_position_of_entity_to_track(self.world.player_entity_id, self.world),
+        camera_system = CameraSystem(camera_entity_id, self.player_entity_id,
+                                     camera.get_position_of_entity_to_track(self.player_entity_id, self.world),
                                      cmp.Vector(overworld_map.width, overworld_map.height))
         animation_system = AnimationSystem()
-        render_system = RenderSystem(window=self.window)
-        hud_system = HUDSystem()
+        render_system = RenderSystem(self.window, camera_entity_id)
 
         scene_processors = []
         scene_processors.extend(  # Note they are added in a give order
             [ai_system, input_system, movement_system, script_system, collision_system, dialog_system, combat_system, inventory_system,
-             visual_effect_system, transition_system, camera_system, animation_system, hud_system, render_system]
+             visual_effect_system, transition_system, camera_system, animation_system, render_system]
         )
         for processor in scene_processors:
             self.world.add_processor(processor)

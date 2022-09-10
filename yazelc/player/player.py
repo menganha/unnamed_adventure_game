@@ -11,7 +11,6 @@ from yazelc import zesper
 from yazelc.animation import AnimationStrip
 from yazelc.controller import Controller, Button
 from yazelc.event_type import EventType
-from yazelc.items import ItemType
 from yazelc.menu import menu_box
 from yazelc.utils.game_utils import Direction, Status
 
@@ -25,8 +24,6 @@ SPRITE_DEPTH = 200
 
 MAX_HEALTH = 10  # Should always be divisible by two
 
-INVENTORY = {item_type: 0 for item_type in ItemType if item_type != ItemType.HEART}
-
 # TODO: Modify the sprite such that the range of the sword is the same on all cardinal directions!!!
 SWORD_FRONT_RANGE = 5
 SWORD_SIDE_RANGE = 20
@@ -39,11 +36,10 @@ INTERACTIVE_FRONT_RANGE = 10
 INTERACTIVE_SIDE_RANGE = 2
 
 
-def create_player_at(center_x_pos: int, center_y_pos: int, world: zesper.World):
+def create_player_at(center_x_pos: int, center_y_pos: int, world: zesper.World) -> int:
     """ Creates the player entity centered at the given position"""
 
     player_entity_id = world.create_entity()
-    world.player_entity_id = player_entity_id
 
     # Create Animations dictionary and add it as a component
     kwargs = {}
@@ -67,6 +63,7 @@ def create_player_at(center_x_pos: int, center_y_pos: int, world: zesper.World):
     world.add_component(player_entity_id, cmp.Velocity(x=0, y=0))
     world.add_component(player_entity_id, cmp.Input(handle_input_function=handle_input))
     world.add_component(player_entity_id, cmp.Health(points=MAX_HEALTH))
+    return player_entity_id
 
 
 def get_position_of_sprite(hitbox: cmp.HitBox):

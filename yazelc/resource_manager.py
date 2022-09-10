@@ -15,17 +15,19 @@ class ResourceManager:
         self._fonts = {}
         self._pygame_font_objects = {}  # keeps track of pygame's loaded fonts (not the wrapper)
 
-    def add_texture(self, path: Path, explicit_name: str = None):
+    def add_texture(self, path: Path, explicit_name: str = None) -> pygame.Surface:
         """ Uses file name stem if explicit name is not passed """
         name = path.stem if not explicit_name else explicit_name
         file_type = path.suffix
         if name not in self._textures:
             if file_type == self.PNG_FILETYPE:
-                self._textures.update({name: pygame.image.load(path).convert_alpha()})
+                texture = pygame.image.load(path).convert_alpha()
+                self._textures.update({name: texture})
+                return texture
             else:
                 raise ValueError(f'Unknown texture filetype: {path}')
 
-    def add_font(self, path: Path, size: int, color: pygame.Color, explicit_name: str = None):
+    def add_font(self, path: Path, size: int, color: pygame.Color, explicit_name: str = None) -> Font:
         """
         Uses file name stem if explicit name is not passed
 
@@ -38,8 +40,9 @@ class ResourceManager:
             if file_type == self.TRUE_TYPE_FONT_FILETYPE:
                 if path not in self._pygame_font_objects:
                     self._pygame_font_objects.update({path: pygame.freetype.Font(path)})
-                font = self._pygame_font_objects[path]
-                self._fonts.update({name: Font(font, size, color)})
+                font = Font(self._pygame_font_objects[path], size, color)
+                self._fonts.update({name: font})
+                return font
             else:
                 raise ValueError(f'Unknown font filetype: {path}')
 
