@@ -1,5 +1,4 @@
 from yazelc import zesper
-
 from yazelc.components import Velocity, Position, HitBox
 
 
@@ -16,3 +15,5 @@ class MovementSystem(zesper.Processor):
             position.y += velocity.y
             if hitbox := self.world.try_component(ent, HitBox):
                 hitbox.rect.move_ip(round(position.x) - round(position.prev_x), round(position.y) - round(position.prev_y))
+
+        # TODO: Make a limit here for movement outside the world bounds

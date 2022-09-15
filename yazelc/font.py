@@ -10,7 +10,7 @@ class Font:
     REFERENCE_CHAR = 'B'
 
     def __init__(self, font: pygame.freetype.Font, size: int, color: pygame.Color):
-        # font.origin = True
+        font.origin = True
         self.font = font
         self.size = size
         self.color = color

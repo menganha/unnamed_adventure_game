@@ -3,7 +3,7 @@ from pathlib import Path
 from yazelc import components as cmp
 from yazelc import zesper
 from yazelc.animation import AnimationStrip
-from yazelc.controller import Controller
+from yazelc.systems.input_system import InputMessage
 
 JELLY_VEL = 1
 
@@ -25,13 +25,13 @@ def create_jelly_at(x_pos: int, y_pos: int, world: zesper.World) -> int:
     return enemy_entity
 
 
-def handle_input(enemy_entity: int, controller: Controller, world: zesper.World):
-    animation = world.component_for_entity(enemy_entity, cmp.Animation)
+def handle_input(input_message: InputMessage):
+    animation = input_message.world.component_for_entity(input_message.ent_id, cmp.Animation)
     animation.previous_status = animation.status
     animation.previous_direction = animation.direction
 
-    brain = world.component_for_entity(enemy_entity, cmp.Brain)
-    velocity = world.component_for_entity(enemy_entity, cmp.Velocity)
+    brain = input_message.world.component_for_entity(input_message.ent_id, cmp.Brain)
+    velocity = input_message.world.component_for_entity(input_message.ent_id, cmp.Velocity)
 
     animation.direction = brain.direction
     if animation.direction:

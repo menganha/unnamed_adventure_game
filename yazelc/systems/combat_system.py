@@ -2,10 +2,9 @@ import logging
 
 from yazelc import components as cmp
 from yazelc import config as cfg
-from yazelc import event_manager
 from yazelc import zesper
-from yazelc.event_type import EventType
-from yazelc.items import PickableItemType
+from yazelc.event import DeathEvent, HudUpdateEvent, CollisionEvent
+from yazelc.items import CollectableItemType
 from yazelc.utils.game_utils import Direction
 from yazelc.utils.game_utils import Status
 from yazelc.visual_effects import create_explosion
@@ -14,8 +13,8 @@ from yazelc.visual_effects import create_explosion
 class CombatSystem(zesper.Processor):
 
     def __init__(self, player_entity_id: int):
+        super().__init__()
         self.player_entity_id = player_entity_id
-        event_manager.subscribe(EventType.COLLISION, self.on_collision)
 
     def process(self):
         # Handles weapon lifetime.
@@ -31,15 +30,15 @@ class CombatSystem(zesper.Processor):
                 health.cool_down_counter -= 1
             if health.points <= 0:  # Using the "<" condition for cases when the inflicted damage is to big that results in negative health
                 center = self.world.component_for_entity(ent, cmp.HitBox).rect.center
-                if ent == self.world.player_entity_id:
-                    event_manager.post_event(EventType.DEATH)
+                if ent == self.player_entity_id:
+                    self.events.append(DeathEvent())
                 else:
                     create_explosion(center[0], center[1], 50, 20, cfg.C_RED, self.world)
                     self.world.delete_entity(ent)
 
-    def on_collision(self, ent1: int, ent2: int):
+    def on_collision(self, collision_event: CollisionEvent):
 
-        if components := self.world.try_pair_signature(ent1, ent2, cmp.Health, cmp.Weapon):
+        if components := self.world.try_pair_signature(collision_event.ent_1, collision_event.ent_2, cmp.Health, cmp.Weapon):
 
             victim, victim_health, attacker, attacker_weapon = components
 
@@ -69,6 +68,7 @@ class CombatSystem(zesper.Processor):
             victim_health.points -= attacker_weapon.damage
 
             if victim == self.player_entity_id:
-                event_manager.post_event(EventType.HUD_UPDATE, PickableItemType.HEART, victim_health.points)
+                hud_event = HudUpdateEvent(CollectableItemType.HEART, victim_health.points)
+                self.events.append(hud_event)
 
             logging.info(f'entity {victim} has received {attacker_weapon.damage} and has {victim_health.points} health points remaining')

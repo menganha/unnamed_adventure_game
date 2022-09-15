@@ -5,13 +5,13 @@ from pathlib import Path
 
 from yazelc import components as cmp
 from yazelc import config as cfg
-from yazelc import event_manager
 from yazelc import visual_effects as vfx
 from yazelc import zesper
 from yazelc.animation import AnimationStrip
-from yazelc.controller import Controller, Button
-from yazelc.event_type import EventType
+from yazelc.controller import Button
+from yazelc.event import PauseEvent
 from yazelc.menu import menu_box
+from yazelc.systems.input_system import InputMessage
 from yazelc.utils.game_utils import Direction, Status
 
 VELOCITY = 1.5 - 1e-8  # This ensures that the rounding produces the displacement pattern 1,2,1,2... that averages a velocity of 1.5
@@ -74,6 +74,7 @@ def get_position_of_sprite(hitbox: cmp.HitBox):
 
 
 def create_bomb(player_entity_id: int, world: zesper.World):
+    bomb_explosion_delay_time = 100
     bomb_entity = world.create_entity()
     img_path = Path('assets', 'sprites', 'bomb.png')  # TODO: Add to resource manager and animation strip gets from resources as well
     frame_sequence = [0] * 52 + [0, 0, 1, 1, 2, 2] * 8
@@ -90,12 +91,12 @@ def create_bomb(player_entity_id: int, world: zesper.World):
     bomb_position_x = bomb_position_center_x - bomb_renderable_component.width // 2
     bomb_position_y = bomb_position_center_y - bomb_renderable_component.height // 2
 
-    script_arguments = (bomb_entity, bomb_position_center_x, bomb_position_center_y)
+    script_arguments = {'bomb_entity_id': bomb_entity, 'x_pos': bomb_position_center_x, 'y_pos': bomb_position_center_y, 'world': world}
 
     world.add_component(bomb_entity, bomb_renderable_component)
     world.add_component(bomb_entity, cmp.Animation(idle_down=animation_stripe))
     world.add_component(bomb_entity, cmp.Position(bomb_position_x, bomb_position_y))
-    world.add_component(bomb_entity, cmp.Script(delay=100, function=create_bomb_hitbox, args=script_arguments))
+    world.add_component(bomb_entity, cmp.Timer(delay=bomb_explosion_delay_time, callback=create_bomb_hitbox, **script_arguments))
 
 
 def create_bomb_hitbox(bomb_entity_id: int, x_pos: int, y_pos: int, world: zesper.World):
@@ -116,36 +117,33 @@ def create_melee_weapon(player_entity_id: int, world: zesper.World):
 def create_interactive_hitbox(player_entity_id: int, world: zesper.World):
     """ Creates a hitbox to detect interaction with other objects """
     entity_id = _create_hitbox_in_front(player_entity_id, INTERACTIVE_FRONT_RANGE, INTERACTIVE_SIDE_RANGE, world)
-
-    def remove_entity(ent: int, world_: zesper.World):
-        world_.delete_entity(ent)
-
     world.add_component(entity_id, cmp.InteractorTag())
-    world.add_component(entity_id, cmp.Script(remove_entity, args=(entity_id,), delay=0))
+    frames_until_destroyed = 0
+    world.add_component(entity_id, cmp.Timer(frames_until_destroyed, world.delete_entity, entity=entity_id))
 
 
-def handle_input(player_entity: int, controller: Controller, world: zesper.World):
-    # TODO: Add state system just for this operation. It decouples the input and is mostly useful if we want to
-    #   remove this process but don't want to stop the state update
-    animation = world.component_for_entity(player_entity, cmp.Animation)
+def handle_input(input_message: InputMessage):
+    # TODO: Add state system just for this operation. It decouples the input and is mostly useful
+    #       if we want to  remove this process but don't want to stop the state update
+    animation = input_message.world.component_for_entity(input_message.ent_id, cmp.Animation)
     animation.previous_status = animation.status
     animation.previous_direction = animation.direction
 
-    if controller.is_button_pressed(Button.START):
-        menu_box.create_pause_menu(world)
-        event_manager.post_event(EventType.PAUSE)
+    if input_message.controller.is_button_pressed(Button.START):
+        menu_box.create_pause_menu(input_message.world)
+        input_message.event_list.append(PauseEvent())
         return
 
-    input_ = world.component_for_entity(player_entity, cmp.Input)
+    input_ = input_message.world.component_for_entity(input_message.ent_id, cmp.Input)
     if input_.block_counter != 0:
         input_.block_counter -= 1
 
     else:
-        velocity = world.component_for_entity(player_entity, cmp.Velocity)
-        position = world.component_for_entity(player_entity, cmp.Position)
+        velocity = input_message.world.component_for_entity(input_message.ent_id, cmp.Velocity)
+        position = input_message.world.component_for_entity(input_message.ent_id, cmp.Position)
 
-        direction_x = - controller.is_button_down(Button.LEFT) + controller.is_button_down(Button.RIGHT)
-        direction_y = - controller.is_button_down(Button.UP) + controller.is_button_down(Button.DOWN)
+        direction_x = - input_message.controller.is_button_down(Button.LEFT) + input_message.controller.is_button_down(Button.RIGHT)
+        direction_y = - input_message.controller.is_button_down(Button.UP) + input_message.controller.is_button_down(Button.DOWN)
 
         abs_vel = VELOCITY_DIAGONAL if (direction_y and direction_x) else VELOCITY
         velocity.x = direction_x * abs_vel
@@ -153,8 +151,10 @@ def handle_input(player_entity: int, controller: Controller, world: zesper.World
 
         # Snaps position to grid when the respective key has been released.  This allows for a deterministic movement
         # pattern by eliminating any decimal residual accumulated when resetting the position to an integer value
-        horizontal_key_released = controller.is_button_released(Button.LEFT) or controller.is_button_released(Button.RIGHT)
-        vertical_key_released = controller.is_button_released(Button.UP) or controller.is_button_released(Button.DOWN)
+        horizontal_key_released = (input_message.controller.is_button_released(Button.LEFT) or
+                                   input_message.controller.is_button_released(Button.RIGHT))
+        vertical_key_released = (input_message.controller.is_button_released(Button.UP) or
+                                 input_message.controller.is_button_released(Button.DOWN))
 
         if horizontal_key_released:
             position.x = round(position.x)
@@ -178,29 +178,28 @@ def handle_input(player_entity: int, controller: Controller, world: zesper.World
         else:
             animation.status = Status.MOVING
 
-        if controller.is_button_pressed(Button.B):
-            # Stop player when is attacking
+        if input_message.controller.is_button_pressed(Button.B):  # Stop player when is attacking
             velocity.x = 0
             velocity.y = 0
             animation.status = Status.ATTACKING
 
             # Creates a temporary hitbox representing the sword weapon
-            create_melee_weapon(player_entity, world)
+            create_melee_weapon(input_message.ent_id, input_message.world)
 
             # Block input until weapon lifetime is over and publish attach event. We need to block it one less than
             # The active frames as we are counting already the frame when it is activated as active
             input_.block_counter = SWORD_ACTIVE_FRAMES - 1
 
-        if controller.is_button_pressed(Button.A):
-            create_interactive_hitbox(player_entity, world)
+        if input_message.controller.is_button_pressed(Button.A):
+            create_interactive_hitbox(input_message.ent_id, input_message.world)
 
-        if controller.is_button_pressed(Button.L):
-            vfx.create_explosion(position.x, position.y, 30, 30, cfg.C_WHITE, world)
+        if input_message.controller.is_button_pressed(Button.L):
+            vfx.create_explosion(position.x, position.y, 30, 30, cfg.C_WHITE, input_message.world)
 
-        if controller.is_button_pressed(Button.X):
-            create_bomb(player_entity, world)
+        if input_message.controller.is_button_pressed(Button.X):
+            create_bomb(input_message.ent_id, input_message.world)
 
-        if controller.is_button_pressed(Button.SELECT):
+        if input_message.controller.is_button_pressed(Button.SELECT):
             cfg.DEBUG_MODE = not cfg.DEBUG_MODE
 
 

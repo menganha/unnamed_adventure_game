@@ -3,22 +3,21 @@ import pygame
 from yazelc import components as cmp
 from yazelc import config as cfg
 from yazelc import zesper
+from yazelc.camera import Camera
 
 
 class RenderSystem(zesper.Processor):
-    def __init__(self, window: pygame.Surface, camera_entity_id: int = None):
-        self.camera_entity_id = camera_entity_id
+    def __init__(self, window: pygame.Surface, camera: Camera):
+        super().__init__()
+        self.camera = camera
         self.window = window
 
     def process(self):
         self.window.fill(cfg.C_BLACK)
-        if self.camera_entity_id:
-            camera_pos = self.world.component_for_entity(self.camera_entity_id, cmp.Position)
-        else:
-            camera_pos = cmp.Position()
 
         # Render sprites
-        for ent, rend in sorted(self.world.get_component(cmp.Renderable), key=lambda x: x[1].depth, reverse=False):
+        camera_pos = self.camera.pos
+        for ent, (rend, pos) in sorted(self.world.get_components(cmp.Renderable, cmp.Position), key=lambda x: x[1][0].depth, reverse=False):
 
             # TODO: This section feels like it does not belong here ===
             health = self.world.try_component(ent, cmp.Health)
@@ -28,13 +27,14 @@ class RenderSystem(zesper.Processor):
                 flags = 0
             # =======================================================
 
-            if position := self.world.try_component(ent, cmp.Position):
-                screen_pos = position - camera_pos
+            if pos.absolute:  # ition := self.world.try_component(ent, cmp.Position):
+                screen_pos = pos
             else:
-                screen_pos = cmp.Position()
+                screen_pos = pos - camera_pos
 
             self.window.blit(rend.image, (round(screen_pos.x), round(screen_pos.y)), special_flags=flags)
 
+        # TODO: They can be on the the same loop if the position has the absolute flag on
         # Render native shapes which are (normally) associated with particle effects
         for ent, (vfx, pos) in self.world.get_components(cmp.VisualEffect, cmp.Position):
             rect = pygame.Rect(round(pos.x - camera_pos.x), round(pos.y - camera_pos.y), 1, 1)

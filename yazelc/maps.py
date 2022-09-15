@@ -33,9 +33,9 @@ class Maps:
             # TODO: Introduce the map depth in the iterator here itself so that the depth specification is encapsulated
             #   in this class
 
-    def create_solid_rectangles(self) -> Iterator[Tuple[cmp.Position, cmp.HitBox, cmp.WallTag]]:
+    def create_solid_rectangles(self) -> Iterator[cmp.HitBox]:
         for obj in self.tmx_data.get_layer_by_name('solids'):
-            yield cmp.HitBox(obj.x, obj.y, obj.width, obj.height), cmp.WallTag()
+            yield cmp.HitBox(obj.x, obj.y, obj.width, obj.height, impenetrable=True)
 
     def create_doors(self):
         for obj in self.tmx_data.get_layer_by_name('doors'):
@@ -48,11 +48,12 @@ class Maps:
         # TODO: TEMPORARY FIX!!!!
         try:
             self.tmx_data.get_layer_by_name('interactives')
-        except:
+        except KeyError:
             return
 
         for obj in self.tmx_data.get_layer_by_name('interactives'):
-            yield cmp.InteractorTag(), cmp.Dialog(obj.properties['text'], font), cmp.HitBox(obj.x, obj.y, obj.width, obj.height)
+            # TODO: Check
+            yield cmp.Dialog(obj.properties['text'], font), cmp.HitBox(obj.x, obj.y, obj.width, obj.height)
 
     def get_center_coord_from_tile(self, tile_x_pos: int, tile_y_pos: int) -> (int, int):
         """

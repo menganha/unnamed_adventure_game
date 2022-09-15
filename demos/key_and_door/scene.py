@@ -6,20 +6,20 @@ import pygame
 
 from yazelc import components as cmp
 from yazelc import config
-from yazelc import event_manager
 from yazelc import items
 from yazelc import zesper
+from yazelc.camera import Camera
 from yazelc.controller import Button
-from yazelc.event_type import EventType
-from yazelc.items import PickableItemType
+from yazelc.event import EventType, CollisionEvent, HudUpdateEvent, ClockEvent
+from yazelc.items import CollectableItemType
 from yazelc.keyboard import Keyboard
-from yazelc.player.inventory import Inventory
 from yazelc.scenes.base_scene import BaseScene
 from yazelc.systems.collision_system import CollisionSystem
 from yazelc.systems.input_system import InputSystem
 from yazelc.systems.inventory_system import InventorySystem
 from yazelc.systems.movement_system import MovementSystem
 from yazelc.systems.render_system import RenderSystem
+from yazelc.systems.script_system import ClockSystem
 
 VELOCITY = 1.5 - 1e-8  # This ensures that the rounding produces the displacement pattern 1,2,1,2... that averages a velocity of 1.5
 VELOCITY_DIAGONAL = 1
@@ -37,21 +37,24 @@ class Hud:
         font.render_text_at('Keys: 0', hud_surface)
         self.world.add_component(self.hud_component_id, cmp.Renderable(hud_surface))
 
-        event_manager.subscribe(EventType.HUD_UPDATE, self.on_hud_update)
-
-    def on_hud_update(self, item_type: PickableItemType, value):
+    def on_hud_update(self, event: HudUpdateEvent):
+        # TODO: Keep a reference to the inventory, or all the variables it needs to display. When this
+        #       event is fired then refresh the HUD. We don't need to pass values to the event message
         font = self.world.resource_manager.get_font(FONT_ID)
         hud_surface = self.world.component_for_entity(self.hud_component_id, cmp.Renderable).image
         hud_surface.fill(config.C_YELLOW)
-        font.render_text_at(f'Keys: {value}', hud_surface)
+        font.render_text_at(f'Keys: {event.value}', hud_surface)
 
 
 class Scene(BaseScene):
 
     def __init__(self, window: pygame.Surface):
         super().__init__(window)
-        self.inventory: Optional[Inventory] = None
+        self.inventory: Optional[dict[CollectableItemType, int]] = None
         self.hud: Optional[Hud] = None
+
+    def on_exit(self):
+        pass
 
     def on_enter(self):
 
@@ -64,7 +67,7 @@ class Scene(BaseScene):
                 x_pos = 0
                 for ele in row:
                     if int(ele):
-                        hitbox = cmp.HitBox(x_pos, y_pos, config.TILE_WIDTH, config.TILE_WIDTH)
+                        hitbox = cmp.HitBox(x_pos, y_pos, config.TILE_WIDTH, config.TILE_WIDTH, impenetrable=True)
                         position = cmp.Position(x_pos, y_pos)
                         image = pygame.Surface((config.TILE_WIDTH, config.TILE_WIDTH))
                         image.fill(config.C_RED)
@@ -86,14 +89,14 @@ class Scene(BaseScene):
         self.world.add_component(player_entity_id, cmp.Input(handle_input_function=self.handle_input))
         self.world.add_component(player_entity_id, cmp.Health())
 
-        self.inventory = Inventory()
+        self.inventory = {collectable_type: 0 for collectable_type in CollectableItemType}
 
         # key creation
         x_pos = 200
         y_pos = 200
         image = pygame.Surface((5, 5))
         image.fill(config.C_YELLOW)
-        items.create_entity(items.PickableItemType.KEY, image, x_pos, y_pos, self.world)
+        items.create_entity(items.CollectableItemType.KEY, image, x_pos, y_pos, self.world)
 
         # Get the input device
         controller = Keyboard()
@@ -112,27 +115,39 @@ class Scene(BaseScene):
         self.world.add_component(door_entity, cmp.Renderable(image=image, depth=100))
         self.world.add_component(door_entity, cmp.Position(x=x_pos, y=y_pos))
         self.world.add_component(door_entity, cmp.Door('dummy_map', 0, 0))
-        self.world.add_component(door_entity, cmp.HitBox(x_pos, y_pos, width, height))
+        self.world.add_component(door_entity, cmp.HitBox(x_pos, y_pos, width, height, impenetrable=True))
 
-        event_manager.subscribe(EventType.COLLISION, self.on_interaction_with_door)
+        # Initialize static camera
+        camera = Camera(0, 0, config.RESOLUTION.x, config.RESOLUTION.y)
 
         # Systems
-        self.world.add_processor(InputSystem(controller))
-        self.world.add_processor(MovementSystem())
-        self.world.add_processor(CollisionSystem())
-        self.world.add_processor(InventorySystem(player_entity_id, self.inventory))
-        self.world.add_processor(RenderSystem(self.window))
+        input_system = InputSystem(controller)
+        movement_system = MovementSystem()
+        collision_system = CollisionSystem()
+        clock_system = ClockSystem()
+        inventory_system = InventorySystem(player_entity_id, self.inventory)
+        render_system = RenderSystem(self.window, camera)
 
-    def on_interaction_with_door(self, ent_1: int, ent_2: int):
-        if result := self.world.try_pair_signature(ent_1, ent_2, cmp.Door, cmp.InteractorTag):
+        self.event_manager.subscribe(EventType.COLLISION, self.on_interaction_with_door)
+        self.event_manager.subscribe(EventType.COLLISION, inventory_system.on_collision)
+        self.event_manager.subscribe(EventType.HUD_UPDATE, self.hud.on_hud_update)
+        self.event_manager.subscribe(EventType.CLOCK, self.on_clock_event)
+
+        processors = [input_system, movement_system, collision_system, clock_system, inventory_system, render_system]
+        for proc in processors:
+            self.world.add_processor(proc)
+
+    def on_interaction_with_door(self, collision_event: CollisionEvent):
+        if result := self.world.try_pair_signature(collision_event.ent_1, collision_event.ent_2, cmp.Door, cmp.InteractorTag):
             door_ent, door_component, _, _ = result
-            if self.inventory.n_keys >= 1:
-                self.inventory.n_keys -= 1
-                event_manager.post_event(EventType.HUD_UPDATE, PickableItemType.KEY, self.inventory.n_keys)
+            if self.inventory[CollectableItemType.KEY] >= 1:
+                self.inventory[CollectableItemType.KEY] -= 1
+                hud_event = HudUpdateEvent(CollectableItemType.KEY, self.inventory[CollectableItemType.KEY])
+                self.event_manager.add_events(hud_event)
                 self.world.delete_entity(door_ent)
 
-    def on_exit(self):
-        pass
+    def on_clock_event(self, clock_event: ClockEvent):
+        self.world.delete_entity(clock_event.entity_id)
 
     @staticmethod
     def handle_input(player_entity, controller, world):
@@ -169,3 +184,4 @@ class Scene(BaseScene):
             image.fill(config.C_WHITE)
             world.add_component(hitbox_entity_id, cmp.Renderable(image))
             world.add_component(hitbox_entity_id, cmp.InteractorTag())
+            world.add_component(hitbox_entity_id, cmp.Timer(0))

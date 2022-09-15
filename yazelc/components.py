@@ -1,13 +1,19 @@
+from __future__ import annotations
+
+from collections.abc import Callable
 from dataclasses import dataclass as component
 from dataclasses import field, InitVar
-from typing import Dict, Callable, List, Optional, Tuple, Any
+from typing import Optional, Any, TYPE_CHECKING
 
 import pygame
 
 from yazelc.animation import AnimationStrip, flip_strip_sprites
 from yazelc.font import Font
-from yazelc.items import PickableItemType
+from yazelc.items import CollectableItemType
 from yazelc.utils.game_utils import Direction, Status
+
+if TYPE_CHECKING:
+    from yazelc.systems.input_system import InputMessage
 
 
 @component
@@ -18,7 +24,12 @@ class Vector:
 
 @component
 class Position(Vector):
-    """ Absolute position of the entity, i.e., not the one relative to the window """
+    """
+    Absolute position of the entity, i.e., not the one relative to the window unless the absolute
+    flag is on. This one is used for entities that should be on the screen no matter where the
+    camera is positioned
+    """
+    absolute: bool = False
     prev_x: float = field(init=False)
     prev_y: float = field(init=False)
 
@@ -128,6 +139,7 @@ class HitBox:
     width: InitVar[int]
     height: InitVar[int]
     scale_offset: int = 0
+    impenetrable: bool = False
     rect: pygame.Rect = field(init=False)
 
     def __post_init__(self, x_pos: int, y_pos: int, width: int, height: int):
@@ -144,17 +156,10 @@ class Brain:
 
 
 @component
-class Pickable:
-    """ Pickable items tag """
-    item_type: PickableItemType
+class Collectable:
+    """ Collectable items tag """
+    item_type: CollectableItemType
     value: int = 1
-
-
-@component
-class Input:
-    handle_input_function: Callable
-    block_counter: int = 0
-    is_paused: bool = False
 
 
 @component
@@ -172,11 +177,25 @@ class Weapon:
 
 
 @component
-class Script:
-    """ Calls a function with the parent entity ID passed as an argument """
-    function: Callable[..., None]
-    args: Tuple[Any, ...]
-    delay: int
+class Timer:
+    """
+    Sends a clock signal at a delayed time optionally repeating itself indefinitely
+    Optionally we can set a callback function with arguments
+    """
+
+    def __init__(self, delay: int, callback: Callable = None, repeat: bool = False, **kwargs: Any):
+        self.delay = delay
+        self.callback = callback
+        self.repeat = repeat
+        self.kwargs = kwargs
+        self.tick = self.delay
+
+
+@component
+class Input:
+    handle_input_function: Callable[[InputMessage]]
+    block_counter: int = 0
+    is_paused: bool = False
 
 
 # @component
@@ -222,7 +241,7 @@ class Animation:
 
     index: int = field(init=False, default=0)
     frame_counter: int = field(init=False, default=0)
-    strips: Dict[Status, Dict[Direction, List[AnimationStrip]]] = field(init=False)
+    strips: dict[Status, dict[Direction, list[AnimationStrip]]] = field(init=False)
 
     previous_direction: Direction = field(init=False)
     previous_status: Status = field(init=False)

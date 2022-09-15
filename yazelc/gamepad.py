@@ -52,6 +52,8 @@ class Gamepad(Controller):
             elif button in (self.GamepadButton.UP, self.GamepadButton.DOWN):
                 self.currentKeyStates[button] = round(self.gamepad.get_axis(1)) + 20 == button.value
             else:
+                # Pycharm bug throwing error at this type checking instance
+                # noinspection PyTypeChecker
                 self.currentKeyStates[button] = self.gamepad.get_button(button.value)
 
     def is_button_down(self, button: Button) -> bool:

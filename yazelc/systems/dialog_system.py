@@ -1,16 +1,15 @@
 from yazelc import dialog_box
-from yazelc import event_manager
 from yazelc import zesper
 from yazelc.components import Dialog, InteractorTag, Renderable
-from yazelc.event_type import EventType
+from yazelc.event import PauseEvent, CollisionEvent
 
 
 class DialogSystem(zesper.Processor):
     """ Handles all text dialog. NPC and signs """
 
     def __init__(self):
+        super().__init__()
         self.tick_counter = 0
-        event_manager.subscribe(EventType.COLLISION, self.on_collision)
 
     def process(self):
         for entity, (dialog, renderable_cmp) in self.world.get_components(Dialog, Renderable):
@@ -48,9 +47,9 @@ class DialogSystem(zesper.Processor):
                 dialog_box.add_triangle_signal(entity, self.world)
                 dialog.idle = True
 
-    def on_collision(self, ent1: int, ent2: int):
+    def on_collision(self, collision_event: CollisionEvent):
         """ Handles collision when interacting with entities with the Dialog component """
-        if components := self.world.try_pair_signature(ent1, ent2, InteractorTag, Dialog):
+        if components := self.world.try_pair_signature(collision_event.ent_1, collision_event.ent_2, InteractorTag, Dialog):
             interactor_entity_id, _, dialog_entity_id, dialog = components
             dialog_box.create_text_box(dialog_entity_id, dialog, self.world)
-            event_manager.post_event(EventType.PAUSE)
+            self.events.append(PauseEvent())

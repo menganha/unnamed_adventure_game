@@ -2,10 +2,10 @@ import pygame
 
 from yazelc import components as cmp
 from yazelc import config as cfg
-from yazelc import event_manager
 from yazelc import zesper
-from yazelc.controller import Controller, Button
-from yazelc.event_type import EventType
+from yazelc.controller import Button
+from yazelc.event import PauseEvent
+from yazelc.systems.input_system import InputMessage
 
 WIDTH = cfg.RESOLUTION.x
 HEIGHT = 50
@@ -20,33 +20,31 @@ DIALOG_FONT_ID = 'DIALOG'
 
 
 def create_text_box(dialog_entity_id: int, dialog: cmp.Dialog, world: zesper.World):
-    camera_pos = world.component_for_entity(world.camera_entity_id, cmp.Position)
-
-    menu_pos_x = round(camera_pos.x)
-    menu_pos_y = round(camera_pos.y + (cfg.RESOLUTION.y - HEIGHT))
+    menu_pos_x = 0
+    menu_pos_y = cfg.RESOLUTION.y - HEIGHT
 
     dialog.idle = False
     dialog.index = 0
 
     background = _create_surface_background()
     world.add_component(dialog_entity_id, cmp.Renderable(image=background, depth=SURFACE_DEPTH))
-    world.add_component(dialog_entity_id, cmp.Position(menu_pos_x, menu_pos_y))
+    world.add_component(dialog_entity_id, cmp.Position(menu_pos_x, menu_pos_y, absolute=True))
     world.add_component(dialog_entity_id, cmp.Input(handle_dialog_controllers))
 
 
-def handle_dialog_controllers(entity_id: int, controller: Controller, world: zesper.World):
-    dialog_ = world.component_for_entity(entity_id, cmp.Dialog)
-    if controller.is_button_pressed(Button.A) and dialog_.idle:
+def handle_dialog_controllers(input_message: InputMessage):
+    dialog_ = input_message.world.component_for_entity(input_message.ent_id, cmp.Dialog)
+    if input_message.controller.is_button_pressed(Button.A) and dialog_.idle:
         if dialog_.is_at_end():
-            world.remove_component(entity_id, cmp.Renderable)
-            world.remove_component(entity_id, cmp.Position)
-            world.remove_component(entity_id, cmp.Input)
+            input_message.world.remove_component(input_message.ent_id, cmp.Renderable)
+            input_message.world.remove_component(input_message.ent_id, cmp.Position)
+            input_message.world.remove_component(input_message.ent_id, cmp.Input)
             dialog_.index = 0
             dialog_.index_start = 0
-            event_manager.post_event(EventType.PAUSE)
+            input_message.event_list.append(PauseEvent())
         else:
             dialog_.idle = False
-            surface = world.component_for_entity(entity_id, cmp.Renderable).image
+            surface = input_message.world.component_for_entity(input_message.ent_id, cmp.Renderable).image
             surface.fill(cfg.C_BLACK)
 
 

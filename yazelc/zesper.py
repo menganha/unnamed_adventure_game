@@ -1,13 +1,21 @@
 """ Module extends the esper package"""
 
-from typing import TypeVar, Optional, Tuple, Union, Type, List
+from collections import deque
+from typing import TypeVar, Optional, Union, Type
 
 from esper import *
 
+from yazelc.event import Event
 from yazelc.resource_manager import ResourceManager
 
 C = TypeVar('C')
 C_alt = TypeVar('C_alt')  # alternative component
+
+
+class Processor(Processor):  # noqa
+
+    def __init__(self):
+        self.events: deque[Event] = deque()
 
 
 class World(World):
@@ -21,9 +29,10 @@ class World(World):
     def __init__(self):
         super().__init__()
         self.resource_manager = ResourceManager()
+        # TODO: Would it be better to decouple it?????
 
     def try_pair_signature(self, ent_1: int, ent_2: int, component_type_1: Type[C], component_type_2: Type[C_alt]) \
-            -> Union[Tuple[int, C, int, C_alt], Tuple[int, C_alt, int, C], None]:
+            -> Union[tuple[int, C, int, C_alt], tuple[int, C_alt, int, C], None]:
         """
         Checks if the pair have each the corresponding input pair components in the two possible permutations.
         If found returns the entities paired with their respective components
@@ -41,7 +50,7 @@ class World(World):
         else:
             return None
 
-    def try_signature(self, ent_1: int, ent_2: int, component_type: Type[C]) -> Optional[Tuple[int, C, int]]:
+    def try_signature(self, ent_1: int, ent_2: int, component_type: Type[C]) -> Optional[tuple[int, C, int]]:
         """
         Same as above but only checked on a single entity
         """
@@ -54,7 +63,7 @@ class World(World):
         else:
             return None
 
-    def remove_all_processors_except(self, *excluded_processor_types: Type[Processor]) -> List[Type[Processor]]:
+    def remove_all_processors_except(self, *excluded_processor_types: Type[Processor]) -> list[Type[Processor]]:
         """ No similar function on the esper Lib."""
         processors_to_remove = [proc for proc in self._processors if type(proc) not in excluded_processor_types]
         for processor in processors_to_remove:
