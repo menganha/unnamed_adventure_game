@@ -5,8 +5,8 @@ import pygame
 
 from yazelc.utils.game_utils import ImmutableVec
 
-RESOLUTION = ImmutableVec(256, 224)
-TILE_WIDTH = 8
+RESOLUTION = ImmutableVec(272, 240)
+TILE_WIDTH = 16
 DEBUG_MODE = False
 
 C_BLACK = pygame.Color(0, 0, 0)

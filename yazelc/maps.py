@@ -1,59 +1,89 @@
 """
 Module deals with map data
 """
+import logging
 from pathlib import Path
-from typing import Iterator, Tuple
+from typing import Iterator
 
 import pygame
+from pytmx import TiledTileLayer
 from pytmx.util_pygame import load_pygame
 
 from yazelc import components as cmp
 from yazelc.font import Font
+from yazelc.items import CollectableItemType
 
 
 class Maps:
     DOOR_TARGET_X_STR = 'target_x'
     DOOR_TARGET_Y_STR = 'target_y'
+    FOREGROUND_LAYER_NAME = 'foreground'
+    OBJECT_LAYER_NAME = 'colliders'
+    TEXT_PROPERTY = 'text'
+    ITEM_PROPERTY = 'item'
 
     # TODO: Move the "magic" strings below to here
 
-    def __init__(self, map_file: Path):
-        self.tmx_data = load_pygame(str(map_file))
+    def __init__(self, map_file_path: Path):
+        self.map_file_path = map_file_path
+        self.tmx_data = load_pygame(str(map_file_path))
         self.width = self.tmx_data.width * self.tmx_data.tilewidth
         self.height = self.tmx_data.height * self.tmx_data.tileheight
 
-    def create_map_image(self) -> Iterator[pygame.Surface]:
-        for layer_idx in self.tmx_data.visible_tile_layers:
-            map_surface = pygame.Surface(
-                (self.tmx_data.width * self.tmx_data.tilewidth, self.tmx_data.height * self.tmx_data.tileheight),
-                flags=pygame.SRCALPHA)
-            for x, y, tile, in self.tmx_data.layers[layer_idx].tiles():
-                map_surface.blit(tile, (x * self.tmx_data.tilewidth, y * self.tmx_data.tileheight))
-            yield map_surface
-            # TODO: Introduce the map depth in the iterator here itself so that the depth specification is encapsulated
-            #   in this class
+    def map_images(self) -> list[pygame.Surface]:
+        map_width = self.tmx_data.width * self.tmx_data.tilewidth
+        map_height = self.tmx_data.height * self.tmx_data.tileheight
+        map_image = pygame.Surface((map_width, map_height), flags=pygame.SRCALPHA)
 
-    def create_solid_rectangles(self) -> Iterator[cmp.HitBox]:
-        for obj in self.tmx_data.get_layer_by_name('solids'):
-            yield cmp.HitBox(obj.x, obj.y, obj.width, obj.height, impenetrable=True)
+        foreground_layer_exists = False
+        for layer in self.tmx_data.layers:
+            if not isinstance(layer, TiledTileLayer):
+                continue
+            if layer.name == self.FOREGROUND_LAYER_NAME:
+                foreground_layer_exists = True
+                continue
+            for x, y, image, in layer.tiles():
+                map_image.blit(image, (x * self.tmx_data.tilewidth, y * self.tmx_data.tileheight))
+
+        if foreground_layer_exists:  # Adds an extra image. could be generalized to a group
+            map_foreground_image = pygame.Surface((map_width, map_height), flags=pygame.SRCALPHA)
+            foreground_layer = self.tmx_data.get_layer_by_name(self.FOREGROUND_LAYER_NAME)
+            for x, y, image, in foreground_layer.tiles():
+                map_foreground_image.blit(image, (x * self.tmx_data.tilewidth, y * self.tmx_data.tileheight))
+            return [map_image, map_foreground_image]
+        else:
+            logging.info(f'No foreground layer named {self.FOREGROUND_LAYER_NAME} found for the map {self.map_file_path}')
+            return [map_image]
+
+    def create_objects(self, font: Font) -> Iterator[tuple]:
+        if self.OBJECT_LAYER_NAME not in self.tmx_data.layernames:
+            logging.info(f'No {self.OBJECT_LAYER_NAME} layer found for the map {self.map_file_path}')
+            return
+        for obj in self.tmx_data.get_layer_by_name(self.OBJECT_LAYER_NAME):
+            hit_box = cmp.HitBox(obj.x, obj.y, obj.width, obj.height, impenetrable=True)
+            position = cmp.Position(obj.x, obj.y)
+            if self.TEXT_PROPERTY in obj.properties:
+                if obj.properties[self.TEXT_PROPERTY] is None:
+                    logging.error('Sign has no dialog')
+                dialog = cmp.Dialog(obj.properties[self.TEXT_PROPERTY], font)
+                components = (hit_box, dialog)
+            elif self.ITEM_PROPERTY in obj.properties:
+                # TODO: Default value of all chested items
+                collectable = cmp.Collectable(CollectableItemType(obj.properties[self.ITEM_PROPERTY]), 1, in_chest=True)
+                components = (hit_box, collectable, position)
+            else:
+                components = (hit_box,)
+            yield components
 
     def create_doors(self):
-        for obj in self.tmx_data.get_layer_by_name('doors'):
-            target_x = obj.properties[self.DOOR_TARGET_X_STR]
-            target_y = obj.properties[self.DOOR_TARGET_Y_STR]
-            yield cmp.Door(obj.name, target_x, target_y), cmp.HitBox(obj.x, obj.y, obj.width, obj.height)
+        if self.OBJECT_LAYER_NAME not in self.tmx_data.layernames:
+            logging.info(f'No {self.OBJECT_LAYER_NAME} layer found for the map {self.map_file_path}')
+            yield None
 
-    def create_signs(self, font: Font) -> Iterator[Tuple[cmp.InteractorTag, cmp.Dialog, cmp.HitBox]]:
-        # TODO: May be generazible to all NPC etc
-        # TODO: TEMPORARY FIX!!!!
-        try:
-            self.tmx_data.get_layer_by_name('interactives')
-        except KeyError:
-            return
-
-        for obj in self.tmx_data.get_layer_by_name('interactives'):
-            # TODO: Check
-            yield cmp.Dialog(obj.properties['text'], font), cmp.HitBox(obj.x, obj.y, obj.width, obj.height)
+    # for obj in self.tmx_data.get_layer_by_name('doors'):
+    #     target_x = obj.properties[self.DOOR_TARGET_X_STR]
+    #     target_y = obj.properties[self.DOOR_TARGET_Y_STR]
+    #     yield cmp.Door(obj.name, target_x, target_y), cmp.HitBox(obj.x, obj.y, obj.width, obj.height)
 
     def get_center_coord_from_tile(self, tile_x_pos: int, tile_y_pos: int) -> (int, int):
         """

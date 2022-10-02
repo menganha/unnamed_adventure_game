@@ -1,13 +1,13 @@
 """
 The module gathers functions that add commonly used entities to an input world
 """
-from pathlib import Path
+
+from copy import copy
 
 from yazelc import components as cmp
 from yazelc import config as cfg
 from yazelc import visual_effects as vfx
 from yazelc import zesper
-from yazelc.animation import AnimationStrip
 from yazelc.controller import Button
 from yazelc.event import PauseEvent
 from yazelc.menu import menu_box
@@ -17,20 +17,26 @@ from yazelc.utils.game_utils import Direction, Status
 VELOCITY = 1.5 - 1e-8  # This ensures that the rounding produces the displacement pattern 1,2,1,2... that averages a velocity of 1.5
 VELOCITY_DIAGONAL = 1
 
-HITBOX_HEIGHT = 14
-HITBOX_WIDTH = 14
+HITBOX_HEIGHT = 9
+HITBOX_WIDTH = 10
 SPRITE_SIZE = 32
 SPRITE_DEPTH = 200
 
 MAX_HEALTH = 10  # Should always be divisible by two
 
+ATTACK_ANIMATION_FRAMES = 5
+IDLE_ANIMATION_FRAME = 10
+
 # TODO: Modify the sprite such that the range of the sword is the same on all cardinal directions!!!
-SWORD_FRONT_RANGE = 5
+SWORD_FRONT_RANGE = 15
 SWORD_SIDE_RANGE = 20
 SWORD_DAMAGE = 5
-SWORD_ACTIVE_FRAMES = 12
+SWORD_ACTIVE_FRAMES = ATTACK_ANIMATION_FRAMES * 4
+SWORD_SPRITE_WIDTH = 48
 
+BOMB_SPRITES_ID = 'BOMB'
 BOMB_DAMAGE = 3
+BOMB_SPRITE_WIDTH = 16
 
 INTERACTIVE_FRONT_RANGE = 10
 INTERACTIVE_SIDE_RANGE = 2
@@ -40,17 +46,9 @@ def create_player_at(center_x_pos: int, center_y_pos: int, world: zesper.World) 
     """ Creates the player entity centered at the given position"""
 
     player_entity_id = world.create_entity()
-
-    # Create Animations dictionary and add it as a component
-    kwargs = {}
-    for typ in ['idle', 'move', 'attack']:
-        for direction in ['up', 'down', 'right']:
-            img_path = Path('assets', 'sprites', 'player', f'{typ}_{direction}.png')
-            delay = 4 if typ == 'attack' else 7
-            kwargs.update({f'{typ}_{direction}': AnimationStrip(img_path, sprite_width=SPRITE_SIZE, delay=delay)})
-
-    world.add_component(player_entity_id, cmp.Renderable(image=kwargs['idle_down'][0], depth=SPRITE_DEPTH))
-    world.add_component(player_entity_id, cmp.Animation(**kwargs))
+    stripe = world.resource_manager.get_animation_strip(f'{Status.IDLE.name}_{Direction.DOWN.name}')
+    world.add_component(player_entity_id, cmp.Renderable(stripe[0], depth=SPRITE_DEPTH))
+    world.add_component(player_entity_id, cmp.Animation(stripe, delay=IDLE_ANIMATION_FRAME))
 
     # HitBox
     hitbox_component = cmp.HitBox(0, 0, HITBOX_WIDTH, HITBOX_HEIGHT)
@@ -62,6 +60,7 @@ def create_player_at(center_x_pos: int, center_y_pos: int, world: zesper.World) 
     world.add_component(player_entity_id, cmp.Position(x=x_pos, y=y_pos))
     world.add_component(player_entity_id, cmp.Velocity(x=0, y=0))
     world.add_component(player_entity_id, cmp.Input(handle_input_function=handle_input))
+    world.add_component(player_entity_id, cmp.State(Status.IDLE, Direction.DOWN))
     world.add_component(player_entity_id, cmp.Health(points=MAX_HEALTH))
     return player_entity_id
 
@@ -69,22 +68,20 @@ def create_player_at(center_x_pos: int, center_y_pos: int, world: zesper.World) 
 def get_position_of_sprite(hitbox: cmp.HitBox):
     """ Gets the position of the sprite from the player's Hitbox """
     relative_pos_x = SPRITE_SIZE // 2
-    relative_pos_y = SPRITE_SIZE // 2
+    relative_pos_y = SPRITE_SIZE // 2 + 3
     return hitbox.rect.centerx - relative_pos_x, hitbox.rect.centery - relative_pos_y
 
 
 def create_bomb(player_entity_id: int, world: zesper.World):
     bomb_explosion_delay_time = 100
     bomb_entity = world.create_entity()
-    img_path = Path('assets', 'sprites', 'bomb.png')  # TODO: Add to resource manager and animation strip gets from resources as well
-    frame_sequence = [0] * 52 + [0, 0, 1, 1, 2, 2] * 8
-    animation_stripe = AnimationStrip(img_path, sprite_width=16, frame_sequence=frame_sequence)
+    strip = world.resource_manager.get_animation_strip(BOMB_SPRITES_ID)
 
     position = world.component_for_entity(player_entity_id, cmp.Position)
-    direction = world.component_for_entity(player_entity_id, cmp.Animation).direction
+    direction = world.component_for_entity(player_entity_id, cmp.State).direction
     renderable = world.component_for_entity(player_entity_id, cmp.Renderable)
 
-    bomb_renderable_component = cmp.Renderable(image=animation_stripe[0])
+    bomb_renderable_component = cmp.Renderable(image=strip[0])
 
     bomb_position_center_x = position.x + renderable.width // 2 + direction.value.x * 8
     bomb_position_center_y = position.y + renderable.height // 2 + direction.value.y * 8
@@ -94,7 +91,8 @@ def create_bomb(player_entity_id: int, world: zesper.World):
     script_arguments = {'bomb_entity_id': bomb_entity, 'x_pos': bomb_position_center_x, 'y_pos': bomb_position_center_y, 'world': world}
 
     world.add_component(bomb_entity, bomb_renderable_component)
-    world.add_component(bomb_entity, cmp.Animation(idle_down=animation_stripe))
+    frame_sequence = [0] * 52 + [0, 0, 1, 1, 2, 2] * 8
+    world.add_component(bomb_entity, cmp.Animation(strip, 0, frame_sequence))
     world.add_component(bomb_entity, cmp.Position(bomb_position_x, bomb_position_y))
     world.add_component(bomb_entity, cmp.Timer(delay=bomb_explosion_delay_time, callback=create_bomb_hitbox, **script_arguments))
 
@@ -113,6 +111,15 @@ def create_melee_weapon(player_entity_id: int, world: zesper.World):
     weapon_entity_id = _create_hitbox_in_front(player_entity_id, SWORD_FRONT_RANGE, SWORD_SIDE_RANGE, world)
     world.add_component(weapon_entity_id, cmp.Weapon(damage=SWORD_DAMAGE, active_frames=SWORD_ACTIVE_FRAMES))
 
+    direction = world.component_for_entity(player_entity_id, cmp.State).direction
+    strip = world.resource_manager.get_animation_strip(f'wooden_sword_{direction.name}')
+    world.add_component(weapon_entity_id, cmp.Animation(strip, ATTACK_ANIMATION_FRAMES, one_loop=True))
+    world.add_component(weapon_entity_id, cmp.Renderable(strip[0], SPRITE_DEPTH + 1))
+    position = copy(world.component_for_entity(player_entity_id, cmp.Position))
+    position.x = position.x - (SWORD_SPRITE_WIDTH - SPRITE_SIZE) // 2
+    position.y = position.y - (SWORD_SPRITE_WIDTH - SPRITE_SIZE) // 2
+    world.add_component(weapon_entity_id, position)
+
 
 def create_interactive_hitbox(player_entity_id: int, world: zesper.World):
     """ Creates a hitbox to detect interaction with other objects """
@@ -125,9 +132,6 @@ def create_interactive_hitbox(player_entity_id: int, world: zesper.World):
 def handle_input(input_message: InputMessage):
     # TODO: Add state system just for this operation. It decouples the input and is mostly useful
     #       if we want to  remove this process but don't want to stop the state update
-    animation = input_message.world.component_for_entity(input_message.ent_id, cmp.Animation)
-    animation.previous_status = animation.status
-    animation.previous_direction = animation.direction
 
     if input_message.controller.is_button_pressed(Button.START):
         menu_box.create_pause_menu(input_message.world)
@@ -162,26 +166,39 @@ def handle_input(input_message: InputMessage):
             position.y = round(position.y)
 
         # Attempt to change direction only when a key is released or the status of the entity is not moving
-        if horizontal_key_released or vertical_key_released or animation.status != Status.MOVING:
+        state = input_message.world.component_for_entity(input_message.ent_id, cmp.State)
+        if horizontal_key_released or vertical_key_released or state.status != Status.MOVING:
             if direction_x > 0:
-                animation.direction = Direction.EAST
+                state.direction = Direction.RIGHT
             elif direction_x < 0:
-                animation.direction = Direction.WEST
+                state.direction = Direction.LEFT
             if direction_y > 0:
-                animation.direction = Direction.SOUTH
+                state.direction = Direction.DOWN
             elif direction_y < 0:
-                animation.direction = Direction.NORTH
+                state.direction = Direction.UP
 
         # Set entity status for animation system
         if not direction_x and not direction_y:
-            animation.status = Status.IDLE
+            state.status = Status.IDLE
         else:
-            animation.status = Status.MOVING
+            state.status = Status.MOVING
+
+        # Change animation
+        if state.has_changed():
+            animation_identifier = f'{state.status.name}_{state.direction.name}'
+            strip = input_message.world.resource_manager.get_animation_strip(animation_identifier)
+            input_message.world.add_component(input_message.ent_id, cmp.Animation(strip, IDLE_ANIMATION_FRAME))
+        state.refresh()
 
         if input_message.controller.is_button_pressed(Button.B):  # Stop player when is attacking
             velocity.x = 0
             velocity.y = 0
-            animation.status = Status.ATTACKING
+            state.status = Status.ATTACKING
+            state.refresh()
+
+            animation_identifier = f'{state.status.name}_{state.direction.name}'
+            strip = input_message.world.resource_manager.get_animation_strip(animation_identifier)
+            input_message.world.add_component(input_message.ent_id, cmp.Animation(strip, ATTACK_ANIMATION_FRAMES))
 
             # Creates a temporary hitbox representing the sword weapon
             create_melee_weapon(input_message.ent_id, input_message.world)
@@ -205,8 +222,8 @@ def handle_input(input_message: InputMessage):
 
 def _create_hitbox_in_front(player_entity_id: int, front_range: int, side_range: int, world: zesper.World) -> int:
     """ Creates a hitbox in the direction the player is facing """
-    direction = world.component_for_entity(player_entity_id, cmp.Animation).direction
-    if direction in (Direction.WEST, Direction.EAST):
+    direction = world.component_for_entity(player_entity_id, cmp.State).direction
+    if direction in (Direction.LEFT, Direction.RIGHT):
         hitbox = cmp.HitBox(0, 0, front_range, side_range)
     else:
         hitbox = cmp.HitBox(0, 0, side_range, front_range)
@@ -217,6 +234,5 @@ def _create_hitbox_in_front(player_entity_id: int, front_range: int, side_range:
 
     hitbox_entity_id = world.create_entity()
     world.add_component(hitbox_entity_id, hitbox)
-    world.add_component(hitbox_entity_id, cmp.Position(hitbox.rect.x, hitbox.rect.y))
 
     return hitbox_entity_id

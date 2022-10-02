@@ -2,13 +2,7 @@
 
 A zelda-like adventure game.
 
-This is still a work in progress.
-
-If you like to try the game just run
-
-    python run_game.py
-
-from the main folder.
+This is still a work in progress. I've excluded the assets so you can only explore the codebase.
 
 ## Requirements
 

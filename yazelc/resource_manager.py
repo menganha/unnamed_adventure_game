@@ -1,7 +1,9 @@
+import logging
 from pathlib import Path
 
 import pygame
 
+from yazelc import animation
 from yazelc.font import Font
 
 
@@ -12,6 +14,7 @@ class ResourceManager:
 
     def __init__(self):
         self._textures = {}
+        self._animation_stripes = {}
         self._fonts = {}
         self._pygame_font_objects = {}  # keeps track of pygame's loaded fonts (not the wrapper)
 
@@ -26,6 +29,9 @@ class ResourceManager:
                 return texture
             else:
                 raise ValueError(f'Unknown texture filetype: {path}')
+        else:
+            logging.info(f'Image on {path} has an existing texture instance with the id {name}')
+            self.get_texture(name)
 
     def add_font(self, path: Path, size: int, color: pygame.Color, explicit_name: str = None) -> Font:
         """
@@ -45,9 +51,29 @@ class ResourceManager:
                 return font
             else:
                 raise ValueError(f'Unknown font filetype: {path}')
+        else:
+            logging.info(f'Font on {path} has an existing instance with the id {name}')
+            self.get_font(name)
 
-    def get_texture(self, name: str):
+    def add_animation_strip(self, path: Path, sprite_width: int, flip: bool = False, explicit_name: str = None) -> list[pygame.Surface]:
+        """
+        Assumes the passed image is a series of sprites depicting an animation, each with a width of <sprite_width>
+        and ordered from left to right
+        """
+        texture = self.add_texture(path, explicit_name)
+        name = path.stem if not explicit_name else explicit_name
+        if name not in self._animation_stripes:
+            strip = animation.get_frames_from_strip(texture, sprite_width)
+            if flip:
+                strip = animation.flip_strip_sprites(strip)
+            self._animation_stripes.update({name: strip})
+            return strip
+
+    def get_texture(self, name: str) -> pygame.Surface:
         return self._textures[name]
 
-    def get_font(self, name: str):
+    def get_font(self, name: str) -> Font:
         return self._fonts[name]
+
+    def get_animation_strip(self, name: str) -> list[pygame.Surface]:
+        return self._animation_stripes[name]

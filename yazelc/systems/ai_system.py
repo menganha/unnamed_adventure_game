@@ -1,18 +1,18 @@
-from random import choices
+from random import choice, random
 
 from yazelc import zesper
-from yazelc.components import Brain
-from yazelc.utils.game_utils import Direction
+from yazelc.components import Brain, State
+from yazelc.utils.game_utils import Direction, Status
 
 
 class AISystem(zesper.Processor):
 
     def process(self):
-        for ent, brain in self.world.get_component(Brain):
+        for ent, (brain, state) in self.world.get_components(Brain, State):
             if brain.think_counter > 0:
                 brain.think_counter -= 1
             if brain.think_counter == 0:
                 brain.think_counter = brain.think_frames
-                direction_weights = [10, 10, 10, 10, 45]
-                direction_choices = list(Direction)[:4] + [None]
-                brain.direction = choices(direction_choices, weights=direction_weights, k=1)[0]
+                direction_choices = list(Direction)[:4]
+                state.direction = choice(direction_choices)
+                state.status = Status.IDLE if random() < 0.5 else Status.MOVING

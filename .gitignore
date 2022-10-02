@@ -1,6 +1,7 @@
 __pycache__
 dev
 dev2
+assets
 .idea
 *.tiled-project
 *.tiled-session

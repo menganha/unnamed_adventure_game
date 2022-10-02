@@ -1,16 +1,16 @@
-from pathlib import Path
-
 from yazelc import components as cmp
 from yazelc import zesper
-from yazelc.animation import AnimationStrip
 from yazelc.systems.input_system import InputMessage
+from yazelc.utils.game_utils import Direction, Status
 
 JELLY_VEL = 1
+JELLY_ID = 'jelly'
+JELLY_SPRITE_WIDTH = 16
+JELLY_ANIMATION_DELAY = 15
 
 
 def create_jelly_at(x_pos: int, y_pos: int, world: zesper.World) -> int:
-    enemy_idle_down_image_path = Path('assets', 'sprites', 'enemy', 'jelly_idle.png')
-    enemy_idle_animation = AnimationStrip(enemy_idle_down_image_path, sprite_width=16, delay=15)
+    image_strip = world.resource_manager.get_animation_strip(JELLY_ID)
     enemy_entity = world.create_entity()
     world.add_component(enemy_entity, cmp.Brain(think_frames=50))
     world.add_component(enemy_entity, cmp.Velocity())
@@ -19,24 +19,21 @@ def create_jelly_at(x_pos: int, y_pos: int, world: zesper.World) -> int:
     world.add_component(enemy_entity, cmp.HitBox(x_pos, y_pos, 16, 16))
     world.add_component(enemy_entity, cmp.Position(x=x_pos, y=x_pos))
     world.add_component(enemy_entity, cmp.EnemyTag())
-    world.add_component(enemy_entity, cmp.Animation(enemy_idle_animation))
-    world.add_component(enemy_entity, cmp.Renderable(image=enemy_idle_animation[0]))
+    world.add_component(enemy_entity, cmp.State(Status.IDLE, Direction.DOWN))
+    world.add_component(enemy_entity, cmp.Animation(image_strip, delay=JELLY_ANIMATION_DELAY))
+    world.add_component(enemy_entity, cmp.Renderable(image=image_strip[0]))
     world.add_component(enemy_entity, cmp.Input(handle_input_function=handle_input))
     return enemy_entity
 
 
 def handle_input(input_message: InputMessage):
-    animation = input_message.world.component_for_entity(input_message.ent_id, cmp.Animation)
-    animation.previous_status = animation.status
-    animation.previous_direction = animation.direction
+    state = input_message.world.component_for_entity(input_message.ent_id, cmp.State)
 
-    brain = input_message.world.component_for_entity(input_message.ent_id, cmp.Brain)
     velocity = input_message.world.component_for_entity(input_message.ent_id, cmp.Velocity)
 
-    animation.direction = brain.direction
-    if animation.direction:
-        velocity.x = brain.direction.value.x
-        velocity.y = brain.direction.value.y
+    if state.status == Status.MOVING:
+        velocity.x = state.direction.value.x
+        velocity.y = state.direction.value.y
     else:
         velocity.x = 0
         velocity.y = 0

@@ -3,14 +3,13 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass as component
 from dataclasses import field, InitVar
-from typing import Optional, Any, TYPE_CHECKING
+from typing import Any, TYPE_CHECKING
 
 import pygame
 
-from yazelc.animation import AnimationStrip, flip_strip_sprites
 from yazelc.font import Font
 from yazelc.items import CollectableItemType
-from yazelc.utils.game_utils import Direction, Status
+from yazelc.utils.game_utils import Direction
 
 if TYPE_CHECKING:
     from yazelc.systems.input_system import InputMessage
@@ -84,12 +83,6 @@ class InteractorTag:
 
 
 @component
-class InteractableTag:
-    """ Tag entity which can be interacted """
-    pass
-
-
-@component
 class Renderable:
     image: pygame.Surface
     depth: int = 100  # Depth is just over the background, i.e., background = 0, foreground, 1000, foreforeground = 2000
@@ -150,7 +143,7 @@ class HitBox:
 @component
 class Brain:
     """ Brain given to an NPC character / Enemy AI"""
-    direction: Direction = Direction.SOUTH
+    # direction: Direction = Direction.DOWN
     think_frames: int = 0  # amount of frames it takes to take a new decision
     think_counter: int = field(init=False, default=0)
 
@@ -160,6 +153,7 @@ class Collectable:
     """ Collectable items tag """
     item_type: CollectableItemType
     value: int = 1
+    in_chest: bool = False
 
 
 @component
@@ -183,12 +177,13 @@ class Timer:
     Optionally we can set a callback function with arguments
     """
 
-    def __init__(self, delay: int, callback: Callable = None, repeat: bool = False, **kwargs: Any):
-        self.delay = delay
-        self.callback = callback
-        self.repeat = repeat
+    def __init__(self, delay: int | list[int], callback: Callable | list[Callable] = None, **kwargs: Any):
+        self.delays = [delay] if isinstance(delay, int) else delay
+        self.callbacks = [callback] if isinstance(callback, Callable) else callback
         self.kwargs = kwargs
-        self.tick = self.delay
+        self.tick = self.delays[0]
+        self.callback_index = 0
+        assert len(self.delays) == len(self.callbacks) or len(self.delays) == 1
 
 
 @component
@@ -196,19 +191,6 @@ class Input:
     handle_input_function: Callable[[InputMessage]]
     block_counter: int = 0
     is_paused: bool = False
-
-
-# @component
-# class Action:
-#     function: Callable[..., None]
-#     args: Tuple[Any, ...]
-#
-#
-# @component
-# class Script:
-#     """ Calls a function with the parent entity ID passed as an argument """
-#     action_list: List[Action]
-#     delay: int = 0
 
 
 @component
@@ -219,59 +201,34 @@ class Door:
 
 
 @component
+class State:
+    """ Helper component for general state of objects """
+
+    status: State
+    direction: Direction
+    prev_status: State = field(init=False)
+    prev_direction: Direction = field(init=False)
+
+    def __post_init__(self):
+        self.refresh()
+
+    def refresh(self):
+        self.prev_status = self.status
+        self.prev_direction = self.direction
+
+    def has_changed(self) -> bool:
+        return self.prev_direction != self.direction or self.prev_status != self.status
+
+
+@component
 class Animation:
-    """
-    Needs at least to get one animation stripe (idle_down) to instantiate this component. No need of "left" animation
-    stripe as we can just "flip" the right one
-    """
-    idle_down: InitVar[AnimationStrip]
-    idle_up: InitVar[Optional[AnimationStrip]] = None
-    idle_right: InitVar[Optional[AnimationStrip]] = None
+    strip: list[pygame.Surface]
+    delay: int
+    frame_sequence: list[int] = None
+    index: int = 0
+    frame_counter: int = 0
+    one_loop: bool = False
 
-    move_down: InitVar[Optional[AnimationStrip]] = None
-    move_up: InitVar[Optional[AnimationStrip]] = None
-    move_right: InitVar[Optional[AnimationStrip]] = None
-
-    attack_down: InitVar[Optional[AnimationStrip]] = None
-    attack_up: InitVar[Optional[AnimationStrip]] = None
-    attack_right: InitVar[Optional[AnimationStrip]] = None
-
-    direction: Direction = Direction.SOUTH
-    status: Status = Status.IDLE
-
-    index: int = field(init=False, default=0)
-    frame_counter: int = field(init=False, default=0)
-    strips: dict[Status, dict[Direction, list[AnimationStrip]]] = field(init=False)
-
-    previous_direction: Direction = field(init=False)
-    previous_status: Status = field(init=False)
-
-    def __post_init__(self, idle_down, idle_up, idle_right, move_down, move_up, move_right, attack_down, attack_up, attack_right):
-        """
-        Creates a dictionary with the as values images surfaces and the states as keys
-        """
-        self.previous_direction = self.direction
-        self.previous_status = self.status
-
-        idle_left = move_left = attack_left = None
-        if idle_right:
-            idle_left = flip_strip_sprites(idle_right)
-        if move_right:
-            move_left = flip_strip_sprites(move_right)
-        if attack_right:
-            attack_left = flip_strip_sprites(attack_right, reverse_order=False)  # May not be in general the situation
-
-        self.strips = {
-            Status.IDLE: {Direction.NORTH: idle_up, Direction.WEST: idle_left,
-                          Direction.SOUTH: idle_down, Direction.EAST: idle_right},
-            Status.MOVING: {Direction.NORTH: move_up, Direction.WEST: move_left,
-                            Direction.SOUTH: move_down, Direction.EAST: move_right},
-            Status.ATTACKING: {Direction.NORTH: attack_up, Direction.WEST: attack_left,
-                               Direction.SOUTH: attack_down, Direction.EAST: attack_right}
-        }
-
-        # Remove the empty strips from the dict
-        for status in (Status.IDLE, Status.MOVING, Status.ATTACKING):
-            for direction in (Direction.NORTH, Direction.SOUTH, Direction.WEST, Direction.EAST):
-                if self.strips[status][direction] is None:
-                    del self.strips[status][direction]
+    def __post_init__(self):
+        if self.frame_sequence is None:
+            self.frame_sequence = [idx for idx in range(len(self.strip)) for _ in range(self.delay)]

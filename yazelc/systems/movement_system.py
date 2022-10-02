@@ -13,6 +13,7 @@ class MovementSystem(zesper.Processor):
             position.prev_y = position.y
             position.x += velocity.x
             position.y += velocity.y
+
             if hitbox := self.world.try_component(ent, HitBox):
                 hitbox.rect.move_ip(round(position.x) - round(position.prev_x), round(position.y) - round(position.prev_y))
 

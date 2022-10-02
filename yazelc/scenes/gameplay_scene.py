@@ -9,6 +9,7 @@ from yazelc import config as cfg
 from yazelc import dialog_box
 from yazelc import enemy
 from yazelc import hud
+from yazelc import items
 from yazelc import zesper
 from yazelc.camera import Camera
 from yazelc.components import Input
@@ -33,22 +34,28 @@ from yazelc.systems.render_system import RenderSystem
 from yazelc.systems.script_system import ClockSystem
 from yazelc.systems.transition_system import TransitionSystem
 from yazelc.systems.visual_effects_system import VisualEffectsSystem
+from yazelc.utils.game_utils import Direction, Status
 
 FULL_HEART_IMAGE_PATH = Path('assets', 'sprites', 'full_heart.png')
+PLAYER_IMAGE_PATH = Path('assets', 'sprites', 'player')
 HALF_HEART_IMAGE_PATH = Path('assets', 'sprites', 'half_heart.png')
 EMPTY_HEART_IMAGE_PATH = Path('assets', 'sprites', 'empty_heart.png')
-PLAYER_IMAGE_PATH = Path('assets', 'sprites', 'player')
+JELLY_ENEMY_PATH = Path('assets', 'sprites', 'enemy', 'jelly_idle.png')
+COINS_IMAGE_PATH = Path('assets', 'sprites', 'coins.png')
+TREASURE_IMAGE_PATH = Path('assets', 'sprites', 'treasure.png')
+WEAPON_IMAGE_PATH = Path('assets', 'sprites', 'weapon')
 FONT_PATH = Path('assets', 'font', 'Anonymous Pro.ttf')
 FONT_SIZE = 12
 FONT_COLOR = cfg.C_WHITE
+BOMB_IMG_PATH = Path('assets', 'sprites', 'bomb.png')
 
 
 class GameplayScene(BaseScene):
 
-    def __init__(self, window: pygame.Surface, map_name: str, start_tile_x_pos: int, start_tile_y_pos: int,
+    def __init__(self, window: pygame.Surface, map_file_path: Path, start_tile_x_pos: int, start_tile_y_pos: int,
                  player_components: Optional[List[object]] = None):
         super().__init__(window)
-        self.map_data_file = Path('data', f'{map_name}.tmx')
+        self.map_data_file = map_file_path
         self.start_tile_x_pos = start_tile_x_pos
         self.start_tile_y_pos = start_tile_y_pos
         self._cached_scene_processors: list[zesper.Processor] = []
@@ -62,29 +69,48 @@ class GameplayScene(BaseScene):
         # Initialize some values
         self.in_scene = True
 
-        # Add resources (TODO: maybe do this in a separate module as they seem to be all over the place)
+        # Add resources TODO: maybe do this in a separate module as they seem to be all over the place
+        self.world.resource_manager.add_font(FONT_PATH, FONT_SIZE, FONT_COLOR, dialog_box.DIALOG_FONT_ID)
+        self.world.resource_manager.add_font(FONT_PATH, FONT_SIZE, FONT_COLOR, menu_box.MENU_FONT_ID)
         self.world.resource_manager.add_texture(FULL_HEART_IMAGE_PATH)
         self.world.resource_manager.add_texture(HALF_HEART_IMAGE_PATH)
         self.world.resource_manager.add_texture(EMPTY_HEART_IMAGE_PATH)
-        self.world.resource_manager.add_font(FONT_PATH, FONT_SIZE, FONT_COLOR, dialog_box.DIALOG_FONT_ID)
-        self.world.resource_manager.add_font(FONT_PATH, FONT_SIZE, FONT_COLOR, menu_box.MENU_FONT_ID)
+        self.world.resource_manager.add_animation_strip(JELLY_ENEMY_PATH, enemy.JELLY_SPRITE_WIDTH, explicit_name=enemy.JELLY_ID)
+        self.world.resource_manager.add_animation_strip(TREASURE_IMAGE_PATH, InventorySystem.TREASURE_TILE_SIZE,
+                                                        explicit_name=InventorySystem.TREASURE_TEXTURE_ID)
+        self.world.resource_manager.add_animation_strip(COINS_IMAGE_PATH, items.COIN_TILE_SIZE, explicit_name=CollectableItemType.COIN.name)
+        self.world.resource_manager.add_animation_strip(BOMB_IMG_PATH, player.BOMB_SPRITE_WIDTH, explicit_name=player.BOMB_SPRITES_ID)
+        for direction in [Direction.UP, Direction.DOWN, Direction.RIGHT, Direction.LEFT]:
+            for typ in [Status.IDLE, Status.MOVING, Status.ATTACKING]:
+                identifier = f'{typ.name}_{direction.name}'
+                img_path = PLAYER_IMAGE_PATH / f'{identifier}.png'.lower()
+                flip = False
+                if direction == Direction.LEFT:
+                    img_path = PLAYER_IMAGE_PATH / f'{typ.name}_{Direction.RIGHT.name}.png'.lower()
+                    flip = True
+                self.world.resource_manager.add_animation_strip(img_path, player.SPRITE_SIZE, flip, identifier)
+        for direction in [Direction.UP, Direction.DOWN, Direction.RIGHT, Direction.LEFT]:
+            identifier = f'wooden_sword_{direction.name}'
+            img_path = WEAPON_IMAGE_PATH / f'{identifier}.png'.lower()
+            flip = False
+            if direction == Direction.LEFT:
+                img_path = WEAPON_IMAGE_PATH / f'wooden_sword_{Direction.RIGHT.name}.png'.lower()
+                flip = True
+            self.world.resource_manager.add_animation_strip(img_path, player.SWORD_SPRITE_WIDTH, flip, identifier)
 
         # Add map entity
         overworld_map = Maps(self.map_data_file)
-        for idx, map_layer in enumerate(overworld_map.create_map_image()):
+        for idx, map_layer in enumerate(overworld_map.map_images()):
             layer_entity_id = self.world.create_entity()
             self.world.add_component(layer_entity_id, cmp.Position(x=0, y=0))
-            depth = 1000 * (idx - 1)
+            depth = 1000 * idx
             self.world.add_component(layer_entity_id, cmp.Renderable(image=map_layer, depth=depth))
-            # self.world.map_layers_entity_id.append(layer_entity_id)
 
-        for hitbox in overworld_map.create_solid_rectangles():
-            self.world.create_entity(hitbox)
+        dialog_font = self.world.resource_manager.get_font(dialog_box.DIALOG_FONT_ID)
+        for components in overworld_map.create_objects(dialog_font):
+            self.world.create_entity(*components)
         for door, hitbox in overworld_map.create_doors():
             self.world.create_entity(door, hitbox)
-        dialog_font = self.world.resource_manager.get_font(dialog_box.DIALOG_FONT_ID)
-        for text, hitbox in overworld_map.create_signs(dialog_font):
-            self.world.create_entity(text, hitbox)
 
         # Add player entity
         player_x_pos, player_y_pos = overworld_map.get_center_coord_from_tile(self.start_tile_x_pos,
@@ -110,6 +136,9 @@ class GameplayScene(BaseScene):
         enemy.create_jelly_at(400, 400, self.world)
 
         # Create a pickable item
+        for idx in range(3):
+            x_pos, y_pos = overworld_map.get_center_coord_from_tile(7 + idx, 17)
+            items.create_entity(CollectableItemType.COIN, x_pos, y_pos, self.world)
         # items.create_entity(items.PickableItemType.HEART, 300, 355, self.world)
         # items.create_entity(items.PickableItemType.HEART, 350, 355, self.world)
         inventory = {collectable_type: 0 for collectable_type in CollectableItemType}
@@ -142,6 +171,7 @@ class GameplayScene(BaseScene):
         self.event_manager.subscribe(EventType.COLLISION, combat_system.on_collision)
         self.event_manager.subscribe(EventType.COLLISION, dialog_system.on_collision)
         self.event_manager.subscribe(EventType.COLLISION, transition_system.on_collision)
+        self.event_manager.subscribe(EventType.COLLISION, inventory_system.on_collision)
         self.event_manager.subscribe(EventType.DEATH, self.on_death)
         self.event_manager.subscribe(EventType.RESTART, self.on_restart)
         self.event_manager.subscribe(EventType.PAUSE, self.on_pause)
@@ -224,8 +254,7 @@ class GameplayScene(BaseScene):
         """
         self.world.remove_all_processors_except(RenderSystem, InputSystem)
 
-        self.world.delete_entity(self.world.hud_entity_id)
-        for entity_id in self.world.map_layers_entity_id:
-            self.world.delete_entity(entity_id)
+        # for entity_id in self.world.map_layers_entity_id:
+        #     self.world.delete_entity(entity_id)
 
         menu_box.create_death_menu(self.world)
