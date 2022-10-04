@@ -10,7 +10,6 @@ from yazelc import visual_effects as vfx
 from yazelc import zesper
 from yazelc.controller import Button
 from yazelc.event import PauseEvent
-from yazelc.menu import menu_box
 from yazelc.systems.input_system import InputMessage
 from yazelc.utils.game_utils import Direction, Status
 
@@ -32,6 +31,7 @@ SWORD_FRONT_RANGE = 15
 SWORD_SIDE_RANGE = 20
 SWORD_DAMAGE = 5
 SWORD_ACTIVE_FRAMES = ATTACK_ANIMATION_FRAMES * 4
+SWORD_RECOIL_VEL = 5
 SWORD_SPRITE_WIDTH = 48
 
 BOMB_SPRITES_ID = 'BOMB'
@@ -109,7 +109,9 @@ def create_bomb_hitbox(bomb_entity_id: int, x_pos: int, y_pos: int, world: zespe
 def create_melee_weapon(player_entity_id: int, world: zesper.World):
     """ Creates a Weapon hitbox for the parent entity with a hitbox """
     weapon_entity_id = _create_hitbox_in_front(player_entity_id, SWORD_FRONT_RANGE, SWORD_SIDE_RANGE, world)
-    world.add_component(weapon_entity_id, cmp.Weapon(damage=SWORD_DAMAGE, active_frames=SWORD_ACTIVE_FRAMES))
+    world.add_component(weapon_entity_id,
+                        cmp.Weapon(damage=SWORD_DAMAGE, active_frames=SWORD_ACTIVE_FRAMES, freeze_frames=8,
+                                   recoil_velocity=SWORD_RECOIL_VEL))
 
     direction = world.component_for_entity(player_entity_id, cmp.State).direction
     strip = world.resource_manager.get_animation_strip(f'wooden_sword_{direction.name}')
@@ -134,13 +136,8 @@ def handle_input(input_message: InputMessage):
     #       if we want to  remove this process but don't want to stop the state update
 
     if input_message.controller.is_button_pressed(Button.START):
-        menu_box.create_pause_menu(input_message.world)
         input_message.event_list.append(PauseEvent())
         return
-
-    input_ = input_message.world.component_for_entity(input_message.ent_id, cmp.Input)
-    if input_.block_counter != 0:
-        input_.block_counter -= 1
 
     else:
         velocity = input_message.world.component_for_entity(input_message.ent_id, cmp.Velocity)
@@ -205,6 +202,7 @@ def handle_input(input_message: InputMessage):
 
             # Block input until weapon lifetime is over and publish attach event. We need to block it one less than
             # The active frames as we are counting already the frame when it is activated as active
+            input_ = input_message.world.component_for_entity(input_message.ent_id, cmp.Input)
             input_.block_counter = SWORD_ACTIVE_FRAMES - 1
 
         if input_message.controller.is_button_pressed(Button.A):

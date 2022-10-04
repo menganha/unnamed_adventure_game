@@ -25,5 +25,8 @@ class InputSystem(zesper.Processor):
         self.controller.process_input()
 
         for entity, input_ in self.world.get_component(Input):
-            input_message = InputMessage(entity, self.controller, self.world, self.events)
-            input_.handle_input_function(input_message)
+            if input_.block_counter != 0:
+                input_.block_counter -= 1
+            else:
+                input_message = InputMessage(entity, self.controller, self.world, self.events)
+                input_.handle_input_function(input_message)

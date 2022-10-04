@@ -63,7 +63,7 @@ class World(World):
         else:
             return None
 
-    def remove_all_processors_except(self, *excluded_processor_types: Type[Processor]) -> list[Type[Processor]]:
+    def remove_all_processors_except(self, *excluded_processor_types: Type[Processor]) -> list[Processor]:
         """ No similar function on the esper Lib."""
         processors_to_remove = [proc for proc in self._processors if type(proc) not in excluded_processor_types]
         for processor in processors_to_remove:

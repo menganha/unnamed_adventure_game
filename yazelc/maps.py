@@ -15,10 +15,16 @@ from yazelc.items import CollectableItemType
 
 
 class Maps:
+    DATA_PATH = Path('data')
     DOOR_TARGET_X_STR = 'target_x'
     DOOR_TARGET_Y_STR = 'target_y'
+    DOOR_TARGET_STR = 'target_door'
+    DOOR_PATH_SEP = ':'
     FOREGROUND_LAYER_NAME = 'foreground'
     OBJECT_LAYER_NAME = 'colliders'
+    ENEMY_LAYER_NAME = 'enemy'
+    ENEMY_PROP = 'enemy'
+    DOOR_LAYER_NAME = 'doors'
     TEXT_PROPERTY = 'text'
     ITEM_PROPERTY = 'item'
 
@@ -75,15 +81,28 @@ class Maps:
                 components = (hit_box,)
             yield components
 
-    def create_doors(self):
-        if self.OBJECT_LAYER_NAME not in self.tmx_data.layernames:
-            logging.info(f'No {self.OBJECT_LAYER_NAME} layer found for the map {self.map_file_path}')
-            yield None
+    def create_doors(self) -> Iterator[tuple]:
+        if self.DOOR_LAYER_NAME not in self.tmx_data.layernames:
+            logging.info(f'No {self.DOOR_LAYER_NAME} layer found for the map {self.map_file_path}')
+            return
+        for obj in self.tmx_data.get_layer_by_name(self.DOOR_LAYER_NAME):
+            target_x = obj.properties[self.DOOR_TARGET_X_STR]
+            target_y = obj.properties[self.DOOR_TARGET_Y_STR]
+            map_image_sub_path = obj.properties[self.DOOR_TARGET_STR].split(self.DOOR_PATH_SEP)
+            target_door = Path(self.DATA_PATH, *map_image_sub_path)
+            hit_box = cmp.HitBox(obj.x, obj.y, obj.width, obj.height, impenetrable=True)
+            door = cmp.Door(target_door, target_x, target_y)
+            yield door, hit_box
 
-    # for obj in self.tmx_data.get_layer_by_name('doors'):
-    #     target_x = obj.properties[self.DOOR_TARGET_X_STR]
-    #     target_y = obj.properties[self.DOOR_TARGET_Y_STR]
-    #     yield cmp.Door(obj.name, target_x, target_y), cmp.HitBox(obj.x, obj.y, obj.width, obj.height)
+    def create_enemies(self) -> Iterator[tuple]:
+        if self.ENEMY_LAYER_NAME not in self.tmx_data.layernames:
+            logging.info(f'No {self.ENEMY_LAYER_NAME} layer found for the map {self.map_file_path}')
+            return
+        for obj in self.tmx_data.get_layer_by_name(self.ENEMY_LAYER_NAME):
+            x_pos = obj.x
+            y_pos = obj.y
+            enemy_type = obj.properties[self.ENEMY_PROP]
+            yield x_pos, y_pos, enemy_type
 
     def get_center_coord_from_tile(self, tile_x_pos: int, tile_y_pos: int) -> (int, int):
         """

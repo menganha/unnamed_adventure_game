@@ -25,6 +25,7 @@ class BaseScene(abc.ABC):
         pass
 
     def run(self):
+        self.in_scene = True
         while self.in_scene:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:

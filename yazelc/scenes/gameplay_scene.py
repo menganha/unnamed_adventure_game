@@ -66,8 +66,6 @@ class GameplayScene(BaseScene):
             self.player_entity_id = self.world.create_entity(*player_components)
 
     def on_enter(self):
-        # Initialize some values
-        self.in_scene = True
 
         # Add resources TODO: maybe do this in a separate module as they seem to be all over the place
         self.world.resource_manager.add_font(FONT_PATH, FONT_SIZE, FONT_COLOR, dialog_box.DIALOG_FONT_ID)
@@ -111,10 +109,14 @@ class GameplayScene(BaseScene):
             self.world.create_entity(*components)
         for door, hitbox in overworld_map.create_doors():
             self.world.create_entity(door, hitbox)
+        for door, hitbox in overworld_map.create_doors():
+            self.world.create_entity(door, hitbox)
+        # Create enemy
+        for pos_x, pos_y, enemy_type in overworld_map.create_enemies():
+            enemy.create_jelly_at(pos_x, pos_y, self.world)  # TODO: Generalize for any type of enemy
 
         # Add player entity
-        player_x_pos, player_y_pos = overworld_map.get_center_coord_from_tile(self.start_tile_x_pos,
-                                                                              self.start_tile_y_pos)
+        player_x_pos, player_y_pos = overworld_map.get_center_coord_from_tile(self.start_tile_x_pos, self.start_tile_y_pos)
         if self.player_entity_id is None:
             self.player_entity_id = player.create_player_at(center_x_pos=player_x_pos, center_y_pos=player_y_pos, world=self.world)
         else:
@@ -133,7 +135,7 @@ class GameplayScene(BaseScene):
         hud.create_hud_entity(self.world)
 
         # Create enemy
-        enemy.create_jelly_at(400, 400, self.world)
+        enemy.create_jelly_at(200, 450, self.world)
 
         # Create a pickable item
         for idx in range(3):
@@ -167,6 +169,13 @@ class GameplayScene(BaseScene):
         animation_system = AnimationSystem()
         render_system = RenderSystem(self.window, self.camera)
 
+        scene_processors = []
+        scene_processors.extend(  # Note they are added in a give order
+            [ai_system, input_system, movement_system, script_system, collision_system, dialog_system, combat_system, inventory_system,
+             visual_effect_system, transition_system, camera_system, animation_system, render_system])
+        for processor in scene_processors:
+            self.world.add_processor(processor)
+
         # Register some events
         self.event_manager.subscribe(EventType.COLLISION, combat_system.on_collision)
         self.event_manager.subscribe(EventType.COLLISION, dialog_system.on_collision)
@@ -176,19 +185,10 @@ class GameplayScene(BaseScene):
         self.event_manager.subscribe(EventType.RESTART, self.on_restart)
         self.event_manager.subscribe(EventType.PAUSE, self.on_pause)
 
-        scene_processors = []
-        scene_processors.extend(  # Note they are added in a give order
-            [ai_system, input_system, movement_system, script_system, collision_system, dialog_system, combat_system, inventory_system,
-             visual_effect_system, transition_system, camera_system, animation_system, render_system]
-        )
-        for processor in scene_processors:
-            self.world.add_processor(processor)
-
     def on_exit(self):
         if type(self.next_scene) == type(self) and self.next_scene != self:
             # TODO: Fine tune all of these parameters
             total_exit_frames = 80
-            stop_frame_num = 20
             # Take out some processors perhaps
             # continue running in the door
             velocity = self.world.component_for_entity(self.player_entity_id, cmp.Velocity)
@@ -196,6 +196,7 @@ class GameplayScene(BaseScene):
             velocity.x = 0.30 * copysign(1.0, velocity.x) if abs(velocity.x) > 1e-4 else 0
             velocity.y = 0.30 * copysign(1.0, velocity.y) if abs(velocity.y) > 1e-4 else 0
             self.world.remove_processor(InputSystem)
+            self.world.remove_processor(CollisionSystem)
             self.world.remove_processor(TransitionSystem)
             self.world.remove_processor(CameraSystem)
 
@@ -210,23 +211,19 @@ class GameplayScene(BaseScene):
             self.world.add_component(effect_id, cmp.Position(self.camera.pos.x, self.camera.pos.y))
 
             while total_exit_frames > 0:
-
                 self.world.process()
 
                 cover_surface.fill(cfg.C_BLACK)
                 pygame.draw.circle(cover_surface, cfg.C_WHITE, (position.x - self.camera.pos.x, position.y - self.camera.pos.y), radius)
                 self.world.component_for_entity(effect_id, cmp.Renderable).image = cover_surface
                 radius -= 5
-
-                if total_exit_frames == stop_frame_num:
-                    velocity.x = 0
-                    velocity.y = 0
-
                 total_exit_frames -= 1
 
     def on_pause(self, pause_event: PauseEvent):
+        """ Handles the events of pause and unpause"""
         self.paused = not self.paused
         if self.paused:
+            menu_box.create_pause_menu(self.world)
             # Removes all control form other entities unless it has a dialog or menu component
             # We store these components locally for later reinsertion
             for entity, input_ in self.world.get_component(cmp.Input):
@@ -245,7 +242,9 @@ class GameplayScene(BaseScene):
     def on_restart(self, restart_event: RestartEvent):
         self.in_scene = False
         self.next_scene = self
-        self.world.clear_database()  # TODO: Should one keep the player or store some information here?
+        self.player_entity_id = None  # TODO: Should one keep the player or store some information here?
+        self.world.clear_database()
+        self.event_manager.clear()
 
     def on_death(self, death_event: DeathEvent):
         """

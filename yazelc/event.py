@@ -99,6 +99,10 @@ class EventManager:
         else:
             self.subscribers = defaultdict(set)
 
+    def clear(self):
+        self.subscribers = defaultdict(set)
+        self.event_queue = deque()
+
     def _make_callback(self, event_type: EventType):
         """Create a callback to remove dead handlers."""
 
