@@ -12,13 +12,13 @@ from yazelc import scene_manager
 from yazelc.scenes.gameplay_scene import GameplayScene
 from yazelc.utils.game_utils import ImmutableVec
 
-INITIAL_MAP = Path('data', 'overworld_1.tmx')
+INITIAL_MAP = Path('data', 'overworld', 'overworld_1.tmx')
 INITIAL_POS = ImmutableVec(10, 24)
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO, format='%(asctime)s %(message)s')
     if len(sys.argv) == 4:
-        map_path = sys.argv[1]
+        map_path = Path(sys.argv[1])
         initial_pos_x = int(sys.argv[2])
         initial_pos_y = int(sys.argv[3])
     else:

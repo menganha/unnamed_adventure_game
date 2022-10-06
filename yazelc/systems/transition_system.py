@@ -11,6 +11,8 @@ if TYPE_CHECKING:
 
 
 # TODO: Fix bug where enemies can go through doors since there are no solid hitboxes preventing movement
+# TODO: This system is unnecessary since it only defines one collision handling. Better accomodate this on the
+#       gameplay class
 class TransitionSystem(zesper.Processor):
     """ Transition between gameplay scenes """
 
