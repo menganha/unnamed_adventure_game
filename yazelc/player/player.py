@@ -10,6 +10,7 @@ from yazelc import visual_effects as vfx
 from yazelc import zesper
 from yazelc.controller import Button
 from yazelc.event import PauseEvent
+from yazelc.menu import menu_box
 from yazelc.systems.input_system import InputMessage
 from yazelc.utils.game_utils import Direction, Status
 
@@ -18,13 +19,15 @@ VELOCITY_DIAGONAL = 1
 
 HITBOX_HEIGHT = 9
 HITBOX_WIDTH = 10
-SPRITE_SIZE = 32
+HITBOX_Y_OFFSET = 2
+SPRITE_SIZE = 16
 SPRITE_DEPTH = 200
 
 MAX_HEALTH = 10  # Should always be divisible by two
 
-ATTACK_ANIMATION_FRAMES = 5
+ATTACK_ANIMATION_FRAMES = 4
 IDLE_ANIMATION_FRAME = 10
+MOVE_ANIMATION_FRAMES = 5
 
 # TODO: Modify the sprite such that the range of the sword is the same on all cardinal directions!!!
 SWORD_FRONT_RANGE = 15
@@ -48,7 +51,7 @@ def create_player_at(center_x_pos: int, center_y_pos: int, world: zesper.World) 
     player_entity_id = world.create_entity()
     stripe = world.resource_manager.get_animation_strip(f'{Status.IDLE.name}_{Direction.DOWN.name}')
     world.add_component(player_entity_id, cmp.Renderable(stripe[0], depth=SPRITE_DEPTH))
-    world.add_component(player_entity_id, cmp.Animation(stripe, delay=IDLE_ANIMATION_FRAME))
+    # world.add_component(player_entity_id, cmp.Animation(stripe[:1], delay=IDLE_ANIMATION_FRAME))
 
     # HitBox
     hitbox_component = cmp.HitBox(0, 0, HITBOX_WIDTH, HITBOX_HEIGHT)
@@ -68,8 +71,15 @@ def create_player_at(center_x_pos: int, center_y_pos: int, world: zesper.World) 
 def get_position_of_sprite(hitbox: cmp.HitBox):
     """ Gets the position of the sprite from the player's Hitbox """
     relative_pos_x = SPRITE_SIZE // 2
-    relative_pos_y = SPRITE_SIZE // 2 + 3
+    relative_pos_y = SPRITE_SIZE // 2 + HITBOX_Y_OFFSET
     return hitbox.rect.centerx - relative_pos_x, hitbox.rect.centery - relative_pos_y
+
+
+def get_position_of_hitbox(sprite_position: cmp.Position):
+    """ Gets the position of the center hitbox from the from the player's postion """
+    relative_pos_x = SPRITE_SIZE // 2
+    relative_pos_y = SPRITE_SIZE // 2 + HITBOX_Y_OFFSET
+    return sprite_position.x + relative_pos_x, sprite_position.y + relative_pos_y
 
 
 def create_bomb(player_entity_id: int, world: zesper.World):
@@ -136,6 +146,7 @@ def handle_input(input_message: InputMessage):
     #       if we want to  remove this process but don't want to stop the state update
 
     if input_message.controller.is_button_pressed(Button.START):
+        menu_box.create_pause_menu(input_message.world)
         input_message.event_list.append(PauseEvent())
         return
 
@@ -184,7 +195,11 @@ def handle_input(input_message: InputMessage):
         if state.has_changed():
             animation_identifier = f'{state.status.name}_{state.direction.name}'
             strip = input_message.world.resource_manager.get_animation_strip(animation_identifier)
-            input_message.world.add_component(input_message.ent_id, cmp.Animation(strip, IDLE_ANIMATION_FRAME))
+            if state.status == state.status.IDLE:
+                input_message.world.component_for_entity(input_message.ent_id, cmp.Renderable).image = strip[0]
+                input_message.world.remove_component(input_message.ent_id, cmp.Animation)
+            else:
+                input_message.world.add_component(input_message.ent_id, cmp.Animation(strip, MOVE_ANIMATION_FRAMES))
         state.refresh()
 
         if input_message.controller.is_button_pressed(Button.B):  # Stop player when is attacking

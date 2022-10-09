@@ -39,6 +39,11 @@ class BaseScene(abc.ABC):
     def on_exit(self):
         pass
 
+    def empty_queues(self):
+        for proc in self.world._processors:
+            proc.events.clear()
+        self.event_manager.event_queue.clear()
+
     def _process_event_queue(self):
         """
         1. Recollect all events from the active system

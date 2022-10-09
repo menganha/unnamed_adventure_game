@@ -17,6 +17,7 @@ if TYPE_CHECKING:
 
 @component
 class Vector:
+    # TODO: Consider reusing the pygame version of the vector class
     x: float = 0.0
     y: float = 0.0
 

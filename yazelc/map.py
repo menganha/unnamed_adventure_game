@@ -11,7 +11,6 @@ from xml.etree import ElementTree
 import pygame
 from pytmx import TiledTileLayer, TiledMap, util_pygame
 
-import zesper
 from yazelc import components as cmp
 from yazelc.font import Font
 from yazelc.items import CollectableItemType
@@ -69,6 +68,8 @@ class Map:
     DOOR_LAYER_NAME = 'doors'
     TEXT_PROPERTY = 'text'
     ITEM_PROPERTY = 'item'
+    FOREGROUND_LAYER_DEPTH = 1000
+    GROUND_LEVEL_DEPTH = 0
 
     def __init__(self, map_file_path: Path, resource_manager: ResourceManager):
         self.map_file_path = map_file_path
@@ -76,9 +77,10 @@ class Map:
         self.tmx_data = TiledMap(str(map_file_path), image_loader=self.yazelc_tiled_image_loader)
         self.width = self.tmx_data.width * self.tmx_data.tilewidth
         self.height = self.tmx_data.height * self.tmx_data.tileheight
-        self.map_layer_entities = []
+        self.layer_entities = []
+        self.object_entities = []
 
-    def get_map_images(self) -> list[pygame.Surface]:
+    def get_map_images(self) -> list[tuple[int, pygame.Surface]]:
         map_width = self.tmx_data.width * self.tmx_data.tilewidth
         map_height = self.tmx_data.height * self.tmx_data.tileheight
         map_image = pygame.Surface((map_width, map_height), flags=pygame.SRCALPHA)
@@ -98,18 +100,10 @@ class Map:
             foreground_layer = self.tmx_data.get_layer_by_name(self.FOREGROUND_LAYER_NAME)
             for x, y, image, in foreground_layer.tiles():
                 map_foreground_image.blit(image, (x * self.tmx_data.tilewidth, y * self.tmx_data.tileheight))
-            return [map_image, map_foreground_image]
+            return [(self.GROUND_LEVEL_DEPTH, map_image), (self.FOREGROUND_LAYER_DEPTH, map_foreground_image)]
         else:
             logging.info(f'No foreground layer named {self.FOREGROUND_LAYER_NAME} found for the map {self.map_file_path}')
-            return [map_image]
-
-    def add_map_to_the_world(self, world: zesper.World):
-        for idx, map_layer in enumerate(self.get_map_images()):
-            layer_entity_id = world.create_entity()
-            world.add_component(layer_entity_id, cmp.Position(x=0, y=0))
-            depth = 1000 * idx
-            world.add_component(layer_entity_id, cmp.Renderable(image=map_layer, depth=depth))
-            self.map_layer_entities.append(layer_entity_id)
+            return [(self.GROUND_LEVEL_DEPTH, map_image)]
 
     def create_objects(self, font: Font) -> Iterator[tuple]:
         if self.OBJECT_LAYER_NAME not in self.tmx_data.layernames:
@@ -162,6 +156,11 @@ class Map:
         center_x = tile_x_pos * self.tmx_data.tilewidth + int(self.tmx_data.tilewidth / 2)
         center_y = tile_y_pos * self.tmx_data.tilewidth + int(self.tmx_data.tileheight / 2)
         return center_x, center_y
+
+    def get_coord_from_tile(self, tile_x_pos: int, tile_y_pos: int) -> (int, int):
+        pos_x = tile_x_pos * self.tmx_data.tilewidth
+        pos_y = tile_y_pos * self.tmx_data.tilewidth
+        return pos_x, pos_y
 
     def yazelc_tiled_image_loader(self, filename: str, color_key: Optional[util_pygame.ColorLike], **kwargs):
         """

@@ -69,6 +69,10 @@ class ResourceManager:
             self._animation_stripes.update({name: strip})
             return strip
 
+    def add_animation_alias(self, name: str, alias: str):
+        animation_strip = self.get_animation_strip(name)
+        self._animation_stripes.update({alias: animation_strip})
+
     def get_texture(self, name: str) -> pygame.Surface:
         return self._textures[name]
 

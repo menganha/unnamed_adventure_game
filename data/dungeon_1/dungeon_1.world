@@ -13,6 +13,13 @@
             "width": 272,
             "x": 272,
             "y": 0
+        },
+        {
+            "fileName": "1_1.tmx",
+            "height": 240,
+            "width": 272,
+            "x": 272,
+            "y": -240
         }
     ],
     "onlyShowAdjacentMaps": false,

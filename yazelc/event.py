@@ -91,7 +91,9 @@ class EventManager:
         while self.event_queue:
             event = self.event_queue.popleft()
             for listener in self.subscribers[event.EVENT_TYPE]:
-                listener()(event)
+                has_been_handled = listener()(event)
+                if has_been_handled:
+                    break
 
     def clear_subscribers(self, event_type: EventType = None):
         if event_type:
@@ -100,8 +102,8 @@ class EventManager:
             self.subscribers = defaultdict(set)
 
     def clear(self):
-        self.subscribers = defaultdict(set)
-        self.event_queue = deque()
+        self.clear_subscribers()
+        self.event_queue.clear()
 
     def _make_callback(self, event_type: EventType):
         """Create a callback to remove dead handlers."""
