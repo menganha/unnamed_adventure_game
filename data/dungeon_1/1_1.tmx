@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <map version="1.9" tiledversion="1.9.2" orientation="orthogonal" renderorder="right-down" width="17" height="15" tilewidth="16"
-     tileheight="16" infinite="0" nextlayerid="6" nextobjectid="146">
+     tileheight="16" infinite="0" nextlayerid="6" nextobjectid="1371">
     <tileset firstgid="1" source="../tilesets/dungeon.tsx"/>
     <layer id="1" name="ground" width="17" height="15">
         <data encoding="csv">
@@ -20,92 +20,91 @@
             718,718,718,718,718,718,718,718,718,718,718,718,718,718,718,718,718,
             718,718,718,718,718,718,718,718,718,718,718,718,718,718,718,718,718
         </data>
- </layer>
- <layer id="2" name="middleground" width="17" height="15">
-     <data encoding="csv">
-         5282,5283,5290,5291,5292,5293,5284,6339,6340,6341,5284,5290,5291,5292,5293,2684360194,2684359842,
-         5634,5635,5640,5640,5640,5640,5640,6691,6692,6693,5640,5640,5640,5640,5640,2684360195,2684359843,
-         1610618025,1610618376,0,0,0,0,0,0,0,0,0,0,0,0,0,2684360200,2684359848,
-         1610618025,1610618376,0,0,0,0,0,0,0,0,0,0,0,0,0,2684360200,2684359848,
-         1610618025,1610618376,0,0,0,0,0,0,0,0,0,0,0,0,0,2684360200,2684359848,
-         1610618024,1610618376,0,0,0,0,0,0,0,0,0,0,0,0,0,2684360200,2684359849,
-         1610619077,1610619429,0,0,0,0,0,0,0,0,0,0,0,0,0,2684361251,2684360899,
-         1610619076,1610619428,0,0,0,0,0,0,9512,0,0,0,0,0,0,2684361252,2684360900,
-         1610619075,1610619427,0,0,0,0,0,0,0,0,0,0,0,0,0,2684361253,2684360901,
-         1610618025,1610618376,0,0,0,0,0,0,0,0,0,0,0,0,0,2684360200,2684359848,
-         1610618025,1610618376,0,0,0,0,0,0,0,0,0,0,0,0,0,2684360200,2684359848,
-         1610618025,1610618376,0,0,0,0,0,0,0,0,0,0,0,0,0,2684360200,2684359848,
-         1610618024,1610618376,0,0,0,0,0,0,0,0,0,0,0,0,0,2684360200,2684359849,
-         1610618019,1610618371,3221231112,3221231112,3221231112,3221231112,3221231112,3221232165,3221232164,3221232163,3221231112,3221231112,3221231112,3221231112,3221231112,3221231107,3221231106,
-         1610618018,1610618370,3221230761,3221230761,3221230761,3221230761,3221230760,3221231813,3221231812,3221231811,3221230761,3221230761,3221230761,3221230761,3221230760,3221230755,3221230754
-     </data>
- </layer>
- <layer id="5" name="foreground" width="17" height="15">
-     <data encoding="csv">
-         0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-         0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-         0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-         0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-         0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-         0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-         0,0,0,0,0,0,0,0,9160,0,0,0,0,0,0,0,0,
-         0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-         0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-         0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-         0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-         0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-         0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-         0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-         0,0,0,0,0,0,0,0,3221231812,0,0,0,0,0,0,0,0
-     </data>
- </layer>
- <objectgroup id="3" name="colliders">
-  <object id="97" x="32" y="16" width="16" height="16"/>
-  <object id="98" x="48" y="16" width="16" height="16"/>
-  <object id="99" x="64" y="16" width="16" height="16"/>
-  <object id="100" x="80" y="16" width="16" height="16"/>
-  <object id="101" x="96" y="16" width="16" height="16"/>
-  <object id="102" x="160" y="16" width="16" height="16"/>
-  <object id="103" x="176" y="16" width="16" height="16"/>
-  <object id="104" x="192" y="16" width="16" height="16"/>
-  <object id="105" x="208" y="16" width="16" height="16"/>
-  <object id="106" x="224" y="16" width="16" height="16"/>
-  <object id="107" x="112" y="16" width="16" height="16"/>
-  <object id="108" x="144" y="16" width="16" height="16"/>
-  <object id="109" x="240" y="32" width="16" height="16"/>
-  <object id="110" x="240" y="48" width="16" height="16"/>
-  <object id="111" x="240" y="64" width="16" height="16"/>
-  <object id="112" x="240" y="80" width="16" height="16"/>
-  <object id="113" x="240" y="144" width="16" height="16"/>
-  <object id="114" x="240" y="160" width="16" height="16"/>
-  <object id="115" x="240" y="176" width="16" height="16"/>
-  <object id="116" x="240" y="192" width="16" height="16"/>
-  <object id="117" x="16" y="96" width="16" height="16"/>
-  <object id="118" x="112" y="208" width="16" height="16"/>
-  <object id="119" x="144" y="208" width="16" height="16"/>
-  <object id="120" x="32" y="208" width="16" height="16"/>
-  <object id="121" x="48" y="208" width="16" height="16"/>
-  <object id="122" x="64" y="208" width="16" height="16"/>
-  <object id="123" x="80" y="208" width="16" height="16"/>
-  <object id="124" x="96" y="208" width="16" height="16"/>
-  <object id="125" x="160" y="208" width="16" height="16"/>
-  <object id="126" x="176" y="208" width="16" height="16"/>
-  <object id="127" x="192" y="208" width="16" height="16"/>
-  <object id="128" x="208" y="208" width="16" height="16"/>
-  <object id="129" x="224" y="208" width="16" height="16"/>
-  <object id="130" x="240" y="96" width="16" height="16"/>
-  <object id="131" x="16" y="128" width="16" height="16"/>
-  <object id="132" x="128" y="112" width="16" height="16"/>
-  <object id="134" x="240" y="128" width="16" height="16"/>
-  <object id="135" x="16" y="32" width="16" height="16"/>
-  <object id="136" x="16" y="48" width="16" height="16"/>
-  <object id="137" x="16" y="64" width="16" height="16"/>
-  <object id="138" x="16" y="80" width="16" height="16"/>
-  <object id="139" x="16" y="144" width="16" height="16"/>
-  <object id="140" x="16" y="160" width="16" height="16"/>
-  <object id="141" x="16" y="176" width="16" height="16"/>
-  <object id="142" x="16" y="192" width="16" height="16"/>
- </objectgroup>
+    </layer>
+    <layer id="2" name="middleground" width="17" height="15">
+        <data encoding="csv">
+            5282,5283,5290,5291,5292,5293,5284,6339,6340,6341,5284,5290,5291,5292,5293,2684360194,2684359842,
+            5634,5635,5640,5640,5640,5640,5640,6691,6692,6693,5640,5640,5640,5640,5640,2684360195,2684359843,
+            1610618025,1610618376,0,0,0,0,0,0,0,0,0,0,0,0,0,2684360200,2684359848,
+            1610618025,1610618376,0,0,0,0,0,0,0,0,0,0,0,0,0,2684360200,2684359848,
+            1610618025,1610618376,0,0,0,0,0,0,0,0,0,0,0,0,0,2684360200,2684359848,
+            1610618024,1610618376,0,0,0,0,0,0,0,0,0,0,0,0,0,2684360200,2684359849,
+            1610619077,1610619429,0,0,0,0,0,0,0,0,0,0,0,0,0,2684361251,2684360899,
+            1610619076,1610619428,0,0,0,0,0,0,9512,0,0,0,0,0,0,2684361252,2684360900,
+            1610619075,1610619427,0,0,0,0,0,0,0,0,0,0,0,0,0,2684361253,2684360901,
+            1610618025,1610618376,0,0,0,0,0,0,0,0,0,0,0,0,0,2684360200,2684359848,
+            1610618025,1610618376,0,0,0,0,0,0,0,0,0,0,0,0,0,2684360200,2684359848,
+            1610618025,1610618376,0,0,0,0,0,0,0,0,0,0,0,0,0,2684360200,2684359848,
+            1610618024,1610618376,0,0,0,0,0,0,0,0,0,0,0,0,0,2684360200,2684359849,
+            1610618019,1610618371,3221231112,3221231112,3221231112,3221231112,3221231112,3221232165,3221232164,3221232163,3221231112,3221231112,3221231112,3221231112,3221231112,3221231107,3221231106,
+            1610618018,1610618370,3221230761,3221230761,3221230761,3221230761,3221230760,3221231813,3221231812,3221231811,3221230761,3221230761,3221230761,3221230761,3221230760,3221230755,3221230754
+        </data>
+    </layer>
+    <layer id="5" name="foreground" width="17" height="15">
+        <data encoding="csv">
+            0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+            0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+            0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+            0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+            0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+            0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+            0,0,0,0,0,0,0,0,9160,0,0,0,0,0,0,0,0,
+            0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+            0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+            0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+            0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+            0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+            0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+            0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+            0,0,0,0,0,0,0,0,3221231812,0,0,0,0,0,0,0,0
+        </data>
+    </layer>
+    <objectgroup id="3" name="colliders">
+        <object id="240" x="32" y="16" width="16" height="16"/>
+        <object id="241" x="48" y="16" width="16" height="16"/>
+        <object id="242" x="64" y="16" width="16" height="16"/>
+        <object id="243" x="80" y="16" width="16" height="16"/>
+        <object id="244" x="96" y="16" width="16" height="16"/>
+        <object id="245" x="160" y="16" width="16" height="16"/>
+        <object id="246" x="176" y="16" width="16" height="16"/>
+        <object id="247" x="192" y="16" width="16" height="16"/>
+        <object id="248" x="208" y="16" width="16" height="16"/>
+        <object id="249" x="224" y="16" width="16" height="16"/>
+        <object id="250" x="112" y="16" width="16" height="16"/>
+        <object id="251" x="144" y="16" width="16" height="16"/>
+        <object id="252" x="240" y="32" width="16" height="16"/>
+        <object id="253" x="240" y="48" width="16" height="16"/>
+        <object id="254" x="240" y="64" width="16" height="16"/>
+        <object id="255" x="240" y="80" width="16" height="16"/>
+        <object id="256" x="240" y="144" width="16" height="16"/>
+        <object id="257" x="240" y="160" width="16" height="16"/>
+        <object id="258" x="240" y="176" width="16" height="16"/>
+        <object id="259" x="240" y="192" width="16" height="16"/>
+        <object id="260" x="16" y="96" width="16" height="16"/>
+        <object id="261" x="112" y="208" width="16" height="16"/>
+        <object id="262" x="144" y="208" width="16" height="16"/>
+        <object id="263" x="32" y="208" width="16" height="16"/>
+        <object id="264" x="48" y="208" width="16" height="16"/>
+        <object id="265" x="64" y="208" width="16" height="16"/>
+        <object id="266" x="80" y="208" width="16" height="16"/>
+        <object id="267" x="96" y="208" width="16" height="16"/>
+        <object id="268" x="160" y="208" width="16" height="16"/>
+        <object id="269" x="176" y="208" width="16" height="16"/>
+        <object id="270" x="192" y="208" width="16" height="16"/>
+        <object id="271" x="208" y="208" width="16" height="16"/>
+        <object id="272" x="224" y="208" width="16" height="16"/>
+        <object id="273" x="240" y="96" width="16" height="16"/>
+        <object id="274" x="16" y="128" width="16" height="16"/>
+        <object id="275" x="240" y="128" width="16" height="16"/>
+        <object id="276" x="16" y="32" width="16" height="16"/>
+        <object id="277" x="16" y="48" width="16" height="16"/>
+        <object id="278" x="16" y="64" width="16" height="16"/>
+        <object id="279" x="16" y="80" width="16" height="16"/>
+        <object id="280" x="16" y="144" width="16" height="16"/>
+        <object id="281" x="16" y="160" width="16" height="16"/>
+        <object id="282" x="16" y="176" width="16" height="16"/>
+        <object id="283" x="16" y="192" width="16" height="16"/>
+    </objectgroup>
  <objectgroup id="4" name="doors">
   <object id="95" x="128" y="12" width="16" height="4">
    <properties>
@@ -121,26 +120,19 @@
     <property name="target_y" type="int" value="0"/>
    </properties>
   </object>
-  <object id="143" x="128" y="12" width="16" height="4">
-   <properties>
-    <property name="target_door" value="''"/>
-    <property name="target_x" type="int" value="0"/>
-    <property name="target_y" type="int" value="0"/>
-   </properties>
-  </object>
-  <object id="144" x="260" y="112" width="16" height="4" rotation="90">
-   <properties>
-    <property name="target_door" value="''"/>
-    <property name="target_x" type="int" value="0"/>
-    <property name="target_y" type="int" value="0"/>
-   </properties>
-  </object>
-  <object id="145" x="128" y="224" width="16" height="4">
-   <properties>
-    <property name="target_door" value="dungeon_1:1_0.tmx"/>
-    <property name="target_x" type="int" value="8"/>
-    <property name="target_y" type="int" value="1"/>
-   </properties>
-  </object>
+     <object id="145" x="128" y="224" width="16" height="4">
+         <properties>
+             <property name="target_door" value="dungeon_1:1_0.tmx"/>
+             <property name="target_x" type="int" value="8"/>
+             <property name="target_y" type="int" value="1"/>
+         </properties>
+     </object>
+     <object id="284" x="128" y="12" width="16" height="4">
+         <properties>
+             <property name="target_door" value="''"/>
+             <property name="target_x" type="int" value="0"/>
+             <property name="target_y" type="int" value="0"/>
+         </properties>
+     </object>
  </objectgroup>
 </map>

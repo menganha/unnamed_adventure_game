@@ -4,6 +4,7 @@ from typing import Optional
 import pygame
 
 from yazelc import zesper
+from yazelc.clock import Clock
 from yazelc.event import EventManager
 
 
@@ -16,6 +17,7 @@ class BaseScene(abc.ABC):
         self.window: pygame.Surface = window
         self.world: zesper.World = zesper.World()
         self.event_manager: EventManager = EventManager()
+        self.clock: Clock = Clock()
         self.in_scene: bool = True
         self.paused: bool = False
         self.next_scene: Optional['BaseScene'] = None
@@ -31,6 +33,7 @@ class BaseScene(abc.ABC):
                 if event.type == pygame.QUIT:
                     self.in_scene = False
                     self.next_scene = None
+            self._process_clock_events()
             self._process_event_queue()
             self.world.process()
         self.event_manager.clear_subscribers()
@@ -60,3 +63,9 @@ class BaseScene(abc.ABC):
             for proc in self.world._processors:
                 self.event_manager.add_events(proc.events)
                 proc.events.clear()
+
+    def _process_clock_events(self):
+        for proc in self.world._processors:
+            self.clock.timer_events.extend(proc.timers)
+            proc.timers.clear()
+        self.clock.tick()

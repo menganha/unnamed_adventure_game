@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass as component
-from dataclasses import field, InitVar
-from typing import Any, TYPE_CHECKING
+from dataclasses import field
+from typing import TYPE_CHECKING
 
 import pygame
 
@@ -14,40 +14,22 @@ from yazelc.utils.game_utils import Direction
 if TYPE_CHECKING:
     from yazelc.systems.input_system import InputMessage
 
-
-@component
-class Vector:
-    # TODO: Consider reusing the pygame version of the vector class
-    x: float = 0.0
-    y: float = 0.0
+Vector = pygame.Vector2
+Velocity = pygame.Vector2
 
 
-@component
-class Position(Vector):
+class Position(pygame.Vector2):
     """
     Absolute position of the entity, i.e., not the one relative to the window unless the absolute
     flag is on. This one is used for entities that should be on the screen no matter where the
     camera is positioned
     """
-    absolute: bool = False
-    prev_x: float = field(init=False)
-    prev_y: float = field(init=False)
 
-    def __post_init__(self):
-        self.prev_x = self.x
-        self.prev_y = self.y
-
-    def __add__(self, other_position):
-        return Position(self.x + other_position.x, self.y + other_position.y)
-
-    def __sub__(self, other_position):
-        return Position(self.x - other_position.x, self.y - other_position.y)
-
-
-@component
-class Velocity(Vector):
-    pass
-    # TODO: Make velocity and position to be strictly an integer. It is possible and more consistent
+    def __init__(self, x: float, y: float, absolute: bool = False):
+        super().__init__(x, y)
+        self.absolute = absolute
+        self.prev_x: float = x
+        self.prev_y: float = y
 
 
 @component
@@ -119,8 +101,8 @@ class Health:
     cool_down_counter: int = field(init=False, default=0)
 
 
-@component
-class HitBox:
+# @component
+class HitBox(pygame.Rect):
     """
     Pygame is made such that hitboxes contain also a position. Therefore, is difficult to separate the components, i.e.,
     Position and a "Hitbox" component in a "clean way".
@@ -128,17 +110,16 @@ class HitBox:
     real Position component. Nevertheless, this internal position of the Hitbox also represent the absolute position of
     it.
     """
-    x_pos: InitVar[int]
-    y_pos: InitVar[int]
-    width: InitVar[int]
-    height: InitVar[int]
-    scale_offset: int = 0
-    impenetrable: bool = False
-    rect: pygame.Rect = field(init=False)
 
-    def __post_init__(self, x_pos: int, y_pos: int, width: int, height: int):
-        self.rect = pygame.Rect(x_pos, y_pos, width, height)
-        self.rect.inflate_ip(self.scale_offset, self.scale_offset)
+    def __init__(self, x_pos: int, y_pos: int, width: int, height: int, impenetrable: bool = False):
+        super().__init__(x_pos, y_pos, width, height)
+        self.impenetrable = impenetrable
+
+    def move(self, x: int, y: int) -> 'HitBox':
+        new_hitbox = super().move(x, y)
+        print(type(new_hitbox))
+        new_hitbox.impenetrable = self.impenetrable
+        return new_hitbox
 
 
 @component
@@ -169,22 +150,6 @@ class Weapon:
     active_frames: int = 20  # -1 means is infinite
     freeze_frames: int = 0  # frames of input blocked when hit
     recoil_velocity: int = 0
-
-
-@component
-class Timer:
-    """
-    Sends a clock signal at a delayed time optionally repeating itself indefinitely
-    Optionally we can set a callback function with arguments
-    """
-
-    def __init__(self, delay: int | list[int], callback: Callable | list[Callable] = None, **kwargs: Any):
-        self.delays = [delay] if isinstance(delay, int) else delay
-        self.callbacks = [callback] if isinstance(callback, Callable) else callback
-        self.kwargs = kwargs
-        self.tick = self.delays[0]
-        self.callback_index = 0
-        assert len(self.delays) == len(self.callbacks) or len(self.delays) == 1
 
 
 @component

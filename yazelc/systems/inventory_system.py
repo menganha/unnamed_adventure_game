@@ -1,8 +1,7 @@
-import copy
-
 from yazelc import items
 from yazelc import zesper
-from yazelc.components import Collectable, InteractorTag, Health, Animation, Renderable, Position, Velocity, Timer
+from yazelc.clock import Timer
+from yazelc.components import Collectable, InteractorTag, Health, Animation, Renderable, Position, Velocity
 from yazelc.event import CollisionEvent, HudUpdateEvent
 from yazelc.player.player import MAX_HEALTH
 
@@ -48,9 +47,10 @@ class InventorySystem(zesper.Processor):
             # Add animation of elevating item
             images = items.get_images(self.world, collectable.item_type)
             renderable = Renderable(images[0], depth=200)
-            position = copy.copy(self.world.component_for_entity(collectable_ent_id, Position))
-            position.y -= self.TREASURE_OBJECT_OFFSET
+            object_position = self.world.component_for_entity(collectable_ent_id, Position)
+            position = Position(object_position.x, object_position.y - self.TREASURE_OBJECT_OFFSET)
             velocity = Velocity(0, self.TREASURE_OBJECT_VELOCITY)
+
             item_collected_entity = self.world.create_entity(velocity, position, renderable)
 
             # First script
@@ -58,9 +58,11 @@ class InventorySystem(zesper.Processor):
                 vel = self.world.component_for_entity(entity, Velocity)
                 vel.y = 0
 
-            timer_to_stop = Timer([self.TREASURE_OBJECT_LIFETIME, self.TREASURE_OBJECT_STOP_TIME],
-                                  [stop_entity, self.world.delete_entity], entity=item_collected_entity)
-            self.world.add_component(item_collected_entity, timer_to_stop)
+            delay = self.TREASURE_OBJECT_LIFETIME
+            stop_entity_timer = Timer(delay, False, stop_entity, item_collected_entity)
+            delay += self.TREASURE_OBJECT_LIFETIME
+            delete_entity_timer = Timer(delay, False, self.world.delete_entity, item_collected_entity)
+            self.timers.extend([stop_entity_timer, delete_entity_timer])
 
             self._add_pickable(collectable, self.player_entity_id)
             self.world.remove_component(collectable_ent_id, Collectable)

@@ -46,7 +46,7 @@ class WorldMap:
     def get_world_map_file_path(map_file_path: Path) -> Path:
         list_world_map_files = list(map_file_path.parent.glob(f'*{WorldMap.WORLD_MAP_SUFFIX}'))
         if len(list_world_map_files) != 1:
-            raise RuntimeError(f'None or more than one world file on the folder f{map_file_path.parent}')
+            raise RuntimeError(f'None or more than one world file on the folder {map_file_path.parent}')
         return list_world_map_files[0]
 
     @classmethod
@@ -63,6 +63,7 @@ class Map:
     DOOR_PATH_SEP = ':'
     FOREGROUND_LAYER_NAME = 'foreground'
     OBJECT_LAYER_NAME = 'colliders'
+    INTERACTIVE_OBJECT_LAYER_NAME = 'interactive'
     ENEMY_LAYER_NAME = 'enemy'
     ENEMY_PROP = 'enemy'
     DOOR_LAYER_NAME = 'doors'
@@ -105,11 +106,21 @@ class Map:
             logging.info(f'No foreground layer named {self.FOREGROUND_LAYER_NAME} found for the map {self.map_file_path}')
             return [(self.GROUND_LEVEL_DEPTH, map_image)]
 
-    def create_objects(self, font: Font) -> Iterator[tuple]:
+    def create_objects(self) -> Iterator[tuple]:
         if self.OBJECT_LAYER_NAME not in self.tmx_data.layernames:
             logging.info(f'No {self.OBJECT_LAYER_NAME} layer found for the map {self.map_file_path}')
             return
         for obj in self.tmx_data.get_layer_by_name(self.OBJECT_LAYER_NAME):
+            hit_box = cmp.HitBox(obj.x, obj.y, obj.width, obj.height, impenetrable=True)
+            position = cmp.Position(obj.x, obj.y)
+            components = (hit_box,)
+            yield components
+
+    def create_interactive_objects(self, font: Font) -> Iterator[tuple]:
+        if self.INTERACTIVE_OBJECT_LAYER_NAME not in self.tmx_data.layernames:
+            logging.info(f'No {self.INTERACTIVE_OBJECT_LAYER_NAME} layer found for the map {self.map_file_path}')
+            return
+        for obj in self.tmx_data.get_layer_by_name(self.INTERACTIVE_OBJECT_LAYER_NAME):
             hit_box = cmp.HitBox(obj.x, obj.y, obj.width, obj.height, impenetrable=True)
             position = cmp.Position(obj.x, obj.y)
             if self.TEXT_PROPERTY in obj.properties:
@@ -117,13 +128,12 @@ class Map:
                     logging.error('Sign has no dialog')
                 dialog = cmp.Dialog(obj.properties[self.TEXT_PROPERTY], font)
                 components = (hit_box, dialog)
+                yield components
             elif self.ITEM_PROPERTY in obj.properties:
                 # TODO: Default value of all chested items
                 collectable = cmp.Collectable(CollectableItemType(obj.properties[self.ITEM_PROPERTY]), 1, in_chest=True)
                 components = (hit_box, collectable, position)
-            else:
-                components = (hit_box,)
-            yield components
+                yield components
 
     def create_doors(self) -> Iterator[tuple]:
         if self.DOOR_LAYER_NAME not in self.tmx_data.layernames:

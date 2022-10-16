@@ -2,12 +2,11 @@
 The module gathers functions that add commonly used entities to an input world
 """
 
-from copy import copy
-
 from yazelc import components as cmp
 from yazelc import config as cfg
 from yazelc import visual_effects as vfx
 from yazelc import zesper
+from yazelc.clock import Timer
 from yazelc.controller import Button
 from yazelc.event import PauseEvent
 from yazelc.menu import menu_box
@@ -55,7 +54,7 @@ def create_player_at(center_x_pos: int, center_y_pos: int, world: zesper.World) 
 
     # HitBox
     hitbox_component = cmp.HitBox(0, 0, HITBOX_WIDTH, HITBOX_HEIGHT)
-    hitbox_component.rect.center = (center_x_pos, center_y_pos)
+    hitbox_component.center = (center_x_pos, center_y_pos)
     world.add_component(player_entity_id, hitbox_component)
 
     # Other components
@@ -72,17 +71,17 @@ def get_position_of_sprite(hitbox: cmp.HitBox):
     """ Gets the position of the sprite from the player's Hitbox """
     relative_pos_x = SPRITE_SIZE // 2
     relative_pos_y = SPRITE_SIZE // 2 + HITBOX_Y_OFFSET
-    return hitbox.rect.centerx - relative_pos_x, hitbox.rect.centery - relative_pos_y
+    return hitbox.centerx - relative_pos_x, hitbox.centery - relative_pos_y
 
 
 def get_position_of_hitbox(sprite_position: cmp.Position):
-    """ Gets the position of the center hitbox from the from the player's postion """
+    """ Gets the position of the center hitbox from the player's position """
     relative_pos_x = SPRITE_SIZE // 2
     relative_pos_y = SPRITE_SIZE // 2 + HITBOX_Y_OFFSET
     return sprite_position.x + relative_pos_x, sprite_position.y + relative_pos_y
 
 
-def create_bomb(player_entity_id: int, world: zesper.World):
+def create_bomb(player_entity_id: int, world: zesper.World, timers: list[Timer]):
     bomb_explosion_delay_time = 100
     bomb_entity = world.create_entity()
     strip = world.resource_manager.get_animation_strip(BOMB_SPRITES_ID)
@@ -104,16 +103,17 @@ def create_bomb(player_entity_id: int, world: zesper.World):
     frame_sequence = [0] * 52 + [0, 0, 1, 1, 2, 2] * 8
     world.add_component(bomb_entity, cmp.Animation(strip, 0, frame_sequence))
     world.add_component(bomb_entity, cmp.Position(bomb_position_x, bomb_position_y))
-    world.add_component(bomb_entity, cmp.Timer(delay=bomb_explosion_delay_time, callback=create_bomb_hitbox, **script_arguments))
+    timers.append(Timer(bomb_explosion_delay_time, False, create_bomb_hitbox, **script_arguments))
 
 
 def create_bomb_hitbox(bomb_entity_id: int, x_pos: int, y_pos: int, world: zesper.World):
     bomb_range = 20
     hitbox = cmp.HitBox(0, 0, bomb_range * 2, bomb_range * 2)
-    hitbox.rect.center = x_pos, y_pos
+    hitbox.center = x_pos, y_pos
     world.add_component(bomb_entity_id, hitbox)
     world.add_component(bomb_entity_id, cmp.Weapon(damage=BOMB_DAMAGE, active_frames=10))
-    vfx.create_explosion(hitbox.rect.centerx, hitbox.rect.centery, 60, bomb_range, cfg.C_RED, world)
+    position = cmp.Position(*hitbox.center)
+    vfx.create_explosion(position, 60, bomb_range, cfg.C_RED, world)
 
 
 def create_melee_weapon(player_entity_id: int, world: zesper.World):
@@ -127,18 +127,18 @@ def create_melee_weapon(player_entity_id: int, world: zesper.World):
     strip = world.resource_manager.get_animation_strip(f'wooden_sword_{direction.name}')
     world.add_component(weapon_entity_id, cmp.Animation(strip, ATTACK_ANIMATION_FRAMES, one_loop=True))
     world.add_component(weapon_entity_id, cmp.Renderable(strip[0], SPRITE_DEPTH + 1))
-    position = copy(world.component_for_entity(player_entity_id, cmp.Position))
-    position.x = position.x - (SWORD_SPRITE_WIDTH - SPRITE_SIZE) // 2
-    position.y = position.y - (SWORD_SPRITE_WIDTH - SPRITE_SIZE) // 2
-    world.add_component(weapon_entity_id, position)
+    player_position = world.component_for_entity(player_entity_id, cmp.Position)
+    weapon_position_x = player_position.x - (SWORD_SPRITE_WIDTH - SPRITE_SIZE) // 2
+    weapon_position_y = player_position.y - (SWORD_SPRITE_WIDTH - SPRITE_SIZE) // 2
+    world.add_component(weapon_entity_id, cmp.Position(weapon_position_x, weapon_position_y))
 
 
-def create_interactive_hitbox(player_entity_id: int, world: zesper.World):
+def create_interactive_hitbox(player_entity_id: int, world: zesper.World, timers: list[Timer]):
     """ Creates a hitbox to detect interaction with other objects """
     entity_id = _create_hitbox_in_front(player_entity_id, INTERACTIVE_FRONT_RANGE, INTERACTIVE_SIDE_RANGE, world)
     world.add_component(entity_id, cmp.InteractorTag())
     frames_until_destroyed = 0
-    world.add_component(entity_id, cmp.Timer(frames_until_destroyed, world.delete_entity, entity=entity_id))
+    timers.append(Timer(frames_until_destroyed, False, world.delete_entity, entity_id))
 
 
 def handle_input(input_message: InputMessage):
@@ -221,13 +221,13 @@ def handle_input(input_message: InputMessage):
             input_.block_counter = SWORD_ACTIVE_FRAMES - 1
 
         if input_message.controller.is_button_pressed(Button.A):
-            create_interactive_hitbox(input_message.ent_id, input_message.world)
+            create_interactive_hitbox(input_message.ent_id, input_message.world, input_message.timers)
 
         if input_message.controller.is_button_pressed(Button.L):
-            vfx.create_explosion(position.x, position.y, 30, 30, cfg.C_WHITE, input_message.world)
+            vfx.create_explosion(position, 30, 30, cfg.C_WHITE, input_message.world)
 
         if input_message.controller.is_button_pressed(Button.X):
-            create_bomb(input_message.ent_id, input_message.world)
+            create_bomb(input_message.ent_id, input_message.world, input_message.timers)
 
         if input_message.controller.is_button_pressed(Button.SELECT):
             cfg.DEBUG_MODE = not cfg.DEBUG_MODE
@@ -242,8 +242,8 @@ def _create_hitbox_in_front(player_entity_id: int, front_range: int, side_range:
         hitbox = cmp.HitBox(0, 0, side_range, front_range)
 
     player_hitbox = world.component_for_entity(player_entity_id, cmp.HitBox)
-    hitbox.rect.centerx = player_hitbox.rect.centerx + int((player_hitbox.rect.w + front_range) * direction.value.x) / 2
-    hitbox.rect.centery = player_hitbox.rect.centery + int((player_hitbox.rect.h + front_range) * direction.value.y) / 2
+    hitbox.centerx = player_hitbox.centerx + int((player_hitbox.w + front_range) * direction.value.x) / 2
+    hitbox.centery = player_hitbox.centery + int((player_hitbox.h + front_range) * direction.value.y) / 2
 
     hitbox_entity_id = world.create_entity()
     world.add_component(hitbox_entity_id, hitbox)

@@ -5,6 +5,7 @@ from typing import TypeVar, Optional, Union, Type
 
 from esper import *
 
+from yazelc.clock import Timer
 from yazelc.event import Event
 from yazelc.resource_manager import ResourceManager
 
@@ -16,6 +17,7 @@ class Processor(Processor):  # noqa
 
     def __init__(self):
         self.events: deque[Event] = deque()
+        self.timers: list[Timer] = list()
 
 
 class World(World):
@@ -71,7 +73,7 @@ class World(World):
         return processors_to_remove
 
     def clear_processors(self):
-        self._processors = []
+        self._processors.clear()
 
     def clear_database(self) -> None:
         super().clear_database()

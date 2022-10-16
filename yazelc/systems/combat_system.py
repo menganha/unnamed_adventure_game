@@ -3,6 +3,7 @@ import logging
 from yazelc import components as cmp
 from yazelc import config as cfg
 from yazelc import zesper
+from yazelc.clock import Timer
 from yazelc.event import DeathEvent, HudUpdateEvent, CollisionEvent
 from yazelc.items import CollectableItemType
 from yazelc.utils.game_utils import Direction
@@ -29,12 +30,30 @@ class CombatSystem(zesper.Processor):
             if health.cool_down_counter > 0:
                 health.cool_down_counter -= 1
             if health.points <= 0:  # Using the "<" condition for cases when the inflicted damage is to big that results in negative health
-                center = self.world.component_for_entity(ent, cmp.HitBox).rect.center
                 if ent == self.player_entity_id:
                     self.events.append(DeathEvent())
                 else:
-                    create_explosion(center[0], center[1], 50, 20, cfg.C_RED, self.world)
-                    self.world.delete_entity(ent)
+                    position = self.world.component_for_entity(ent, cmp.Position)
+
+                    # image = self.world.component_for_entity(ent, cmp.Renderable).image  # TEST
+                    # image.set_palette([cfg.C_RED, cfg.C_BLUE, cfg.C_WHITE])
+                    if self.world.has_component(ent, cmp.Weapon):
+                        self.world.remove_component(ent, cmp.Weapon)
+                    if self.world.has_component(ent, cmp.Brain):
+                        self.world.remove_component(ent, cmp.Brain)
+                    self.world.remove_component(ent, cmp.Input)
+                    self.world.remove_component(ent, cmp.Health)
+
+                    time_to_explosion = 20
+                    explosion_kwargs = {'position': position, 'n_particles': 50, 'max_vel': 20, 'color': cfg.C_RED,
+                                        'world': self.world}
+                    self.timers.append(Timer(time_to_explosion, False, create_explosion, **explosion_kwargs))
+
+                    time_to_remove = time_to_explosion
+                    self.timers.append(Timer(time_to_remove, False, self.world.delete_entity, ent))
+
+                    # else:
+                    #     create_explosion(center[0], center[1], 50, 20, cfg.C_RED, self.world)
 
     def on_collision(self, collision_event: CollisionEvent):
 
@@ -58,9 +77,9 @@ class CombatSystem(zesper.Processor):
             victim_hitbox = self.world.component_for_entity(victim, cmp.HitBox)
             weapon_hitbox = self.world.component_for_entity(attacker, cmp.HitBox)
 
-            rel_pos_x = victim_hitbox.rect.centerx - weapon_hitbox.rect.centerx
-            rel_pos_y = victim_hitbox.rect.centery - weapon_hitbox.rect.centery
-            recoil_direction = Direction.closest_direction(rel_pos_x, rel_pos_y)
+            rel_pos_x = victim_hitbox.centerx - weapon_hitbox.centerx
+            rel_pos_y = victim_hitbox.centery - weapon_hitbox.centery
+            recoil_direction = Direction.closest_diagonal_direction(rel_pos_x, rel_pos_y)
             victim_vel.x = recoil_direction.value.x * attacker_weapon.recoil_velocity
             victim_vel.y = recoil_direction.value.y * attacker_weapon.recoil_velocity
 

@@ -18,23 +18,30 @@ class CollisionSystem(zesper.Processor):
         hitboxes = self.world.get_component(HitBox)
         for index, (ent_1, hitbox_1) in enumerate(hitboxes):
             for ent_2, hitbox_2 in hitboxes[index + 1:]:
-                if hitbox_1.rect.colliderect(hitbox_2.rect):
+                if hitbox_1.colliderect(hitbox_2):
                     self.events.append(CollisionEvent(ent_1, ent_2))
         # TODO: Door and Dialog box are constantly colliding
 
         # Resolves impenetrable hitboxes by moving objects
-        impenetrable_hitboxes_rects = [hitbox.rect for ent, hitbox in hitboxes if hitbox.impenetrable]
+        impenetrable_hitboxes = [hitbox for ent, hitbox in hitboxes if hitbox.impenetrable]
         for ent, (hitbox, position, velocity) in self.world.get_components(HitBox, Position, Velocity):
-            if hitbox.rect.collidelist(impenetrable_hitboxes_rects) != -1:
-                for dir_x, dir_y in ((1, 0), (0, 1), (1, 1)):
-                    delta_x = (round(position.x) - round(position.prev_x)) * dir_x
-                    delta_y = (round(position.y) - round(position.prev_y)) * dir_y
-                    test_rect = hitbox.rect.move(-delta_x, -delta_y)
-                    if test_rect.collidelist(impenetrable_hitboxes_rects) == -1:
-                        hitbox.rect = test_rect
-                        position.x = round(position.x - velocity.x * dir_x)
-                        position.y = round(position.y - velocity.y * dir_y)
-                        break
+            if hitbox.collidelist(impenetrable_hitboxes) != -1:
+                if False:  # ent == player_ent and not collision_with_inner_hitbox():
+                    pass  # some_function()
+                    # collision with inner box should be a function of inflate. Check for that the inner inbox is always cenetered
+                    # Check on which corner is colliding. if it's moving up, check the two upper ones. collide_with_point may help
+                    # Move in the oposite of that corner and using the movement oposite to that direction.
+                else:
+                    # TODO: refactor this in its own function
+                    for dir_x, dir_y in ((1, 0), (0, 1), (1, 1)):
+                        delta_x = (round(position.x) - round(position.prev_x)) * dir_x
+                        delta_y = (round(position.y) - round(position.prev_y)) * dir_y
+                        test_hitbox = hitbox.move(-delta_x, -delta_y)
+                        if test_hitbox.collidelist(impenetrable_hitboxes) == -1:
+                            hitbox.move_ip(-delta_x, -delta_y)
+                            position.x = round(position.x - velocity.x * dir_x)
+                            position.y = round(position.y - velocity.y * dir_y)
+                            break
 
         # static_hitbox_rects = {ent: hitbox.rect for ent, hitbox in self.world.get_component(HitBox) if
         #                        not self.world.has_component(ent, Velocity)}

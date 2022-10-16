@@ -1,0 +1,13 @@
+{
+    "maps": [
+        {
+            "fileName": "emil.tmx",
+            "height": 240,
+            "width": 272,
+            "x": 0,
+            "y": 0
+        }
+    ],
+    "onlyShowAdjacentMaps": false,
+    "type": "world"
+}

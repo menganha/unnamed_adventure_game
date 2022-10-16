@@ -32,7 +32,6 @@ from yazelc.systems.input_system import InputSystem
 from yazelc.systems.inventory_system import InventorySystem
 from yazelc.systems.movement_system import MovementSystem
 from yazelc.systems.render_system import RenderSystem
-from yazelc.systems.script_system import ClockSystem
 from yazelc.systems.visual_effects_system import VisualEffectsSystem
 from yazelc.utils.game_utils import Direction, Status
 
@@ -51,10 +50,9 @@ FONT_COLOR = cfg.C_WHITE
 BOMB_IMG_PATH = Path('assets', 'sprites', 'bomb.png')
 MAP_VELOCITY_TRANSITION = 4
 PROCESSOR_PRIORITY = {
-    AISystem: 12,
-    InputSystem: 11,
-    MovementSystem: 10,
-    ClockSystem: 9,
+    AISystem: 11,
+    InputSystem: 10,
+    MovementSystem: 9,
     CollisionSystem: 8,
     DialogSystem: 7,
     CombatSystem: 6,
@@ -96,7 +94,7 @@ class GameplayScene(BaseScene):
             velocity = self.world.component_for_entity(self.player_entity_id, cmp.Velocity)
             hitbox = self.world.component_for_entity(self.player_entity_id, cmp.HitBox)
             velocity.x, velocity.y = (0, 0)
-            hitbox.rect.center = (player_x_pos, player_y_pos)
+            hitbox.center = (player_x_pos, player_y_pos)
             position.x, position.y = player.get_position_of_sprite(hitbox)
 
         # Add camera entity
@@ -129,7 +127,6 @@ class GameplayScene(BaseScene):
         self.world.add_processor(AISystem(), PROCESSOR_PRIORITY[AISystem])
         self.world.add_processor(InputSystem(controller), PROCESSOR_PRIORITY[InputSystem])
         self.world.add_processor(MovementSystem(), PROCESSOR_PRIORITY[MovementSystem])
-        self.world.add_processor(ClockSystem(), PROCESSOR_PRIORITY[ClockSystem])
         self.world.add_processor(CollisionSystem(), PROCESSOR_PRIORITY[CollisionSystem])
         self.world.add_processor(dialog_system, PROCESSOR_PRIORITY[DialogSystem])
         self.world.add_processor(combat_system, PROCESSOR_PRIORITY[CombatSystem])
@@ -204,7 +201,10 @@ class GameplayScene(BaseScene):
 
     def _generate_objects(self):
         dialog_font = self.world.resource_manager.get_font(dialog_box.DIALOG_FONT_ID)
-        for components in self.maps.create_objects(dialog_font):
+        for components in self.maps.create_objects():
+            ent_id = self.world.create_entity(*components)
+            self.maps.object_entities.append(ent_id)
+        for components in self.maps.create_interactive_objects(dialog_font):
             ent_id = self.world.create_entity(*components)
             self.maps.object_entities.append(ent_id)
         for door, hitbox in self.maps.create_doors():
@@ -293,6 +293,7 @@ class GameplayScene(BaseScene):
                 # Run the animation. Remove magic numbers
                 distance = (cfg.RESOLUTION.x if abs(normal[0]) > ZERO_THRESHOLD else cfg.RESOLUTION.y)
                 frames_to_exit = round(distance / MAP_VELOCITY_TRANSITION)
+                # TODO: The amount of tiles is variable. For example for transitions without doors it , e.g., 1.2 instead of 3
                 velocity_for_three_tiles = [map_vel + 3 * cfg.TILE_WIDTH * nor / frames_to_exit for (map_vel, nor) in
                                             zip(map_velocity, normal)]
                 player_velocity.x, player_velocity.y = velocity_for_three_tiles
@@ -302,7 +303,7 @@ class GameplayScene(BaseScene):
 
                 player_velocity.x, player_velocity.y = 0, 0
                 player_position.x, player_position.y = self.maps.get_coord_from_tile(door.target_x, door.target_y)
-                player_hitbox.rect.centerx, player_hitbox.rect.centery = player.get_position_of_hitbox(player_position)
+                player_hitbox.centerx, player_hitbox.centery = player.get_position_of_hitbox(player_position)
 
                 # Remove velocity components and delete old map layer entities
                 for layer_entity_id in self.maps.layer_entities:

@@ -42,8 +42,8 @@ class RenderSystem(zesper.Processor):
 
         if cfg.DEBUG_MODE:  # On debug mode then render all hitboxes
             for ent, (hitbox) in self.world.get_component(cmp.HitBox):
-                hb_surface = pygame.Surface((hitbox.rect.w, hitbox.rect.h), flags=pygame.SRCALPHA)
+                hb_surface = pygame.Surface((hitbox.w, hitbox.h), flags=pygame.SRCALPHA)
                 hb_surface.fill(cfg.C_BLUE)
-                self.window.blit(hb_surface, (hitbox.rect.x - round(camera_pos.x), hitbox.rect.y - round(camera_pos.y)))
+                self.window.blit(hb_surface, (hitbox.x - round(camera_pos.x), hitbox.y - round(camera_pos.y)))
 
         pygame.display.flip()

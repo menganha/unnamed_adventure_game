@@ -28,7 +28,8 @@ def closing_circle(player_entity_id: int, camera: Camera, world: zesper.World):
 
     # Continue running through the door
     velocity = world.component_for_entity(player_entity_id, cmp.Velocity)
-    position = world.component_for_entity(player_entity_id, cmp.HitBox).rect.copy()
+    hitbox = world.component_for_entity(player_entity_id, cmp.HitBox)
+    position = cmp.Position(hitbox.x, hitbox.y)
     velocity.x = 0.30 * copysign(1.0, velocity.x) if abs(velocity.x) > 1e-4 else 0
     velocity.y = 0.30 * copysign(1.0, velocity.y) if abs(velocity.y) > 1e-4 else 0
 
