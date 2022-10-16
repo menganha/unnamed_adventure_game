@@ -6,7 +6,7 @@ from yazelc.utils.game_utils import Direction, Status
 JELLY_VEL = 0.5
 JELLY_ID = 'jelly'
 JELLY_SPRITE_WIDTH = 16
-JELLY_ANIMATION_DELAY = 15
+JELLY_ANIMATION_DELAY = 8
 
 
 def create_jelly_at(x_pos: int, y_pos: int, world: zesper.World) -> int:

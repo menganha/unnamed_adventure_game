@@ -15,6 +15,7 @@ if TYPE_CHECKING:
     from yazelc.systems.input_system import InputMessage
 
 Vector = pygame.Vector2
+
 Velocity = pygame.Vector2
 
 
@@ -24,7 +25,6 @@ class Position(pygame.Vector2):
     flag is on. This one is used for entities that should be on the screen no matter where the
     camera is positioned
     """
-
     def __init__(self, x: float, y: float, absolute: bool = False):
         super().__init__(x, y)
         self.absolute = absolute
@@ -101,7 +101,6 @@ class Health:
     cool_down_counter: int = field(init=False, default=0)
 
 
-# @component
 class HitBox(pygame.Rect):
     """
     Pygame is made such that hitboxes contain also a position. Therefore, is difficult to separate the components, i.e.,
@@ -117,7 +116,6 @@ class HitBox(pygame.Rect):
 
     def move(self, x: int, y: int) -> 'HitBox':
         new_hitbox = super().move(x, y)
-        print(type(new_hitbox))
         new_hitbox.impenetrable = self.impenetrable
         return new_hitbox
 

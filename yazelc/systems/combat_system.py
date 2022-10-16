@@ -12,6 +12,7 @@ from yazelc.visual_effects import create_explosion
 
 
 class CombatSystem(zesper.Processor):
+    TIME_TO_REMOVE_ENT_AFTER_DEATH = 15
 
     def __init__(self, player_entity_id: int):
         super().__init__()
@@ -33,27 +34,21 @@ class CombatSystem(zesper.Processor):
                 if ent == self.player_entity_id:
                     self.events.append(DeathEvent())
                 else:
+                    components = []
                     position = self.world.component_for_entity(ent, cmp.Position)
+                    components.append(position)
+                    if renderable := self.world.try_component(ent, cmp.Renderable):
+                        components.append(renderable)
+                    if velocity := self.world.try_component(ent, cmp.Velocity):
+                        components.append(velocity)
+                    if hitbox := self.world.try_component(ent, cmp.HitBox):
+                        components.append(hitbox)
+                    new_ent = self.world.create_entity(*components)
+                    self.world.delete_entity(ent)
 
-                    # image = self.world.component_for_entity(ent, cmp.Renderable).image  # TEST
-                    # image.set_palette([cfg.C_RED, cfg.C_BLUE, cfg.C_WHITE])
-                    if self.world.has_component(ent, cmp.Weapon):
-                        self.world.remove_component(ent, cmp.Weapon)
-                    if self.world.has_component(ent, cmp.Brain):
-                        self.world.remove_component(ent, cmp.Brain)
-                    self.world.remove_component(ent, cmp.Input)
-                    self.world.remove_component(ent, cmp.Health)
-
-                    time_to_explosion = 20
-                    explosion_kwargs = {'position': position, 'n_particles': 50, 'max_vel': 20, 'color': cfg.C_RED,
-                                        'world': self.world}
-                    self.timers.append(Timer(time_to_explosion, False, create_explosion, **explosion_kwargs))
-
-                    time_to_remove = time_to_explosion
-                    self.timers.append(Timer(time_to_remove, False, self.world.delete_entity, ent))
-
-                    # else:
-                    #     create_explosion(center[0], center[1], 50, 20, cfg.C_RED, self.world)
+                    explosion_kwargs = {'position': position, 'n_particles': 50, 'max_vel': 20, 'color': cfg.C_RED, 'world': self.world}
+                    self.timers.append(Timer(self.TIME_TO_REMOVE_ENT_AFTER_DEATH, False, create_explosion, **explosion_kwargs))
+                    self.timers.append(Timer(self.TIME_TO_REMOVE_ENT_AFTER_DEATH, False, self.world.delete_entity, new_ent))
 
     def on_collision(self, collision_event: CollisionEvent):
 
