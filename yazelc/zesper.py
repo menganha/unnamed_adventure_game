@@ -15,6 +15,8 @@ C_alt = TypeVar('C_alt')  # alternative component
 
 class Processor(Processor):  # noqa
 
+    world: World = None
+
     def __init__(self):
         self.events: deque[Event] = deque()
         self.timers: list[Timer] = list()
