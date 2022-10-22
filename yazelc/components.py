@@ -118,7 +118,7 @@ class HitBox(pygame.Rect):
     def move(self, x: int, y: int) -> 'HitBox':
         new_hitbox = super().move(x, y)
         new_hitbox.impenetrable = self.impenetrable
-        return new_hitbox
+        return new_hitbox  # noqa  C implementation of pygame.Rect is aware that we are subclassing
 
 
 @component

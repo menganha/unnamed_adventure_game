@@ -9,6 +9,7 @@ class AISystem(zesper.Processor):
 
     def process(self):
         for ent, (brain, state) in self.world.get_components(Brain, State):
+            state.update()
             if brain.think_counter > 0:
                 brain.think_counter -= 1
             if brain.think_counter == 0:

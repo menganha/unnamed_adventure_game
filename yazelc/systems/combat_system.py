@@ -1,5 +1,7 @@
 import logging
 
+import pygame
+
 from yazelc import components as cmp
 from yazelc import config as cfg
 from yazelc import zesper
@@ -65,6 +67,14 @@ class CombatSystem(zesper.Processor):
             # We could send an event here for entity specific handling. Like a Getting Hit event!
             if state := self.world.try_component(victim, cmp.State):
                 state.status = Status.HIT
+                if self.world.has_component(victim, cmp.Animation):
+                    self.world.remove_component(victim, cmp.Animation)
+                if renderable := self.world.try_component(victim, cmp.Renderable):
+                    new_image = renderable.image.copy()
+                    new_image.blit(renderable.image, (0, 0), special_flags=pygame.BLEND_RGB_ADD)
+                    new_image.blit(renderable.image, (0, 0), special_flags=pygame.BLEND_RGB_ADD)
+
+                    renderable.image = new_image
 
             if input_ := self.world.try_component(victim, cmp.Input):
                 input_.block_counter = attacker_weapon.freeze_frames

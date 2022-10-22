@@ -146,9 +146,8 @@ def handle_animation_for_input(ent_id: int, state: cmp.State, world: zesper.Worl
     strip = world.resource_manager.get_animation_strip(animation_identifier)
 
     if state.status == Status.IDLE:
-        world.component_for_entity(ent_id, cmp.Renderable).image = strip[0]
-        world.remove_component(ent_id, cmp.Animation)
-        return
+        strip = strip[:1]
+        animation_frames = 1
     elif state.status.MOVING:
         animation_frames = MOVE_ANIMATION_FRAMES
     elif state.status.ATTACKING:

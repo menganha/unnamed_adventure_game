@@ -36,3 +36,7 @@ def handle_input(input_message: InputMessage):
     else:
         velocity.x = 0
         velocity.y = 0
+
+    if state.has_changed():
+        image_strip = input_message.world.resource_manager.get_animation_strip(JELLY_ID)
+        input_message.world.add_component(input_message.ent_id, cmp.Animation(image_strip, delay=JELLY_ANIMATION_DELAY))
