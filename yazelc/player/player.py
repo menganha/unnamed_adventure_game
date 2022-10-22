@@ -141,10 +141,25 @@ def create_interactive_hitbox(player_entity_id: int, world: zesper.World, timers
     timers.append(Timer(frames_until_destroyed, False, world.delete_entity, entity_id))
 
 
-def handle_input(input_message: InputMessage):
-    # TODO: Add state system just for this operation. It decouples the input and is mostly useful
-    #       if we want to  remove this process but don't want to stop the state update
+def handle_animation_for_input(ent_id: int, state: cmp.State, world: zesper.World):
+    animation_identifier = f'{state.status.name}_{state.direction.name}'
+    strip = world.resource_manager.get_animation_strip(animation_identifier)
 
+    if state.status == Status.IDLE:
+        world.component_for_entity(ent_id, cmp.Renderable).image = strip[0]
+        world.remove_component(ent_id, cmp.Animation)
+        return
+    elif state.status.MOVING:
+        animation_frames = MOVE_ANIMATION_FRAMES
+    elif state.status.ATTACKING:
+        animation_frames = ATTACK_ANIMATION_FRAMES
+    else:
+        raise RuntimeError(f'Animation frame for player not specified for the status {state.status} and direction {state.direction}')
+
+    world.add_component(ent_id, cmp.Animation(strip, animation_frames))
+
+
+def handle_input(input_message: InputMessage):
     if input_message.controller.is_button_pressed(Button.START):
         menu_box.create_pause_menu(input_message.world)
         input_message.event_list.append(PauseEvent())
@@ -175,7 +190,9 @@ def handle_input(input_message: InputMessage):
 
         # Attempt to change direction only when a key is released or the status of the entity is not moving
         state = input_message.world.component_for_entity(input_message.ent_id, cmp.State)
-        if horizontal_key_released or vertical_key_released or state.status != Status.MOVING:
+        state.update()
+
+        if (horizontal_key_released or vertical_key_released) or state.status != Status.MOVING:  # If it's moving don't change directions
             if direction_x > 0:
                 state.direction = Direction.RIGHT
             elif direction_x < 0:
@@ -185,32 +202,19 @@ def handle_input(input_message: InputMessage):
             elif direction_y < 0:
                 state.direction = Direction.UP
 
-        # Set entity status for animation system
-        if not direction_x and not direction_y:
+        if input_message.controller.is_button_pressed(Button.B):
+            state.status = Status.ATTACKING
+        elif not direction_x and not direction_y:
             state.status = Status.IDLE
         else:
             state.status = Status.MOVING
 
-        # Change animation
         if state.has_changed():
-            animation_identifier = f'{state.status.name}_{state.direction.name}'
-            strip = input_message.world.resource_manager.get_animation_strip(animation_identifier)
-            if state.status == state.status.IDLE:
-                input_message.world.component_for_entity(input_message.ent_id, cmp.Renderable).image = strip[0]
-                input_message.world.remove_component(input_message.ent_id, cmp.Animation)
-            else:
-                input_message.world.add_component(input_message.ent_id, cmp.Animation(strip, MOVE_ANIMATION_FRAMES))
-        state.refresh()
+            handle_animation_for_input(input_message.ent_id, state, input_message.world)
 
-        if input_message.controller.is_button_pressed(Button.B):  # Stop player when is attacking
-            velocity.x = 0
+        if input_message.controller.is_button_pressed(Button.B):
+            velocity.x = 0  # Stop player when is attacking
             velocity.y = 0
-            state.status = Status.ATTACKING
-            state.refresh()
-
-            animation_identifier = f'{state.status.name}_{state.direction.name}'
-            strip = input_message.world.resource_manager.get_animation_strip(animation_identifier)
-            input_message.world.add_component(input_message.ent_id, cmp.Animation(strip, ATTACK_ANIMATION_FRAMES))
 
             # Creates a temporary hitbox representing the sword weapon
             create_melee_weapon(input_message.ent_id, input_message.world)

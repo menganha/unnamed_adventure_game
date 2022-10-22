@@ -62,6 +62,7 @@ class CombatSystem(zesper.Processor):
             if self.world.has_component(victim, cmp.EnemyTag) and self.world.has_component(attacker, cmp.EnemyTag):
                 return
 
+            # We could send an event here for entity specific handling. Like a Getting Hit event!
             if state := self.world.try_component(victim, cmp.State):
                 state.status = Status.HIT
 
@@ -85,4 +86,4 @@ class CombatSystem(zesper.Processor):
                 hud_event = HudUpdateEvent(CollectableItemType.HEART, victim_health.points)
                 self.events.append(hud_event)
 
-            logging.info(f'entity {victim} has received {attacker_weapon.damage} and has {victim_health.points} health points remaining')
+            logging.info(f'Entity {victim} has received {attacker_weapon.damage} and has {victim_health.points} health points remaining')

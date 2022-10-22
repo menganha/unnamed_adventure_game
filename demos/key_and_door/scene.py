@@ -19,7 +19,6 @@ from yazelc.systems.input_system import InputSystem
 from yazelc.systems.inventory_system import InventorySystem
 from yazelc.systems.movement_system import MovementSystem
 from yazelc.systems.render_system import RenderSystem
-from yazelc.systems.script_system import ClockSystem
 
 VELOCITY = 1.5 - 1e-8  # This ensures that the rounding produces the displacement pattern 1,2,1,2... that averages a velocity of 1.5
 VELOCITY_DIAGONAL = 1
@@ -124,7 +123,6 @@ class Scene(BaseScene):
         input_system = InputSystem(controller)
         movement_system = MovementSystem()
         collision_system = CollisionSystem()
-        clock_system = ClockSystem()
         inventory_system = InventorySystem(player_entity_id, self.inventory)
         render_system = RenderSystem(self.window, camera)
 
@@ -133,7 +131,7 @@ class Scene(BaseScene):
         self.event_manager.subscribe(EventType.HUD_UPDATE, self.hud.on_hud_update)
         self.event_manager.subscribe(EventType.CLOCK, self.on_clock_event)
 
-        processors = [input_system, movement_system, collision_system, clock_system, inventory_system, render_system]
+        processors = [input_system, movement_system, collision_system, inventory_system, render_system]
         for proc in processors:
             self.world.add_processor(proc)
 

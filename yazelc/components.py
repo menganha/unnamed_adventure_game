@@ -9,7 +9,7 @@ import pygame
 
 from yazelc.font import Font
 from yazelc.items import CollectableItemType
-from yazelc.utils.game_utils import Direction
+from yazelc.utils.game_utils import Direction, Status
 
 if TYPE_CHECKING:
     from yazelc.systems.input_system import InputMessage
@@ -25,6 +25,7 @@ class Position(pygame.Vector2):
     flag is on. This one is used for entities that should be on the screen no matter where the
     camera is positioned
     """
+
     def __init__(self, x: float, y: float, absolute: bool = False):
         super().__init__(x, y)
         self.absolute = absolute
@@ -164,19 +165,16 @@ class Door:
     target_y: int
 
 
-@component
 class State:
     """ Helper component for general state of objects """
 
-    status: State
-    direction: Direction
-    prev_status: State = field(init=False)
-    prev_direction: Direction = field(init=False)
+    def __init__(self, status: Status, direction: Direction):
+        self.status: Status = status
+        self.direction: Direction = direction
+        self.prev_status: Status = status
+        self.prev_direction: Direction = direction
 
-    def __post_init__(self):
-        self.refresh()
-
-    def refresh(self):
+    def update(self):
         self.prev_status = self.status
         self.prev_direction = self.direction
 
