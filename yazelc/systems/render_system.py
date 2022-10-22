@@ -19,24 +19,35 @@ class RenderSystem(zesper.Processor):
         camera_pos = self.camera.pos
         for ent, (rend, pos) in sorted(self.world.get_components(cmp.Renderable, cmp.Position), key=lambda x: x[1][0].depth, reverse=False):
 
-            # TODO: This section feels like it does not belong here ===
-            health = self.world.try_component(ent, cmp.Health)
-            if health and health.cool_down_counter > 0:
-                flags = pygame.BLEND_RGBA_ADD
-            else:
-                flags = 0
-            # =======================================================
-
-            if pos.absolute:  # ition := self.world.try_component(ent, cmp.Position):
+            if pos.absolute:
                 screen_pos = pos
             else:
                 screen_pos = pos - camera_pos
 
-            self.window.blit(rend.image, (round(screen_pos.x), round(screen_pos.y)), special_flags=flags)
+            if blend := self.world.try_component(ent, cmp.BlendEffect):
+                new_image = rend.image.copy()
+                block = pygame.Surface(rend.image.get_size()).convert_alpha()
+                if blend.time_idx % 4 == 0:
+                    color = cfg.C_LIGHT_RED
+                else:
+                    color = cfg.C_LIGHT_BLUE
+                block.fill(color)
+                new_image.blit(block, (0, 0), special_flags=pygame.BLEND_RGBA_MIN)
+                new_image.blit(new_image, (0, 0), special_flags=pygame.BLEND_RGBA_ADD)
+
+                blend.time_idx += 1
+                if blend.time_idx == blend.time:
+                    self.world.remove_component(ent, cmp.BlendEffect)
+
+                img = new_image
+            else:
+                img = rend.image
+
+            self.window.blit(img, (round(screen_pos.x), round(screen_pos.y)))
 
         # TODO: They can be on the the same loop if the position has the absolute flag on
         # Render native shapes which are (normally) associated with particle effects
-        for ent, (vfx, pos) in self.world.get_components(cmp.VisualEffect, cmp.Position):
+        for ent, (vfx, pos) in self.world.get_components(cmp.Particle, cmp.Position):
             rect = pygame.Rect(round(pos.x - camera_pos.x), round(pos.y - camera_pos.y), 1, 1)
             pygame.draw.rect(self.window, vfx.color, rect)
 

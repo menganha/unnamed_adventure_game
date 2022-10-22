@@ -91,8 +91,14 @@ class Menu:
 
 
 @component
-class VisualEffect:
+class Particle:
     color: pygame.Color
+
+
+@component
+class BlendEffect:
+    time: int
+    time_idx: int = 0
 
 
 @component

@@ -1,7 +1,5 @@
 import logging
 
-import pygame
-
 from yazelc import components as cmp
 from yazelc import config as cfg
 from yazelc import zesper
@@ -45,6 +43,7 @@ class CombatSystem(zesper.Processor):
                         components.append(velocity)
                     if hitbox := self.world.try_component(ent, cmp.HitBox):
                         components.append(hitbox)
+                    components.append(cmp.BlendEffect(self.TIME_TO_REMOVE_ENT_AFTER_DEATH))
                     new_ent = self.world.create_entity(*components)
                     self.world.delete_entity(ent)
 
@@ -69,12 +68,8 @@ class CombatSystem(zesper.Processor):
                 state.status = Status.HIT
                 if self.world.has_component(victim, cmp.Animation):
                     self.world.remove_component(victim, cmp.Animation)
-                if renderable := self.world.try_component(victim, cmp.Renderable):
-                    new_image = renderable.image.copy()
-                    new_image.blit(renderable.image, (0, 0), special_flags=pygame.BLEND_RGB_ADD)
-                    new_image.blit(renderable.image, (0, 0), special_flags=pygame.BLEND_RGB_ADD)
-
-                    renderable.image = new_image
+                if self.world.has_component(victim, cmp.Renderable):
+                    self.world.add_component(victim, cmp.BlendEffect(attacker_weapon.freeze_frames))
 
             if input_ := self.world.try_component(victim, cmp.Input):
                 input_.block_counter = attacker_weapon.freeze_frames
