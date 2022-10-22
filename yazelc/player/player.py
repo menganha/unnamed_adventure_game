@@ -216,6 +216,8 @@ def handle_input(input_message: InputMessage):
             velocity.x = 0  # Stop player when is attacking
             velocity.y = 0
 
+            # TODO: one should create a small delay until the actual hitbox is created as the attack animation has some
+            #   of gaining momentum for the swing
             # Creates a temporary hitbox representing the sword weapon
             create_melee_weapon(input_message.ent_id, input_message.world)
 

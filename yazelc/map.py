@@ -121,7 +121,7 @@ class Map:
             logging.info(f'No {self.INTERACTIVE_OBJECT_LAYER_NAME} layer found for the map {self.map_file_path}')
             return
         for obj in self.tmx_data.get_layer_by_name(self.INTERACTIVE_OBJECT_LAYER_NAME):
-            hit_box = cmp.HitBox(obj.x, obj.y, obj.width, obj.height, impenetrable=True)
+            hit_box = cmp.HitBox(obj.x, obj.y, obj.width, obj.height, impenetrable=False)
             position = cmp.Position(obj.x, obj.y)
             if self.TEXT_PROPERTY in obj.properties:
                 if obj.properties[self.TEXT_PROPERTY] is None:
@@ -144,7 +144,7 @@ class Map:
             target_y = obj.properties[self.DOOR_TARGET_Y_STR]
             map_image_sub_path = obj.properties[self.DOOR_TARGET_STR].split(self.DOOR_PATH_SEP)
             target_door = Path(self.DATA_PATH, *map_image_sub_path)
-            hit_box = cmp.HitBox(obj.x, obj.y, obj.width, obj.height, impenetrable=True)
+            hit_box = cmp.HitBox(obj.x, obj.y, obj.width, obj.height, impenetrable=False)
             door = cmp.Door(target_door, target_x, target_y)
             yield door, hit_box
 
