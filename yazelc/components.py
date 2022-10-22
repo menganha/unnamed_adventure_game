@@ -171,14 +171,18 @@ class Door:
     target_y: int
 
 
+@component()
 class State:
     """ Helper component for general state of objects """
+    status: Status
+    direction: Direction
 
-    def __init__(self, status: Status, direction: Direction):
-        self.status: Status = status
-        self.direction: Direction = direction
-        self.prev_status: Status = status
-        self.prev_direction: Direction = direction
+    prev_status: Status = field(init=False)
+    prev_direction: Direction = field(init=False)
+
+    def __post_init__(self):
+        self.prev_status = self.status
+        self.prev_direction = self.direction
 
     def update(self):
         self.prev_status = self.status
