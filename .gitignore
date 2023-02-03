@@ -3,5 +3,6 @@ dev
 dev2
 assets
 .idea
+.run
 *.tiled-project
 *.tiled-session

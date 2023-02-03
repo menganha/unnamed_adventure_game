@@ -16,8 +16,6 @@ if TYPE_CHECKING:
 
 Vector = pygame.Vector2
 
-Velocity = pygame.Vector2
-
 
 class Position(pygame.Vector2):
     """
@@ -31,6 +29,21 @@ class Position(pygame.Vector2):
         self.absolute = absolute
         self.prev_x: float = x
         self.prev_y: float = y
+
+    def move_ip(self, delta_x: float | int, delta_y: float | int):
+        self.prev_x = self.x
+        self.prev_y = self.y
+        self.x += delta_x
+        self.y += delta_y
+
+    def update(self, x: float | pygame.Vector2 | tuple[float, float] | list[float] = 0, y: float = 0, ) -> None:
+        self.prev_x = self.x
+        self.prev_y = self.y
+        super().update(x, y)
+
+
+class Velocity(pygame.Vector2):
+    ZERO_THRESHOLD = 1e-3
 
 
 @component
@@ -111,20 +124,66 @@ class Health:
 class HitBox(pygame.Rect):
     """
     Pygame is made such that hitboxes contain also a position. Therefore, is difficult to separate the components, i.e.,
-    Position and a "Hitbox" component in a "clean way".
-    We have opted for the approach where the Hitbox has a position embedded in the component but does not count as a
-    real Position component. Nevertheless, this internal position of the Hitbox also represent the absolute position of
-    it.
+    Position and a "Hitbox" component in a "clean way". We have opted for the approach where the Hitbox has a position
+    embedded in the component but does not count as a real Position component. Nevertheless, this internal position of the
+    Hitbox also represent the absolute position of it.
+
+    In addition to the regular bounding hitbox we can optionally specify a "skin depth" which will define two additional
+    hitboxes. These are used to implement the "soft corner collision" seen in games like Zelda: A Link to the Past.
     """
 
-    def __init__(self, x_pos: int, y_pos: int, width: int, height: int, impenetrable: bool = False):
+    def __init__(self, x_pos: int, y_pos: int, width: int, height: int, impenetrable: bool = False, skin_depth: int = 0):
         super().__init__(x_pos, y_pos, width, height)
         self.impenetrable = impenetrable
+        self.skin_depth = skin_depth
+        self.corner_rects: list[pygame.Rect] = []
+        if self.skin_depth:
+            self.corner_rects = [pygame.Rect(0, 0, skin_depth, skin_depth) for _ in range(4)]
+            self._align_corner_rects_with_parent_rect()
 
     def move(self, x: int, y: int) -> 'HitBox':
+        """ NOTE: This is not creating an exact copy of the original HitBox object but moved """
         new_hitbox = super().move(x, y)
         new_hitbox.impenetrable = self.impenetrable
+        new_hitbox.skin_depth = 0  # Do not copy skin information as this will make the
+        new_hitbox.corner_rects = None
         return new_hitbox  # noqa  C implementation of pygame.Rect is aware that we are subclassing
+
+    def move_ip(self, x: int, y: int):
+        """ Move also the internal boxes """
+        super().move_ip(x, y)
+        for corner_r in self.corner_rects:
+            corner_r.move_ip(x, y)
+
+    def collides_with_corner_points(self, rect: pygame.Rect) -> int:
+        point_list = [
+            [sum(ele) for ele in zip(self.corner_rects[0].topright, (-1, -1))],
+            [sum(ele) for ele in zip(self.corner_rects[0].bottomleft, (-1, -1))],
+            [sum(ele) for ele in zip(self.corner_rects[1].topleft, (-1, 0))],  #
+            [sum(ele) for ele in zip(self.corner_rects[1].bottomright, (-1, 0))],
+            self.corner_rects[2].topright,
+            self.corner_rects[2].bottomleft,
+            [sum(ele) for ele in zip(self.corner_rects[3].topleft, (0, -1))],
+            self.corner_rects[3].bottomright,
+        ]
+        for point in point_list:
+            if rect.collidepoint(*point):
+                return True
+        else:
+            return False
+
+    def __setattr__(self, key, value):
+        if hasattr(self, 'corner_rects') and self.corner_rects:
+            super().__setattr__(key, value)
+            self._align_corner_rects_with_parent_rect()
+        else:
+            super().__setattr__(key, value)
+
+    def _align_corner_rects_with_parent_rect(self):
+        self.corner_rects[0].topleft = self.topleft  # Define them in counterclockwise direction starting from topleft
+        self.corner_rects[1].bottomleft = self.bottomleft
+        self.corner_rects[2].bottomright = self.bottomright
+        self.corner_rects[3].topright = self.topright
 
 
 @component

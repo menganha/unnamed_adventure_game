@@ -1,31 +1,35 @@
 from yazelc import zesper
 from yazelc.components import Position, Velocity, HitBox
 from yazelc.event import CollisionEvent
+from yazelc.player.player import VELOCITY
 
 
 class CollisionSystem(zesper.Processor):
     """
     Processes collisions with non-moving solid entities
 
-    The system first resolves the collisions between with solid walls and movable entities and only after it checks
-    for collisions between regular hitboxes. The reasoning is that after a wall collision entities normally needs a
-    repositioning which can trigger further collision with entities which have been already tested negative for
-    collision. This adds a layer of complexity as one has to deal with several collision checks
+    The system first resolves the collisions between with impenetrable hitbox and all movable hitboxes (independent of
+    their impenetrable value) Only after checks for collisions between penetrable hitboxes and adds the corresponding
+    event.
+
+    The reasoning is that after a "wall" collision entities normally needs a repositioning which can trigger further
+    collision with entities which have been already tested negative for collision. This adds a layer of complexity
+    as one has to deal with several collision checks
     """
 
     def process(self):
 
-        # Resolves impenetrable hitboxes by moving objects
-        impenetrable_static_hitboxes = [hitbox for ent, hitbox in self.world.get_component(HitBox) if hitbox.impenetrable]
+        # Resolves collision of all moving hitboxes against impenetrable hitboxes
+        impenetrable_hitboxes = [hitbox for ent, hitbox in self.world.get_component(HitBox) if hitbox.impenetrable]
         for ent, (hitbox, position, velocity) in self.world.get_components(HitBox, Position, Velocity):
-            if hitbox.collidelist(impenetrable_static_hitboxes) != -1:
-                if False:  # ent == player_ent and not collision_with_inner_hitbox():
-                    pass  # some_function()
-                    # collision with inner box should be a function of inflate. Check for that the inner inbox is always cenetered
-                    # Check on which corner is colliding. if it's moving up, check the two upper ones. collide_with_point may help
-                    # Move in the oposite of that corner and using the movement oposite to that direction.
+            colliding_hitboxes_indices = hitbox.collidelistall(impenetrable_hitboxes)
+            if colliding_hitboxes_indices:
+
+                if hitbox.skin_depth and len(colliding_hitboxes_indices) == 1:
+                    colliding_wall = impenetrable_hitboxes[colliding_hitboxes_indices[0]]
+                    self._handle_corner_push(position, velocity, hitbox, colliding_wall, impenetrable_hitboxes)
                 else:
-                    self._resolve_collision(position, velocity, hitbox, impenetrable_static_hitboxes)
+                    self._resolve_collision(position, velocity, hitbox, impenetrable_hitboxes)
 
         # Everything that it is penetrable it is checked for collision after the movement checks have been resolved
         transparent_hitboxes = [(ent, hb) for ent, hb in self.world.get_component(HitBox) if not hb.impenetrable]
@@ -34,6 +38,49 @@ class CollisionSystem(zesper.Processor):
             entities_that_collided = hitbox_1.collidedictall(rect_dictionary, 1)
             for ent_2, _ in entities_that_collided:
                 self.events.append(CollisionEvent(ent_1, ent_2))
+
+    def _handle_corner_push(self, position: Position, velocity: Velocity, hitbox: HitBox, colliding_wall: HitBox,
+                            impenetrable_hitboxes: list[HitBox]):
+        """
+        Handle case colliding with a corner
+        1. Confirm that only one wall is collided with the hitbox
+        2. Check collision with the corners of the hitbox. If it doesn't collide don't do anything
+        3. Check collision with the 8 reference points. If it collides then don't to anything
+        4. Resolve collision in the normal way
+        5. Move in the perpendicular direction of movement in the direction oposite to  the obstacle
+        """
+        colliding_corners = colliding_wall.collidelistall(hitbox.corner_rects)
+        collides_with_points = hitbox.collides_with_corner_points(colliding_wall)
+        self._resolve_collision(position, velocity, hitbox, impenetrable_hitboxes)
+        if colliding_corners and len(colliding_corners) == 1 and not collides_with_points:
+            corner_idx = colliding_corners[0]
+            if corner_idx == 0:
+                if velocity.y < -Velocity.ZERO_THRESHOLD:
+                    correction_vel = Velocity(VELOCITY, 0)
+                else:
+                    correction_vel = Velocity(0, VELOCITY)
+            elif corner_idx == 1:
+                if velocity.y > Velocity.ZERO_THRESHOLD:
+                    correction_vel = Velocity(VELOCITY, 0)
+                else:
+                    correction_vel = Velocity(0, -VELOCITY)
+            elif corner_idx == 2:
+                if velocity.y > Velocity.ZERO_THRESHOLD:
+                    correction_vel = Velocity(-VELOCITY, 0)
+                else:
+                    correction_vel = Velocity(0, -VELOCITY)
+            else:  # corner_idx == 3:
+                if velocity.y < - Velocity.ZERO_THRESHOLD:
+                    correction_vel = Velocity(-VELOCITY, 0)
+                else:
+                    correction_vel = Velocity(0, VELOCITY)
+            self._update_entity_position(position, correction_vel, hitbox)
+
+    @staticmethod
+    def _update_entity_position(position: Position, velocity: Velocity, hitbox: HitBox):
+        """ exact copy of the method in the movement system """
+        position.move_ip(velocity.x, velocity.y)
+        hitbox.move_ip(round(position.x) - round(position.prev_x), round(position.y) - round(position.prev_y))
 
     @staticmethod
     def _resolve_collision(position: Position, velocity: Velocity, hitbox: HitBox, impenetrable_hitboxes: list[HitBox]):
@@ -44,6 +91,7 @@ class CollisionSystem(zesper.Processor):
             test_hitbox = hitbox.move(-delta_x, -delta_y)
             if test_hitbox.collidelist(impenetrable_hitboxes) == -1:
                 hitbox.move_ip(-delta_x, -delta_y)
-                position.x = round(position.x - velocity.x * dir_x)
-                position.y = round(position.y - velocity.y * dir_y)
+                position.update(round(position.x - velocity.x * dir_x), round(position.y - velocity.y * dir_y))
                 break
+        else:  # If we cannot resolve then should we signal death (trapped between two walls)?
+            raise RuntimeError('Trapped between two impenetrable hitboxes!')

@@ -10,7 +10,7 @@ from yazelc import components as cmp
 from yazelc.utils.game_utils import Direction, Status
 
 
-class TestComponents(unittest.TestCase):
+class TestStateComponents(unittest.TestCase):
 
     def setUp(self):
         self.state = cmp.State(Status.IDLE, Direction.LEFT)

@@ -15,10 +15,10 @@ class Keyboard(Controller):
         Button.R: pygame.K_c,
         Button.START: pygame.K_RETURN,
         Button.SELECT: pygame.K_v,
-        Button.UP: pygame.K_i,
-        Button.DOWN: pygame.K_k,
-        Button.LEFT: pygame.K_j,
-        Button.RIGHT: pygame.K_l
+        Button.UP: pygame.K_UP,
+        Button.DOWN: pygame.K_DOWN,
+        Button.LEFT: pygame.K_LEFT,
+        Button.RIGHT: pygame.K_RIGHT
     }
 
     def __init__(self):

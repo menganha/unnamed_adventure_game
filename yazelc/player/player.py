@@ -16,9 +16,10 @@ from yazelc.utils.game_utils import Direction, Status
 VELOCITY = 1.5 - 1e-8  # This ensures that the rounding produces the displacement pattern 1,2,1,2... that averages a velocity of 1.5
 VELOCITY_DIAGONAL = 1
 
-HITBOX_HEIGHT = 9
+HITBOX_HEIGHT = 10
 HITBOX_WIDTH = 10
 HITBOX_Y_OFFSET = 2
+SKIN_DEPTH = 5
 SPRITE_SIZE = 16
 SPRITE_DEPTH = 200
 
@@ -54,7 +55,7 @@ def create_player_at(center_x_pos: int, center_y_pos: int, world: zesper.World) 
     # world.add_component(player_entity_id, cmp.Animation(stripe[:1], delay=IDLE_ANIMATION_FRAME))
 
     # HitBox
-    hitbox_component = cmp.HitBox(0, 0, HITBOX_WIDTH, HITBOX_HEIGHT)
+    hitbox_component = cmp.HitBox(0, 0, HITBOX_WIDTH, HITBOX_HEIGHT, skin_depth=SKIN_DEPTH)
     hitbox_component.center = (center_x_pos, center_y_pos)
     world.add_component(player_entity_id, hitbox_component)
 
