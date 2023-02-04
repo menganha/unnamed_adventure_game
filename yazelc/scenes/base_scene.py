@@ -36,7 +36,7 @@ class BaseScene(abc.ABC):
             self._process_clock_events()
             self._process_event_queue()
             self.world.process()
-        self.event_manager.clear_subscribers()
+        self.event_manager.remove_all_handlers()
 
     @abc.abstractmethod
     def on_exit(self):

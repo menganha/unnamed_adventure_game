@@ -25,12 +25,12 @@ class TestEvent(unittest.TestCase):
         self.event_manager.subscribe(EventType.DEATH, self.instance_with_reference.on_death)
         self.event_manager.subscribe(EventType.COLLISION, self.instance_with_reference.on_death)
 
-    def test_clear_all_subscribers(self):
-        self.event_manager.clear_subscribers()
+    def test_remove_all_handlers(self):
+        self.event_manager.remove_all_handlers()
         self.assertFalse(self.event_manager.subscribers)
 
-    def test_clear_one_type_of_subscribers(self):
-        self.event_manager.clear_subscribers(EventType.COLLISION)
+    def test_remove_all_handlers_of_one_event(self):
+        self.event_manager.remove_all_handlers(EventType.COLLISION)
         self.assertFalse(self.event_manager.subscribers[EventType.COLLISION])
         self.assertTrue(self.event_manager.subscribers[EventType.DEATH])
 

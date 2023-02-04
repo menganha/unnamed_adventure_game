@@ -2,10 +2,10 @@ from __future__ import annotations
 
 from abc import ABC
 from collections import defaultdict, deque
-from collections.abc import Callable
+from collections.abc import Callable, Iterable
 from enum import Enum, auto
 from types import MethodType
-from typing import TYPE_CHECKING, Union, TypeVar
+from typing import TYPE_CHECKING, TypeVar
 from weakref import ref, WeakMethod
 
 if TYPE_CHECKING:
@@ -61,7 +61,7 @@ class ClockEvent(Event):
         self.kwargs = kwargs
 
 
-_EVENT = TypeVar('_EVENT', bound=Event)  # used for the static type checker
+_EVENT = TypeVar('_EVENT', bound=Event)  # used for the static type checker for admitting any subclass
 
 
 class EventManager:
@@ -74,15 +74,15 @@ class EventManager:
         self.subscribers = defaultdict(set)
         self.event_queue = deque()
 
-    def subscribe(self, event_type: EventType, listener: Callable[[_EVENT], None]):
-
-        if isinstance(listener, MethodType):
-            self.subscribers[event_type].add(WeakMethod(listener, self._make_callback(event_type)))
+    def subscribe(self, event_type: EventType, handler: Callable[[_EVENT], None]):
+        """ Subscribe handler method to event type """
+        if isinstance(handler, MethodType):
+            self.subscribers[event_type].add(WeakMethod(handler, self._make_callback(event_type)))
         else:
-            self.subscribers[event_type].add(ref(listener, self._make_callback(event_type)))
+            self.subscribers[event_type].add(ref(handler, self._make_callback(event_type)))
 
-    def add_events(self, events: Union[Event, list[type(Event)]]):
-        if isinstance(events, deque):
+    def add_events(self, events: Event | Iterable[type(Event)]):
+        if isinstance(events, Iterable):
             self.event_queue.extend(events)
         else:
             self.event_queue.append(events)
@@ -95,14 +95,15 @@ class EventManager:
                 if has_been_handled:
                     break
 
-    def clear_subscribers(self, event_type: EventType = None):
+    def remove_all_handlers(self, event_type: EventType = None):
         if event_type:
             self.subscribers[event_type] = set()
         else:
             self.subscribers = defaultdict(set)
 
     def clear(self):
-        self.clear_subscribers()
+        """ Clears all handlers subscribers and the event queue """
+        self.remove_all_handlers()
         self.event_queue.clear()
 
     def _make_callback(self, event_type: EventType):
