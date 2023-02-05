@@ -7,10 +7,7 @@ from weakref import ref, WeakMethod
 
 
 class Event(ABC):
-    # @property
-    @classmethod
-    def id(cls) -> type:
-        return cls
+    pass
 
 
 _EVENT = TypeVar('_EVENT', bound=Event)  # used for the static type checker for admitting any subclass
@@ -33,7 +30,7 @@ class EventManager:
             self.subscribers[event_type].add(ref(handler, self._make_callback(event_type)))
 
     def dispatch_event(self, event: Event):
-        for listener in self.subscribers[event.id()]:
+        for listener in self.subscribers[type(event)]:
             listener()(event)
 
     def remove_all_handlers(self, event_type: type[Event] = None):
