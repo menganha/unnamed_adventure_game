@@ -1,7 +1,10 @@
+from yazelc import config as cfg
 from yazelc import dialog_box
 from yazelc import zesper
-from yazelc.components import Dialog, InteractorTag, Renderable
-from yazelc.event import PauseEvent, CollisionEvent
+from yazelc.components import Dialog, Renderable, Position, Menu
+from yazelc.controller import Button
+from yazelc.event.events import InputEvent, ResumeEvent
+from yazelc.menu import menu_box
 
 
 class DialogSystem(zesper.Processor):
@@ -9,7 +12,7 @@ class DialogSystem(zesper.Processor):
 
     def __init__(self):
         super().__init__()
-        self.tick_counter = 0
+        self._tick_counter: int = 0
 
     def process(self):
         for entity, (dialog, renderable_cmp) in self.world.get_components(Dialog, Renderable):
@@ -47,9 +50,20 @@ class DialogSystem(zesper.Processor):
                 dialog_box.add_triangle_signal(entity, self.world)
                 dialog.idle = True
 
-    def on_collision(self, collision_event: CollisionEvent):
-        """ Handles collision when interacting with entities with the Dialog component """
-        if components := self.world.try_pair_signature(collision_event.ent_1, collision_event.ent_2, InteractorTag, Dialog):
-            interactor_entity_id, _, dialog_entity_id, dialog = components
-            dialog_box.create_text_box(dialog_entity_id, dialog, self.world)
-            self.events.append(PauseEvent())
+    def on_input(self, input_event: InputEvent):
+
+        for entity, (dialog_, renderable_) in self.world.get_components(Dialog, Renderable):
+            if input_event.controller.is_button_pressed(Button.A) and dialog_.idle:
+                if dialog_.is_at_end():
+                    self.world.remove_component(entity, Renderable)
+                    self.world.remove_component(entity, Position)
+                    dialog_.index = 0
+                    dialog_.index_start = 0
+                    self.world.event_queue.enqueue_event(ResumeEvent())
+                else:
+                    dialog_.idle = False
+                    surface = renderable_.image
+                    surface.fill(cfg.C_BLACK)
+
+        for entity, (menu, renderable_) in self.world.get_components(Menu, Renderable):
+            menu_box.handle_menu_input(input_event, entity, menu, self.world)

@@ -3,9 +3,11 @@ from typing import Optional
 
 import pygame
 
+from event.events import InputEvent
 from yazelc import zesper
-from yazelc.clock import Clock
-from yazelc.event import EventManager
+from yazelc.controller import Controller
+from yazelc.event.event_manager import EventManager
+from yazelc.event.event_queue import EventQueue
 
 
 class BaseScene(abc.ABC):
@@ -13,13 +15,13 @@ class BaseScene(abc.ABC):
     Base implementation for all scenes. This class is abstract and should not be instantiated.
     """
 
-    def __init__(self, window: pygame.Surface):
+    def __init__(self, window: pygame.Surface, controller: Controller):
         self.window: pygame.Surface = window
         self.world: zesper.World = zesper.World()
         self.event_manager: EventManager = EventManager()
-        self.clock: Clock = Clock()
+        self.event_queue: EventQueue = EventQueue()
+        self.controller: Controller = controller
         self.in_scene: bool = True
-        self.paused: bool = False
         self.next_scene: Optional['BaseScene'] = None
 
     @abc.abstractmethod
@@ -29,11 +31,6 @@ class BaseScene(abc.ABC):
     def run(self):
         self.in_scene = True
         while self.in_scene:
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    self.in_scene = False
-                    self.next_scene = None
-            self._process_clock_events()
             self._process_event_queue()
             self.world.process()
         self.event_manager.remove_all_handlers()
@@ -42,30 +39,23 @@ class BaseScene(abc.ABC):
     def on_exit(self):
         pass
 
-    def empty_queues(self):
-        for proc in self.world._processors:
-            proc.events.clear()
-        self.event_manager.event_queue.clear()
-
     def _process_event_queue(self):
         """
-        1. Recollect all events from the active system
-        2. Process them
-        3. If some events produced within other events, start again from 1
+        1. Recollect all events from collected on the event queue during the previous frame
+        2. Process them all
+        3. Process the player input events.
         """
-        for proc in self.world._processors:
-            self.event_manager.add_events(proc.events)
-            proc.events.clear()
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                self.in_scene = False
+                self.next_scene = None
 
-        while self.event_manager.event_queue:
-            self.event_manager.consume_event_queue()
+        # for event in self.event_queue.get():
+        while self.event_queue:
+            event = self.event_queue.popleft()
+            self.event_manager.dispatch_event(event)
+        self.event_queue.process_delayed_events()
 
-            for proc in self.world._processors:
-                self.event_manager.add_events(proc.events)
-                proc.events.clear()
-
-    def _process_clock_events(self):
-        for proc in self.world._processors:
-            self.clock.timer_events.extend(proc.timers)
-            proc.timers.clear()
-        self.clock.tick()
+        self.controller.process_input()
+        input_event = InputEvent(self.controller)
+        self.event_manager.dispatch_event(input_event)

@@ -1,18 +1,14 @@
 from __future__ import annotations
 
-from collections.abc import Callable
 from dataclasses import dataclass as component
 from dataclasses import field
-from typing import TYPE_CHECKING
+from enum import Enum, auto
 
 import pygame
 
 from yazelc.font import Font
 from yazelc.items import CollectableItemType
 from yazelc.utils.game_utils import Direction, Status
-
-if TYPE_CHECKING:
-    from yazelc.systems.input_system import InputMessage
 
 Vector = pygame.Vector2
 
@@ -91,8 +87,14 @@ class Renderable:
         self.height = self.image.get_height()
 
 
+class MenuType(Enum):
+    DEATH = auto()
+    PAUSE = auto()
+
+
 @component
 class Menu:
+    menu_type: MenuType
     title: str
     items: list[str]
     font: Font
@@ -142,7 +144,7 @@ class HitBox(pygame.Rect):
             self._align_corner_rects_with_parent_rect()
 
     def move(self, x: int, y: int) -> 'HitBox':
-        """ NOTE: This is not creating an exact copy of the original HitBox object but moved """
+        """ NOTE: This is not creating a "moved" copy of the original HitBox object """
         new_hitbox = super().move(x, y)
         new_hitbox.impenetrable = self.impenetrable
         new_hitbox.skin_depth = 0  # Do not copy skin information as this will make the
@@ -159,7 +161,7 @@ class HitBox(pygame.Rect):
         point_list = [
             [sum(ele) for ele in zip(self.corner_rects[0].topright, (-1, -1))],
             [sum(ele) for ele in zip(self.corner_rects[0].bottomleft, (-1, -1))],
-            [sum(ele) for ele in zip(self.corner_rects[1].topleft, (-1, 0))],  #
+            [sum(ele) for ele in zip(self.corner_rects[1].topleft, (-1, 0))],
             [sum(ele) for ele in zip(self.corner_rects[1].bottomright, (-1, 0))],
             self.corner_rects[2].topright,
             self.corner_rects[2].bottomleft,
@@ -216,11 +218,11 @@ class Weapon:
     recoil_velocity: int = 0
 
 
-@component
-class Input:
-    handle_input_function: Callable[[InputMessage]]
-    block_counter: int = 0
-    is_paused: bool = False
+# @component
+# class Input:
+#     handle_input_function: Callable[[InputEvent, int]]
+#     # block_counter: int = 0
+#     # is_paused: bool = False
 
 
 @component

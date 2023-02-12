@@ -3,9 +3,6 @@ import pygame
 from yazelc import components as cmp
 from yazelc import config as cfg
 from yazelc import zesper
-from yazelc.controller import Button
-from yazelc.event import PauseEvent
-from yazelc.systems.input_system import InputMessage
 
 WIDTH = cfg.RESOLUTION.x
 HEIGHT = 50
@@ -29,23 +26,6 @@ def create_text_box(dialog_entity_id: int, dialog: cmp.Dialog, world: zesper.Wor
     background = _create_surface_background()
     world.add_component(dialog_entity_id, cmp.Renderable(image=background, depth=SURFACE_DEPTH))
     world.add_component(dialog_entity_id, cmp.Position(menu_pos_x, menu_pos_y, absolute=True))
-    world.add_component(dialog_entity_id, cmp.Input(handle_dialog_controllers))
-
-
-def handle_dialog_controllers(input_message: InputMessage):
-    dialog_ = input_message.world.component_for_entity(input_message.ent_id, cmp.Dialog)
-    if input_message.controller.is_button_pressed(Button.A) and dialog_.idle:
-        if dialog_.is_at_end():
-            input_message.world.remove_component(input_message.ent_id, cmp.Renderable)
-            input_message.world.remove_component(input_message.ent_id, cmp.Position)
-            input_message.world.remove_component(input_message.ent_id, cmp.Input)
-            dialog_.index = 0
-            dialog_.index_start = 0
-            input_message.event_list.append(PauseEvent())
-        else:
-            dialog_.idle = False
-            surface = input_message.world.component_for_entity(input_message.ent_id, cmp.Renderable).image
-            surface.fill(cfg.C_BLACK)
 
 
 def add_triangle_signal(dialog_entity_id: int, world: zesper.World, color: pygame.Color = cfg.C_WHITE):

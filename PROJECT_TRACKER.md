@@ -1,3 +1,9 @@
+# Devlog (2023-02-07)
+
+I'm not sure what would be the best way to set up events. The main question is whether we should pass or not the world instance reference.
+I have a problem with this because it couples the world with the event, and me no like it. The only alternative is to create an intermediate
+event listener on a processor for example, that pases the reference to the world.
+
 # Devlog (2023-02-05)
 
 ## New event system

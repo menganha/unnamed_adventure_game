@@ -4,6 +4,9 @@ from pathlib import Path
 
 import pygame
 
+from yazelc.gamepad import Gamepad
+from yazelc.keyboard import Keyboard
+
 pygame.init()
 pygame.freetype.init()
 
@@ -26,6 +29,17 @@ if __name__ == '__main__':
         initial_pos_x = INITIAL_POS.x
         initial_pos_y = INITIAL_POS.y
     window = pygame.display.set_mode((cfg.RESOLUTION.x, cfg.RESOLUTION.y), pygame.SCALED, vsync=1)
-    gameplay_scene = GameplayScene(window, map_path, initial_pos_x, initial_pos_y)
+
+    # Get the main input device
+    pygame.joystick.init()
+    if pygame.joystick.get_count():
+        controller = Gamepad(pygame.joystick.Joystick(0))
+        logging.info('Using gamepad controller')
+    else:
+        controller = Keyboard()
+        pygame.joystick.quit()
+        logging.info('Using keyboard controller')
+
+    gameplay_scene = GameplayScene(window, controller, map_path, initial_pos_x, initial_pos_y)
     scene_manager.run_game_loop(initial_scene=gameplay_scene)
     pygame.quit()

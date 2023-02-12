@@ -1,8 +1,8 @@
+from event.event_manager import CollisionEvent, HudUpdateEvent
 from yazelc import items
 from yazelc import zesper
 from yazelc.clock import Timer
 from yazelc.components import Collectable, InteractorTag, Health, Animation, Renderable, Position, Velocity
-from yazelc.event import CollisionEvent, HudUpdateEvent
 from yazelc.player.player import MAX_HEALTH
 
 

@@ -4,20 +4,20 @@ from typing import Optional
 
 import pygame
 
+from event.event_manager import EventType, CollisionEvent, HudUpdateEvent, ClockEvent
 from yazelc import components as cmp
 from yazelc import config
 from yazelc import items
 from yazelc import zesper
 from yazelc.camera import Camera
 from yazelc.controller import Button
-from yazelc.event import EventType, CollisionEvent, HudUpdateEvent, ClockEvent
 from yazelc.items import CollectableItemType
 from yazelc.keyboard import Keyboard
 from yazelc.scenes.base_scene import BaseScene
 from yazelc.systems.collision_system import CollisionSystem
-from yazelc.systems.input_system import InputSystem
 from yazelc.systems.inventory_system import InventorySystem
 from yazelc.systems.movement_system import MovementSystem
+from yazelc.systems.player_input_system import PlayerInputSystem
 from yazelc.systems.render_system import RenderSystem
 
 VELOCITY = 1.5 - 1e-8  # This ensures that the rounding produces the displacement pattern 1,2,1,2... that averages a velocity of 1.5
@@ -120,7 +120,7 @@ class Scene(BaseScene):
         camera = Camera(0, 0, config.RESOLUTION.x, config.RESOLUTION.y)
 
         # Systems
-        input_system = InputSystem(controller)
+        input_system = PlayerInputSystem(controller)
         movement_system = MovementSystem()
         collision_system = CollisionSystem()
         inventory_system = InventorySystem(player_entity_id, self.inventory)

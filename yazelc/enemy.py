@@ -1,6 +1,6 @@
 from yazelc import components as cmp
 from yazelc import zesper
-from yazelc.systems.input_system import InputMessage
+from yazelc.systems.player_input_system import InputMessage
 from yazelc.utils.game_utils import Direction, Status
 
 JELLY_VEL = 0.5

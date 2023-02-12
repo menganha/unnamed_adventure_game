@@ -1,37 +1,25 @@
 """ Module extends the esper package"""
-
-from collections import deque
 from typing import TypeVar, Optional, Union, Type
 
 from esper import *
 
-from yazelc.clock import Timer
-from yazelc.event import Event
+from yazelc.event.event_queue import EventQueue
 from yazelc.resource_manager import ResourceManager
 
 C = TypeVar('C')
 C_alt = TypeVar('C_alt')  # alternative component
 
 
-class Processor(Processor):  # noqa
-
-    def __init__(self):
-        self.events: deque[Event] = deque()
-        self.timers: list[Timer] = list()
-
-
 class World(World):
     """
-    The class is overridden by adding state variables for entities that are "important", that is, that are referenced
-    all around the code.
-
-    Also, additional helpful methods are included
+    Adds resource management and event queue reference to be used by systems.
+    Additional helpful methods are included
     """
 
-    def __init__(self):
+    def __init__(self, resource_manager: ResourceManager, event_queue: EventQueue):
         super().__init__()
-        self.resource_manager = ResourceManager()
-        # TODO: Would it be better to decouple it?????
+        self.resource_manager = resource_manager
+        self.event_queue = event_queue
 
     def try_pair_signature(self, ent_1: int, ent_2: int, component_type_1: Type[C], component_type_2: Type[C_alt]) \
             -> Union[tuple[int, C, int, C_alt], tuple[int, C_alt, int, C], None]:
@@ -78,3 +66,7 @@ class World(World):
     def clear_database(self) -> None:
         super().clear_database()
         self.clear_processors()
+
+
+class Processor(Processor):  # noqa
+    world: World

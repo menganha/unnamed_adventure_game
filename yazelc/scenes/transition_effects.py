@@ -14,7 +14,7 @@ from yazelc import zesper
 from yazelc.camera import Camera
 from yazelc.systems.camera_system import CameraSystem
 from yazelc.systems.collision_system import CollisionSystem
-from yazelc.systems.input_system import InputSystem
+from yazelc.systems.player_input_system import PlayerInputSystem
 
 if TYPE_CHECKING:
     pass
@@ -33,7 +33,7 @@ def closing_circle(player_entity_id: int, camera: Camera, world: zesper.World):
     velocity.x = 0.30 * copysign(1.0, velocity.x) if abs(velocity.x) > 1e-4 else 0
     velocity.y = 0.30 * copysign(1.0, velocity.y) if abs(velocity.y) > 1e-4 else 0
 
-    world.remove_processor(InputSystem)
+    world.remove_processor(PlayerInputSystem)
     world.remove_processor(CollisionSystem)
     world.remove_processor(CameraSystem)
 

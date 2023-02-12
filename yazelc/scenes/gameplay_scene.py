@@ -12,11 +12,9 @@ from yazelc import hud
 from yazelc import items
 from yazelc import zesper
 from yazelc.camera import Camera
-from yazelc.components import Input
-from yazelc.event import EventType, PauseEvent, DeathEvent, RestartEvent, CollisionEvent
-from yazelc.gamepad import Gamepad
+from yazelc.controller import Controller
+from yazelc.event import events
 from yazelc.items import CollectableItemType
-from yazelc.keyboard import Keyboard
 from yazelc.map import Map, WorldMap
 from yazelc.menu import menu_box
 from yazelc.player import player
@@ -28,9 +26,9 @@ from yazelc.systems.camera_system import CameraSystem
 from yazelc.systems.collision_system import CollisionSystem
 from yazelc.systems.combat_system import CombatSystem
 from yazelc.systems.dialog_system import DialogSystem
-from yazelc.systems.input_system import InputSystem
 from yazelc.systems.inventory_system import InventorySystem
 from yazelc.systems.movement_system import MovementSystem
+from yazelc.systems.player_input_system import PlayerInputSystem
 from yazelc.systems.render_system import RenderSystem
 from yazelc.systems.visual_effects_system import VisualEffectsSystem
 from yazelc.utils.game_utils import Direction, Status
@@ -51,7 +49,7 @@ BOMB_IMG_PATH = Path('assets', 'sprites', 'bomb.png')
 MAP_VELOCITY_TRANSITION = 4
 PROCESSOR_PRIORITY = {
     AISystem: 11,
-    InputSystem: 10,
+    PlayerInputSystem: 10,
     MovementSystem: 9,
     CollisionSystem: 8,
     DialogSystem: 7,
@@ -65,14 +63,13 @@ PROCESSOR_PRIORITY = {
 
 class GameplayScene(BaseScene):
 
-    def __init__(self, window: pygame.Surface, map_file_path: Path, start_tile_x_pos: int, start_tile_y_pos: int,
+    def __init__(self, window: pygame.Surface, controller: Controller, map_file_path: Path, start_tile_x_pos: int, start_tile_y_pos: int,
                  player_components: Optional[tuple[Any, ...]] = None):
-        super().__init__(window)
+        super().__init__(window, controller)
         self.map_data_file = map_file_path
         self.start_tile_x_pos = start_tile_x_pos
         self.start_tile_y_pos = start_tile_y_pos
         self._cached_scene_processors: list[zesper.Processor] = []
-        self._input_storage: list[tuple[int, Input]] = []  # Stores the input components removed temporarily during a pause state
         self.player_entity_id: Optional[int] = None
         self.camera: Optional[Camera] = None
         self.maps: Optional[Map] = None
@@ -112,38 +109,36 @@ class GameplayScene(BaseScene):
         # items.create_entity(items.PickableItemType.HEART, 350, 355, self.world)
         inventory = {collectable_type: 0 for collectable_type in CollectableItemType}
 
-        # Get the input device
-        pygame.joystick.init()
-        if pygame.joystick.get_count():
-            controller = Gamepad(pygame.joystick.Joystick(0))
-        else:
-            controller = Keyboard()
-            pygame.joystick.quit()
-
         # Create the systems for the scene
         combat_system = CombatSystem(self.player_entity_id)
         dialog_system = DialogSystem()
         inventory_system = InventorySystem(self.player_entity_id, inventory)
+        input_system = PlayerInputSystem(self.player_entity_id)
+        vfx_system = VisualEffectsSystem()
         self.world.add_processor(AISystem(), PROCESSOR_PRIORITY[AISystem])
-        self.world.add_processor(InputSystem(controller), PROCESSOR_PRIORITY[InputSystem])
+        self.world.add_processor(input_system, PROCESSOR_PRIORITY[PlayerInputSystem])
         self.world.add_processor(MovementSystem(), PROCESSOR_PRIORITY[MovementSystem])
         self.world.add_processor(CollisionSystem(), PROCESSOR_PRIORITY[CollisionSystem])
         self.world.add_processor(dialog_system, PROCESSOR_PRIORITY[DialogSystem])
         self.world.add_processor(combat_system, PROCESSOR_PRIORITY[CombatSystem])
         self.world.add_processor(inventory_system, PROCESSOR_PRIORITY[InventorySystem])
-        self.world.add_processor(VisualEffectsSystem(), PROCESSOR_PRIORITY[VisualEffectsSystem])
+        self.world.add_processor(vfx_system, PROCESSOR_PRIORITY[VisualEffectsSystem])
         self.world.add_processor(CameraSystem(self.camera), PROCESSOR_PRIORITY[CameraSystem])
         self.world.add_processor(AnimationSystem(), PROCESSOR_PRIORITY[AnimationSystem])
         self.world.add_processor(RenderSystem(self.window, self.camera), PROCESSOR_PRIORITY[RenderSystem])
 
         # Register events
-        self.event_manager.subscribe(EventType.COLLISION, combat_system.on_collision)
-        self.event_manager.subscribe(EventType.COLLISION, dialog_system.on_collision)
-        self.event_manager.subscribe(EventType.COLLISION, inventory_system.on_collision)
-        self.event_manager.subscribe(EventType.DEATH, self.on_death)
-        self.event_manager.subscribe(EventType.RESTART, self.on_restart)
-        self.event_manager.subscribe(EventType.PAUSE, self.on_pause)
-        self.event_manager.subscribe(EventType.COLLISION, self.on_hit_door)
+        self.event_manager.subscribe(events.InputEvent, input_system.on_input_event)
+        self.event_manager.subscribe(events.CollisionEvent, combat_system.on_collision)
+        self.event_manager.subscribe(events.CollisionEvent, dialog_system.on_collision)
+        self.event_manager.subscribe(events.CollisionEvent, inventory_system.on_collision)
+        self.event_manager.subscribe(events.BombExplosionEvent, vfx_system.on_bomb_explosion)
+        self.event_manager.subscribe(events.BombExplosionEvent, combat_system.on_bomb_explosion)
+        self.event_manager.subscribe(events.DeathEvent, self.on_death)
+        self.event_manager.subscribe(events.RestartEvent, self.on_restart)
+        self.event_manager.subscribe(events.PauseEvent, self.on_pause)
+        self.event_manager.subscribe(events.ResumeEvent, self.on_resume)
+        self.event_manager.subscribe(events.CollisionEvent, self.on_hit_door)
 
     def load_resources(self):
         """ Should load all resources for a given scene """
@@ -218,33 +213,39 @@ class GameplayScene(BaseScene):
         if type(self.next_scene) == type(self) and self.next_scene != self:  # Why do we make this check?
             transition_effects.closing_circle(self.player_entity_id, self.camera, self.world)
 
-    def on_pause(self, pause_event: PauseEvent):
-        """ Handles the events of pause and unpause"""
-        self.paused = not self.paused
-        if self.paused:
-            # Removes all control form other entities unless it has a dialog or menu component
-            # We store these components locally for later reinsertion
-            for entity, input_ in self.world.get_component(cmp.Input):
-                if not self.world.has_component(entity, cmp.Dialog) and not self.world.has_component(entity, cmp.Menu):
-                    self._input_storage.append((entity, input_))
-                    self.world.remove_component(entity, cmp.Input)
-            self._cached_scene_processors = self.world.remove_all_processors_except(RenderSystem, DialogSystem, InputSystem)
-        else:
-            for entity, input_ in self._input_storage:
-                self.world.add_component(entity, input_)
-            self._input_storage = []
-            for proc in self._cached_scene_processors:
-                self.world.add_processor(proc)
-            self._cached_scene_processors = []
+    def on_pause(self, pause_event: events.PauseEvent):
+        """
+        Removes all control form other entities unless it has a dialog or menu component
+        We store these components locally for later reinsertion
+        """
 
-    def on_restart(self, restart_event: RestartEvent):
+        input_processor = self.world.get_processor(PlayerInputSystem)
+        self.event_manager.unsubscribe_class(input_processor)
+        self._cached_scene_processors = self.world.remove_all_processors_except(RenderSystem)
+
+        dialog_system = DialogSystem()
+        self.world.add_processor(dialog_system)
+        self.event_manager.subscribe_class(dialog_system)
+
+    def on_resume(self, resume_event: events.ResumeEvent):
+        for proc in self._cached_scene_processors:
+            self.world.add_processor(proc)
+        input_processor = self.world.get_processor(PlayerInputSystem)
+        self.event_manager.subscribe_class(input_processor)
+        self._cached_scene_processors = []
+
+        dialog_system = self.world.get_processor(DialogSystem)
+        self.event_manager.unsubscribe_class(dialog_system)
+        self.world.remove_processor(DialogSystem)
+
+    def on_restart(self, restart_event: events.RestartEvent):
         self.in_scene = False
         self.next_scene = self
         self.player_entity_id = None  # TODO: Should one keep the player or store some information here?
         self.world.clear_database()
-        self.event_manager.clear()
+        self.event_manager.remove_all_handlers()
 
-    def on_hit_door(self, collision_event: CollisionEvent):
+    def on_hit_door(self, collision_event: events.CollisionEvent):
         # TODO: Fix bug where enemies can go through doors since there are no solid hitboxes preventing movement
         if component := self.world.try_signature(collision_event.ent_1, collision_event.ent_2, cmp.Door):
             ent_door, door, player_ent = component
@@ -285,7 +286,8 @@ class GameplayScene(BaseScene):
                     self.world.add_component(layer_entity_id, cmp.Velocity(*map_velocity))
 
                 # Store some processors and remove them temporarily
-                for processor_type in (InputSystem, CollisionSystem, CameraSystem):
+                # TODO: Remove input handlers
+                for processor_type in (CollisionSystem, CameraSystem):
                     proc = self.world.get_processor(processor_type)
                     self._cached_scene_processors.append(proc)
                     self.world.remove_processor(processor_type)
@@ -320,12 +322,12 @@ class GameplayScene(BaseScene):
                 # Marks the event as handled
                 return True
 
-    def on_death(self, death_event: DeathEvent):
+    def on_death(self, death_event: events.DeathEvent):
         """
         Saves the status of the player (weapons, hearts, etc., wherever that is allocated in the end), removes all processors
         except the animation and render processor, and creates a death menu
         """
-        self.world.remove_all_processors_except(RenderSystem, InputSystem)
+        self.world.remove_all_processors_except(RenderSystem)
 
         # for entity_id in self.world.map_layers_entity_id:
         #     self.world.delete_entity(entity_id)

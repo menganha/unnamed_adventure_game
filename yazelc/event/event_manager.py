@@ -1,16 +1,10 @@
-from abc import ABC
 from collections import defaultdict
 from collections.abc import Callable
 from types import MethodType
-from typing import TypeVar
+from typing import TypeVar, Any
 from weakref import ref, WeakMethod
 
-
-class Event(ABC):
-    pass
-
-
-_EVENT = TypeVar('_EVENT', bound=Event)  # used for the static type checker for admitting any subclass
+_EVENT = TypeVar('_EVENT')  # used for the static type checker for admitting any subclass
 _EVENT_TYPE = type[_EVENT]
 
 
@@ -22,6 +16,9 @@ class EventManager:
 
     def __init__(self):
         self.subscribers = defaultdict(set)
+        from yazelc.event import events  # TODO: think of putting this on the top without causing circular imports
+        self._event_types = [getattr(events, attr) for attr in vars(events)
+                             if isinstance(getattr(events, attr), type) and attr.lower().endswith('event')]
 
     def subscribe(self, event_type: _EVENT_TYPE, handler: Callable[[_EVENT], None]):
         """ Subscribe handler method to event type """
@@ -29,7 +26,20 @@ class EventManager:
         callback_on_garbage_collection = self._make_callback(event_type)
         self.subscribers[event_type].add(reference_type(handler, callback_on_garbage_collection))
 
-    def dispatch_event(self, event: Event):
+    def subscribe_class(self, instance: Any):
+        """ Subscribe all bound methods of type if they have the right name format: on_{event_type} """
+        for type_ in self._event_types:
+            method_name = f'on_{type_.__name__.lower().replace("event", "")}'
+            if hasattr(instance, method_name):
+                self.subscribe(type_, getattr(instance, method_name))
+
+    def unsubscribe_class(self, instance: Any):
+        for type_ in self._event_types:
+            method_name = f'on_{type_.__name__.lower().replace("event", "")}'
+            if hasattr(instance, method_name):
+                self.remove_handler(type_, getattr(instance, method_name))
+
+    def dispatch_event(self, event: _EVENT):
         for listener in self.subscribers[type(event)]:
             listener()(event)
 
@@ -45,13 +55,13 @@ class EventManager:
         if not self.subscribers[event_type]:
             self.subscribers.pop(event_type)
 
-    def remove_all_handlers(self, event_type: type[Event] = None):
+    def remove_all_handlers(self, event_type: _EVENT_TYPE = None):
         if event_type:
             self.subscribers.pop(event_type, None)
         else:
             self.subscribers = defaultdict(set)
 
-    def _make_callback(self, event_type: type[Event]):
+    def _make_callback(self, event_type: _EVENT_TYPE):
         """ Creates a callback to remove dead handlers """
 
         def callback(weak_method):

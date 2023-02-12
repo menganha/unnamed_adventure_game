@@ -1,6 +1,7 @@
+from yazelc import dialog_box
 from yazelc import zesper
-from yazelc.components import Position, Velocity, HitBox
-from yazelc.event import CollisionEvent
+from yazelc.components import Position, Velocity, HitBox, InteractorTag, Dialog, Weapon, Health
+from yazelc.event.events import CollisionEvent, PauseEvent, DamageEvent
 from yazelc.player.player import VELOCITY
 
 
@@ -37,7 +38,18 @@ class CollisionSystem(zesper.Processor):
             rect_dictionary = {ent: hb for ent, hb in transparent_hitboxes[index + 1:]}  # prevents double counting and self checking
             entities_that_collided = hitbox_1.collidedictall(rect_dictionary, 1)
             for ent_2, _ in entities_that_collided:
-                self.events.append(CollisionEvent(ent_1, ent_2))
+                self.world.event_queue.enqueue_event(CollisionEvent(ent_1, ent_2))
+
+    def on_collision(self, collision_event: CollisionEvent):
+
+        # Handles collision when interacting with entities with the Dialog component
+        if components := self.world.try_pair_signature(collision_event.ent_1, collision_event.ent_2, InteractorTag, Dialog):
+            interactor_entity_id, _, dialog_entity_id, dialog = components
+            dialog_box.create_text_box(dialog_entity_id, dialog, self.world)
+            self.world.event_queue.enqueue_event(PauseEvent())
+        elif components := self.world.try_pair_signature(collision_event.ent_1, collision_event.ent_2, Health, Weapon):
+            damage_event = DamageEvent(*components)
+            self.world.event_queue.enqueue_event(damage_event)
 
     def _handle_corner_push(self, position: Position, velocity: Velocity, hitbox: HitBox, colliding_wall: HitBox,
                             impenetrable_hitboxes: list[HitBox]):

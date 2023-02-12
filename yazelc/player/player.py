@@ -8,9 +8,8 @@ from yazelc import visual_effects as vfx
 from yazelc import zesper
 from yazelc.clock import Timer
 from yazelc.controller import Button
-from yazelc.event import PauseEvent
+from yazelc.event.events import PauseEvent, InputEvent, BombExplosionEvent
 from yazelc.menu import menu_box
-from yazelc.systems.input_system import InputMessage
 from yazelc.utils.game_utils import Direction, Status
 
 VELOCITY = 1.5 - 1e-8  # This ensures that the rounding produces the displacement pattern 1,2,1,2... that averages a velocity of 1.5
@@ -38,8 +37,8 @@ SWORD_ACTIVE_FRAMES = ATTACK_ANIMATION_FRAMES * 4
 SWORD_RECOIL_VEL = 5
 SWORD_SPRITE_WIDTH = 48
 
+# TODO: Pass bomb related methods and variables to its own file to reduce couplings
 BOMB_SPRITES_ID = 'BOMB'
-BOMB_DAMAGE = 3
 BOMB_SPRITE_WIDTH = 16
 
 INTERACTIVE_FRONT_RANGE = 10
@@ -63,7 +62,7 @@ def create_player_at(center_x_pos: int, center_y_pos: int, world: zesper.World) 
     x_pos, y_pos = get_position_of_sprite(hitbox_component)
     world.add_component(player_entity_id, cmp.Position(x=x_pos, y=y_pos))
     world.add_component(player_entity_id, cmp.Velocity(x=0, y=0))
-    world.add_component(player_entity_id, cmp.Input(handle_input_function=handle_input))
+    # world.add_component(player_entity_id, cmp.Input(handle_input_function=handle_input))
     world.add_component(player_entity_id, cmp.State(Status.IDLE, Direction.DOWN))
     world.add_component(player_entity_id, cmp.Health(points=MAX_HEALTH))
     return player_entity_id
@@ -83,9 +82,9 @@ def get_position_of_hitbox(sprite_position: cmp.Position):
     return sprite_position.x + relative_pos_x, sprite_position.y + relative_pos_y
 
 
-def create_bomb(player_entity_id: int, world: zesper.World, timers: list[Timer]):
+def create_bomb(player_entity_id: int, world: zesper.World):
     bomb_explosion_delay_time = 100
-    bomb_entity = world.create_entity()
+    bomb_entity_id = world.create_entity()
     strip = world.resource_manager.get_animation_strip(BOMB_SPRITES_ID)
 
     position = world.component_for_entity(player_entity_id, cmp.Position)
@@ -96,26 +95,16 @@ def create_bomb(player_entity_id: int, world: zesper.World, timers: list[Timer])
 
     bomb_position_center_x = position.x + renderable.width // 2 + direction.value.x * 8
     bomb_position_center_y = position.y + renderable.height // 2 + direction.value.y * 8
-    bomb_position_x = bomb_position_center_x - bomb_renderable_component.width // 2
-    bomb_position_y = bomb_position_center_y - bomb_renderable_component.height // 2
+    bomb_position = cmp.Position(bomb_position_center_x - bomb_renderable_component.width // 2,
+                                 bomb_position_center_y - bomb_renderable_component.height // 2)
 
-    script_arguments = {'bomb_entity_id': bomb_entity, 'x_pos': bomb_position_center_x, 'y_pos': bomb_position_center_y, 'world': world}
+    world.add_component(bomb_entity_id, bomb_renderable_component)
+    BOMB_FRAME_SEQUENCE = [0] * 52 + [0, 0, 1, 1, 2, 2] * 8
+    world.add_component(bomb_entity_id, cmp.Animation(strip, 0, BOMB_FRAME_SEQUENCE))
+    world.add_component(bomb_entity_id, bomb_position)
 
-    world.add_component(bomb_entity, bomb_renderable_component)
-    frame_sequence = [0] * 52 + [0, 0, 1, 1, 2, 2] * 8
-    world.add_component(bomb_entity, cmp.Animation(strip, 0, frame_sequence))
-    world.add_component(bomb_entity, cmp.Position(bomb_position_x, bomb_position_y))
-    timers.append(Timer(bomb_explosion_delay_time, False, create_bomb_hitbox, **script_arguments))
-
-
-def create_bomb_hitbox(bomb_entity_id: int, x_pos: int, y_pos: int, world: zesper.World):
-    bomb_range = 20
-    hitbox = cmp.HitBox(0, 0, bomb_range * 2, bomb_range * 2)
-    hitbox.center = x_pos, y_pos
-    world.add_component(bomb_entity_id, hitbox)
-    world.add_component(bomb_entity_id, cmp.Weapon(damage=BOMB_DAMAGE, active_frames=10))
-    position = cmp.Position(*hitbox.center)
-    vfx.create_explosion(position, 60, bomb_range, cfg.C_RED, world)
+    bomb_explosion_event = BombExplosionEvent(bomb_entity_id, bomb_position)
+    world.event_queue.enqueue_event(bomb_explosion_event, bomb_explosion_delay_time)
 
 
 def create_melee_weapon(player_entity_id: int, world: zesper.World):
@@ -160,18 +149,16 @@ def handle_animation_for_input(ent_id: int, state: cmp.State, world: zesper.Worl
     world.add_component(ent_id, cmp.Animation(strip, animation_frames))
 
 
-def handle_input(input_message: InputMessage):
-    if input_message.controller.is_button_pressed(Button.START):
-        menu_box.create_pause_menu(input_message.world)
-        input_message.event_list.append(PauseEvent())
-        return
-
+def handle_input(input_event: InputEvent, player_entity_id: int, world: zesper.World):
+    if input_event.controller.is_button_pressed(Button.START):
+        menu_box.create_pause_menu(world)
+        world.event_queue.enqueue_event(PauseEvent(PauseEventType.MENU))
     else:
-        velocity = input_message.world.component_for_entity(input_message.ent_id, cmp.Velocity)
-        position = input_message.world.component_for_entity(input_message.ent_id, cmp.Position)
+        velocity = world.component_for_entity(player_entity_id, cmp.Velocity)
+        position = world.component_for_entity(player_entity_id, cmp.Position)
 
-        direction_x = - input_message.controller.is_button_down(Button.LEFT) + input_message.controller.is_button_down(Button.RIGHT)
-        direction_y = - input_message.controller.is_button_down(Button.UP) + input_message.controller.is_button_down(Button.DOWN)
+        direction_x = - input_event.controller.is_button_down(Button.LEFT) + input_event.controller.is_button_down(Button.RIGHT)
+        direction_y = - input_event.controller.is_button_down(Button.UP) + input_event.controller.is_button_down(Button.DOWN)
 
         abs_vel = VELOCITY_DIAGONAL if (direction_y and direction_x) else VELOCITY
         velocity.x = direction_x * abs_vel
@@ -179,10 +166,10 @@ def handle_input(input_message: InputMessage):
 
         # Snaps position to grid when the respective key has been released.  This allows for a deterministic movement
         # pattern by eliminating any decimal residual accumulated when resetting the position to an integer value
-        horizontal_key_released = (input_message.controller.is_button_released(Button.LEFT) or
-                                   input_message.controller.is_button_released(Button.RIGHT))
-        vertical_key_released = (input_message.controller.is_button_released(Button.UP) or
-                                 input_message.controller.is_button_released(Button.DOWN))
+        horizontal_key_released = (input_event.controller.is_button_released(Button.LEFT) or
+                                   input_event.controller.is_button_released(Button.RIGHT))
+        vertical_key_released = (input_event.controller.is_button_released(Button.UP) or
+                                 input_event.controller.is_button_released(Button.DOWN))
 
         if horizontal_key_released:
             position.x = round(position.x)
@@ -190,7 +177,7 @@ def handle_input(input_message: InputMessage):
             position.y = round(position.y)
 
         # Attempt to change direction only when a key is released or the status of the entity is not moving
-        state = input_message.world.component_for_entity(input_message.ent_id, cmp.State)
+        state = world.component_for_entity(player_entity_id, cmp.State)
         state.update()
 
         if (horizontal_key_released or vertical_key_released) or state.status != Status.MOVING:  # If it's moving don't change directions
@@ -203,7 +190,7 @@ def handle_input(input_message: InputMessage):
             elif direction_y < 0:
                 state.direction = Direction.UP
 
-        if input_message.controller.is_button_pressed(Button.B):
+        if input_event.controller.is_button_pressed(Button.B):
             state.status = Status.ATTACKING
         elif not direction_x and not direction_y:
             state.status = Status.IDLE
@@ -211,32 +198,32 @@ def handle_input(input_message: InputMessage):
             state.status = Status.MOVING
 
         if state.has_changed():
-            handle_animation_for_input(input_message.ent_id, state, input_message.world)
+            handle_animation_for_input(player_entity_id, state, world)
 
-        if input_message.controller.is_button_pressed(Button.B):
+        if input_event.controller.is_button_pressed(Button.B):
             velocity.x = 0  # Stop player when is attacking
             velocity.y = 0
 
             # TODO: one should create a small delay until the actual hitbox is created as the attack animation has some
             #   of gaining momentum for the swing
             # Creates a temporary hitbox representing the sword weapon
-            create_melee_weapon(input_message.ent_id, input_message.world)
+            create_melee_weapon(player_entity_id, world)
 
             # Block input until weapon lifetime is over and publish attach event. We need to block it one less than
             # The active frames as we are counting already the frame when it is activated as active
-            input_ = input_message.world.component_for_entity(input_message.ent_id, cmp.Input)
+            input_ = world.component_for_entity(player_entity_id, cmp.Input)
             input_.block_counter = SWORD_ACTIVE_FRAMES - 1
 
-        if input_message.controller.is_button_pressed(Button.A):
-            create_interactive_hitbox(input_message.ent_id, input_message.world, input_message.timers)
+        if input_event.controller.is_button_pressed(Button.A):
+            create_interactive_hitbox(player_entity_id, world)
 
-        if input_message.controller.is_button_pressed(Button.L):
-            vfx.create_explosion(position, 30, 30, cfg.C_WHITE, input_message.world)
+        if input_event.controller.is_button_pressed(Button.L):
+            vfx.create_explosion(position, 30, 30, cfg.C_WHITE, world)
 
-        if input_message.controller.is_button_pressed(Button.X):
-            create_bomb(input_message.ent_id, input_message.world, input_message.timers)
+        if input_event.controller.is_button_pressed(Button.X):
+            create_bomb(player_entity_id, world)
 
-        if input_message.controller.is_button_pressed(Button.SELECT):
+        if input_event.controller.is_button_pressed(Button.SELECT):
             cfg.DEBUG_MODE = not cfg.DEBUG_MODE
 
 
