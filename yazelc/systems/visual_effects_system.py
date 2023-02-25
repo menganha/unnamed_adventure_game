@@ -1,10 +1,9 @@
 from math import isclose
 
-from yazelc import config as cfg
 from yazelc import visual_effects as vfx
 from yazelc import zesper
 from yazelc.components import Particle, Position, Velocity
-from yazelc.event.events import BombExplosionEvent
+from yazelc.event.events import ExplosionEvent
 
 
 class VisualEffectsSystem(zesper.Processor):
@@ -20,7 +19,5 @@ class VisualEffectsSystem(zesper.Processor):
             if isclose(vel.x, 0, abs_tol=self.ABS_TOL) and isclose(vel.y, 0, abs_tol=self.ABS_TOL):
                 self.world.delete_entity(ent)
 
-    def on_bombexplosion(self, bomb_explosion_event: BombExplosionEvent):
-        BOMB_RANGE = 20
-        BOMB_PARTICLES = 60
-        vfx.create_explosion(bomb_explosion_event.position, BOMB_PARTICLES, BOMB_RANGE, cfg.C_RED, self.world)
+    def on_explosion(self, explosion: ExplosionEvent):
+        vfx.create_explosion(explosion.position, explosion.n_particles, explosion.max_vel, explosion.color, self.world)

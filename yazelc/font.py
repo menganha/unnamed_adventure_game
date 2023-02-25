@@ -9,7 +9,7 @@ class Font:
     SPACE_CHAR = ' '
     REFERENCE_CHAR = 'B'
 
-    def __init__(self, font: pygame.freetype.Font, size: int, color: pygame.Color):
+    def __init__(self, font: 'pygame.freetype.Font', size: int, color: pygame.Color):
         font.origin = True
         self.font = font
         self.size = size

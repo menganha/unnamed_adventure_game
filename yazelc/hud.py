@@ -17,14 +17,14 @@ HUD_FONT_ID = 'HUD'
 HEART_OFFSET = Vector(2, 2)
 
 
-def create_hud_entity(world: zesper.World) -> int:
+def create_hud_entity(world: zesper.World, health_points: int) -> int:
     hud_entity_id = world.create_entity()
     world.hud_entity_id = hud_entity_id
     hud_surface = pygame.surface.Surface((HUD_WIDTH, HUD_HEIGHT), flags=pygame.SRCALPHA)
-    world.add_component(hud_entity_id, Position(0, 0))
+    world.add_component(hud_entity_id, Position(0, 0, absolute=True))
     world.add_component(hud_entity_id, Renderable(hud_surface, depth=HUD_DEPTH))
-    # health_points = world.component_for_entity(player_entity_id, Health).points
-    # update_hud_hearts(hud_entity_id, world, health_points)
+    update_hud_hearts(hud_entity_id, health_points, world)
+    # TODO: Add here also all the updates for all the items that the hud consists of
     return hud_entity_id
 
 
@@ -37,7 +37,7 @@ def update_hud_keys(hud_entity_id: int, world: zesper.World, n_keys: int):
     font.render_text_at(text, hud_image)
 
 
-def update_hud_hearts(hud_entity_id: int, world: zesper.World, health_points: int):
+def update_hud_hearts(hud_entity_id: int, health_points: int, world: zesper.World):
     hud_image = world.component_for_entity(hud_entity_id, Renderable).image
     full_heart_image = world.resource_manager.get_texture(FULL_HEART_RESOURCE_NAME)
     half_heart_image = world.resource_manager.get_texture(HALF_HEART_RESOURCE_NAME)

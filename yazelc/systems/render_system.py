@@ -27,7 +27,7 @@ class RenderSystem(zesper.Processor):
             if blend := self.world.try_component(ent, cmp.BlendEffect):
                 new_image = rend.image.copy()
                 block = pygame.Surface(rend.image.get_size()).convert_alpha()
-                if blend.time_idx % 4 == 0:
+                if blend.timer.module(blend.blink_interval):
                     color = cfg.C_LIGHT_RED
                 else:
                     color = cfg.C_LIGHT_BLUE
@@ -35,8 +35,8 @@ class RenderSystem(zesper.Processor):
                 new_image.blit(block, (0, 0), special_flags=pygame.BLEND_RGBA_MIN)
                 new_image.blit(new_image, (0, 0), special_flags=pygame.BLEND_RGBA_ADD)
 
-                blend.time_idx += 1
-                if blend.time_idx == blend.time:
+                blend.timer.tick()
+                if blend.timer.has_finished():
                     self.world.remove_component(ent, cmp.BlendEffect)
 
                 img = new_image

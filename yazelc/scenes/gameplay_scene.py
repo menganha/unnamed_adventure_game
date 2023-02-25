@@ -10,6 +10,7 @@ from yazelc import dialog_box
 from yazelc import enemy
 from yazelc import hud
 from yazelc import items
+from yazelc import weapons
 from yazelc import zesper
 from yazelc.camera import Camera
 from yazelc.controller import Controller
@@ -25,7 +26,9 @@ from yazelc.systems.animation_system import AnimationSystem
 from yazelc.systems.camera_system import CameraSystem
 from yazelc.systems.collision_system import CollisionSystem
 from yazelc.systems.combat_system import CombatSystem
-from yazelc.systems.dialog_system import DialogSystem
+from yazelc.systems.delayed_entity_removal_system import EntityRemovalSystem
+from yazelc.systems.dialog_menu_system import DialogMenuSystem
+from yazelc.systems.hud_system import HudSystem
 from yazelc.systems.inventory_system import InventorySystem
 from yazelc.systems.movement_system import MovementSystem
 from yazelc.systems.player_input_system import PlayerInputSystem
@@ -47,18 +50,20 @@ ZERO_THRESHOLD = 1e-2
 FONT_COLOR = cfg.C_WHITE
 BOMB_IMG_PATH = Path('assets', 'sprites', 'bomb.png')
 MAP_VELOCITY_TRANSITION = 4
-PROCESSOR_PRIORITY = {
-    AISystem: 11,
-    PlayerInputSystem: 10,
-    MovementSystem: 9,
-    CollisionSystem: 8,
-    DialogSystem: 7,
-    CombatSystem: 6,
-    InventorySystem: 5,
-    VisualEffectsSystem: 4,
-    CameraSystem: 3,
-    AnimationSystem: 2,
-    RenderSystem: 1}
+PROCESSOR_PRIORITY = {system: idx + 1 for idx, system in enumerate(reversed(
+    [PlayerInputSystem,
+     AISystem,
+     MovementSystem,
+     CollisionSystem,
+     DialogMenuSystem,
+     CombatSystem,
+     InventorySystem,
+     HudSystem,
+     VisualEffectsSystem,
+     CameraSystem,
+     AnimationSystem,
+     EntityRemovalSystem,
+     RenderSystem]))}
 
 
 class GameplayScene(BaseScene):
@@ -99,7 +104,8 @@ class GameplayScene(BaseScene):
         self.camera.track_entity(self.player_entity_id, self.world)
 
         # Initialize the HUD
-        hud.create_hud_entity(self.world)
+        health_points = self.world.component_for_entity(self.player_entity_id, cmp.Health).points
+        hud_entity_id = hud.create_hud_entity(self.world, health_points)
 
         # Create a pickable item
         for idx in range(3):
@@ -111,37 +117,42 @@ class GameplayScene(BaseScene):
 
         # Create the systems for the scene
         combat_system = CombatSystem(self.player_entity_id)
-        dialog_system = DialogSystem()
         inventory_system = InventorySystem(self.player_entity_id, inventory)
         input_system = PlayerInputSystem(self.player_entity_id)
         vfx_system = VisualEffectsSystem()
+        entity_removal_system = EntityRemovalSystem()
+        collision_system = CollisionSystem()
+        hud_system = HudSystem(hud_entity_id)
         self.world.add_processor(AISystem(), PROCESSOR_PRIORITY[AISystem])
         self.world.add_processor(input_system, PROCESSOR_PRIORITY[PlayerInputSystem])
         self.world.add_processor(MovementSystem(), PROCESSOR_PRIORITY[MovementSystem])
-        self.world.add_processor(CollisionSystem(), PROCESSOR_PRIORITY[CollisionSystem])
-        self.world.add_processor(dialog_system, PROCESSOR_PRIORITY[DialogSystem])
+        self.world.add_processor(collision_system, PROCESSOR_PRIORITY[CollisionSystem])
         self.world.add_processor(combat_system, PROCESSOR_PRIORITY[CombatSystem])
         self.world.add_processor(inventory_system, PROCESSOR_PRIORITY[InventorySystem])
+        self.world.add_processor(hud_system, PROCESSOR_PRIORITY[HudSystem])
         self.world.add_processor(vfx_system, PROCESSOR_PRIORITY[VisualEffectsSystem])
         self.world.add_processor(CameraSystem(self.camera), PROCESSOR_PRIORITY[CameraSystem])
+        self.world.add_processor(entity_removal_system, PROCESSOR_PRIORITY[EntityRemovalSystem])
         self.world.add_processor(AnimationSystem(), PROCESSOR_PRIORITY[AnimationSystem])
         self.world.add_processor(RenderSystem(self.window, self.camera), PROCESSOR_PRIORITY[RenderSystem])
 
         # Register events
-        self.event_manager.subscribe(events.InputEvent, input_system.on_input_event)
-        self.event_manager.subscribe(events.CollisionEvent, combat_system.on_collision)
-        self.event_manager.subscribe(events.CollisionEvent, dialog_system.on_collision)
-        self.event_manager.subscribe(events.CollisionEvent, inventory_system.on_collision)
-        self.event_manager.subscribe(events.BombExplosionEvent, vfx_system.on_bomb_explosion)
-        self.event_manager.subscribe(events.BombExplosionEvent, combat_system.on_bomb_explosion)
-        self.event_manager.subscribe(events.DeathEvent, self.on_death)
-        self.event_manager.subscribe(events.RestartEvent, self.on_restart)
-        self.event_manager.subscribe(events.PauseEvent, self.on_pause)
-        self.event_manager.subscribe(events.ResumeEvent, self.on_resume)
-        self.event_manager.subscribe(events.CollisionEvent, self.on_hit_door)
+        self.event_manager.subscribe_handler(input_system)
+        self.event_manager.subscribe_handler(combat_system)
+        self.event_manager.subscribe_handler(inventory_system)
+        self.event_manager.subscribe_handler(vfx_system)
+        self.event_manager.subscribe_handler(collision_system)
+        self.event_manager.subscribe_handler(entity_removal_system)
+        self.event_manager.subscribe_handler(hud_system)
+        self.event_manager.subscribe_handler_method(events.DeathEvent, self.on_death)
+        self.event_manager.subscribe_handler_method(events.RestartEvent, self.on_restart)
+        self.event_manager.subscribe_handler_method(events.PauseEvent, self.on_pause)
+        self.event_manager.subscribe_handler_method(events.ResumeEvent, self.on_resume)
+        self.event_manager.subscribe_handler_method(events.CollisionEvent, self.on_hit_door)
 
     def load_resources(self):
         """ Should load all resources for a given scene """
+        # TODO: Do not use the resource manager instance reference  within the world instance but the one on this parent node
         world_map = WorldMap.from_map_file_path(self.map_data_file)
         for tileset_image_path in world_map.get_needed_images_path():
             self.world.resource_manager.add_texture(tileset_image_path)
@@ -154,7 +165,7 @@ class GameplayScene(BaseScene):
         self.world.resource_manager.add_animation_strip(TREASURE_IMAGE_PATH, InventorySystem.TREASURE_TILE_SIZE,
                                                         explicit_name=InventorySystem.TREASURE_TEXTURE_ID)
         self.world.resource_manager.add_animation_strip(COINS_IMAGE_PATH, items.COIN_TILE_SIZE, explicit_name=CollectableItemType.COIN.name)
-        self.world.resource_manager.add_animation_strip(BOMB_IMG_PATH, player.BOMB_SPRITE_WIDTH, explicit_name=player.BOMB_SPRITES_ID)
+        self.world.resource_manager.add_animation_strip(BOMB_IMG_PATH, weapons.BOMB_SPRITE_WIDTH, explicit_name=weapons.BOMB_SPRITES_ID)
         for direction in [Direction.UP, Direction.DOWN, Direction.RIGHT, Direction.LEFT]:
             for typ in [Status.MOVING, Status.ATTACKING]:
                 flip = False
@@ -220,23 +231,23 @@ class GameplayScene(BaseScene):
         """
 
         input_processor = self.world.get_processor(PlayerInputSystem)
-        self.event_manager.unsubscribe_class(input_processor)
+        self.event_manager.remove_handler(input_processor)
         self._cached_scene_processors = self.world.remove_all_processors_except(RenderSystem)
 
-        dialog_system = DialogSystem()
+        dialog_system = DialogMenuSystem()
         self.world.add_processor(dialog_system)
-        self.event_manager.subscribe_class(dialog_system)
+        self.event_manager.subscribe_handler(dialog_system)
 
     def on_resume(self, resume_event: events.ResumeEvent):
         for proc in self._cached_scene_processors:
-            self.world.add_processor(proc)
+            self.world.add_processor(proc, PROCESSOR_PRIORITY[type(proc)])
         input_processor = self.world.get_processor(PlayerInputSystem)
-        self.event_manager.subscribe_class(input_processor)
+        self.event_manager.subscribe_handler(input_processor)
         self._cached_scene_processors = []
 
-        dialog_system = self.world.get_processor(DialogSystem)
-        self.event_manager.unsubscribe_class(dialog_system)
-        self.world.remove_processor(DialogSystem)
+        dialog_system = self.world.get_processor(DialogMenuSystem)
+        self.event_manager.remove_handler(dialog_system)
+        self.world.remove_processor(DialogMenuSystem)
 
     def on_restart(self, restart_event: events.RestartEvent):
         self.in_scene = False
@@ -244,6 +255,7 @@ class GameplayScene(BaseScene):
         self.player_entity_id = None  # TODO: Should one keep the player or store some information here?
         self.world.clear_database()
         self.event_manager.remove_all_handlers()
+        self.event_queue.clear()
 
     def on_hit_door(self, collision_event: events.CollisionEvent):
         # TODO: Fix bug where enemies can go through doors since there are no solid hitboxes preventing movement
@@ -327,9 +339,17 @@ class GameplayScene(BaseScene):
         Saves the status of the player (weapons, hearts, etc., wherever that is allocated in the end), removes all processors
         except the animation and render processor, and creates a death menu
         """
+        menu_box.create_death_menu(self.world)
+
         self.world.remove_all_processors_except(RenderSystem)
+
+        input_processor = self.world.get_processor(PlayerInputSystem)
+        self.event_manager.remove_handler(input_processor)
+        self._cached_scene_processors = self.world.remove_all_processors_except(RenderSystem)
+
+        dialog_system = DialogMenuSystem()
+        self.world.add_processor(dialog_system)
+        self.event_manager.subscribe_handler(dialog_system)
 
         # for entity_id in self.world.map_layers_entity_id:
         #     self.world.delete_entity(entity_id)
-
-        menu_box.create_death_menu(self.world)

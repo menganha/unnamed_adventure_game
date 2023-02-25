@@ -2,17 +2,46 @@
 Define all Event types here
 """
 
-from yazelc.components import Position, Health, Weapon
+from dataclasses import dataclass
+from functools import partial
+
+from pygame import Color
+
+from yazelc.components import Collectable
 from yazelc.controller import Controller
 from yazelc.items import CollectableItemType
 
+eventclass = partial(dataclass, frozen=True)
 
+
+@eventclass
 class InputEvent:
-    def __init__(self, controller: Controller):
-        self.controller = controller
+    controller: Controller
+
+
+@eventclass
+class BlockInputEvent:
+    block_frames: int
 
 
 class DeathEvent:
+    pass
+
+
+@eventclass
+class DeleteEntityEvent:
+    entity_id: int
+
+
+@eventclass
+class CollectionEvent:
+    """ When player or interactor collider touches a collectable """
+    collectable_id: int
+    collectable: Collectable
+    collector_id: int
+
+
+class EnemyDecisionEvent:
     pass
 
 
@@ -20,12 +49,10 @@ class PauseEvent:
     pass
 
 
+@eventclass
 class DamageEvent:
-    def __init__(self, victim_id: int, victim_health: Health, attacker_id: int, attacker_weapon: Weapon):
-        self.victim_id = victim_id
-        self.victim_health = victim_health
-        self.attacker_id = attacker_id
-        self.attacker_weapon = attacker_weapon
+    victim_id: int
+    attacker_id: int
 
 
 class ResumeEvent:
@@ -36,21 +63,27 @@ class RestartEvent:
     pass
 
 
+@eventclass
 class CollisionEvent:
-
-    def __init__(self, ent_1: int, ent_2: int):
-        self.ent_1 = ent_1
-        self.ent_2 = ent_2
+    ent_1: int
+    ent_2: int
 
 
+@eventclass
 class HudUpdateEvent:
-
-    def __init__(self, collectable_item_type: CollectableItemType, value: int):
-        self.pickable_item_type = collectable_item_type
-        self.value = value
+    pickable_item_type: CollectableItemType
+    value: int
 
 
+@eventclass
+class ExplosionEvent:
+    """ Visual effect system event """
+    position: tuple[int, int]
+    n_particles: int
+    max_vel: int
+    color: Color
+
+
+@eventclass
 class BombExplosionEvent:
-    def __init__(self, bomb_entity_id: int, position: Position):
-        self.bomb_entity_id = bomb_entity_id
-        self.position = position
+    bomb_entity_id: int

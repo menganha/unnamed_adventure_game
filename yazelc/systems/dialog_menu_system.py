@@ -7,8 +7,8 @@ from yazelc.event.events import InputEvent, ResumeEvent
 from yazelc.menu import menu_box
 
 
-class DialogSystem(zesper.Processor):
-    """ Handles all text dialog. NPC and signs """
+class DialogMenuSystem(zesper.Processor):
+    """ Handles all text dialog (NPC and signs) and the context menus """
 
     def __init__(self):
         super().__init__()

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass as component
-from dataclasses import field
+from dataclasses import field, InitVar
 from enum import Enum, auto
 
 import pygame
@@ -9,6 +9,7 @@ import pygame
 from yazelc.font import Font
 from yazelc.items import CollectableItemType
 from yazelc.utils.game_utils import Direction, Status
+from yazelc.utils.timer import Timer
 
 Vector = pygame.Vector2
 
@@ -40,6 +41,9 @@ class Position(pygame.Vector2):
 
 class Velocity(pygame.Vector2):
     ZERO_THRESHOLD = 1e-3
+
+
+class Acceleration(Velocity): pass
 
 
 @component
@@ -112,15 +116,22 @@ class Particle:
 
 @component
 class BlendEffect:
-    time: int
-    time_idx: int = 0
+    time: InitVar[int]
+    blink_interval: int = 5
+    timer: Timer = field(init=False)  # frames of invincibility
+
+    def __post_init__(self, time: int):
+        self.timer = Timer(time)
 
 
 @component
 class Health:
     points: int = 10
-    cool_down_frames: int = 20  # frame of invincibility
-    cool_down_counter: int = field(init=False, default=0)
+    cooldown_time: InitVar[int] = 20
+    cooldown_timer: Timer = field(init=False)  # frames of invincibility
+
+    def __post_init__(self, cooldown_time: int):
+        self.cooldown_timer = Timer(cooldown_time)
 
 
 class HitBox(pygame.Rect):
@@ -213,16 +224,13 @@ class EnemyTag:
 @component
 class Weapon:
     damage: int = 5
-    active_frames: int = 20  # -1 means is infinite
+    active_frames: InitVar[int] = 20  # -1 means is infinite
     freeze_frames: int = 0  # frames of input blocked when hit
     recoil_velocity: int = 0
+    active_timer: Timer = field(init=False)
 
-
-# @component
-# class Input:
-#     handle_input_function: Callable[[InputEvent, int]]
-#     # block_counter: int = 0
-#     # is_paused: bool = False
+    def __post_init__(self, active_frames: int):
+        self.active_timer = Timer(active_frames)
 
 
 @component

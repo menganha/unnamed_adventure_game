@@ -8,6 +8,7 @@ from yazelc import zesper
 from yazelc.controller import Controller
 from yazelc.event.event_manager import EventManager
 from yazelc.event.event_queue import EventQueue
+from yazelc.resource_manager import ResourceManager
 
 
 class BaseScene(abc.ABC):
@@ -17,9 +18,10 @@ class BaseScene(abc.ABC):
 
     def __init__(self, window: pygame.Surface, controller: Controller):
         self.window: pygame.Surface = window
-        self.world: zesper.World = zesper.World()
+        self.resource_manager: ResourceManager = ResourceManager()
         self.event_manager: EventManager = EventManager()
         self.event_queue: EventQueue = EventQueue()
+        self.world: zesper.World = zesper.World(self.resource_manager, self.event_queue)
         self.controller: Controller = controller
         self.in_scene: bool = True
         self.next_scene: Optional['BaseScene'] = None

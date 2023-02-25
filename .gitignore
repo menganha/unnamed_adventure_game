@@ -6,3 +6,4 @@ assets
 .run
 *.tiled-project
 *.tiled-session
+profile_results

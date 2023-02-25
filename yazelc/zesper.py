@@ -1,7 +1,7 @@
 """ Module extends the esper package"""
 from typing import TypeVar, Optional, Union, Type
 
-from esper import *
+import esper
 
 from yazelc.event.event_queue import EventQueue
 from yazelc.resource_manager import ResourceManager
@@ -10,7 +10,7 @@ C = TypeVar('C')
 C_alt = TypeVar('C_alt')  # alternative component
 
 
-class World(World):
+class World(esper.World):
     """
     Adds resource management and event queue reference to be used by systems.
     Additional helpful methods are included
@@ -53,7 +53,7 @@ class World(World):
         else:
             return None
 
-    def remove_all_processors_except(self, *excluded_processor_types: Type[Processor]) -> list[Processor]:
+    def remove_all_processors_except(self, *excluded_processor_types: Type[esper.Processor]) -> list[esper.Processor]:
         """ No similar function on the esper Lib."""
         processors_to_remove = [proc for proc in self._processors if type(proc) not in excluded_processor_types]
         for processor in processors_to_remove:
@@ -68,5 +68,5 @@ class World(World):
         self.clear_processors()
 
 
-class Processor(Processor):  # noqa
+class Processor(esper.Processor):  # noqa
     world: World
