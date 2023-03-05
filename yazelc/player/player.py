@@ -7,7 +7,7 @@ from yazelc import config as cfg
 from yazelc import weapons
 from yazelc import zesper
 from yazelc.controller import Button
-from yazelc.event.events import InputEvent, ExplosionEvent, BlockInputEvent, DeleteEntityEvent
+from yazelc.event.events import InputEvent, ExplosionEvent, BlockInputEvent, DeleteEntityEvent, SoundTriggerEvent
 from yazelc.utils.game_utils import Direction, Status
 
 VELOCITY = 1.5 - 1e-8  # This ensures that the rounding produces the displacement pattern 1,2,1,2... that averages a velocity of 1.5
@@ -29,14 +29,16 @@ MOVE_ANIMATION_DELAY = 5
 # TODO: Modify the sprite such that the range of the sword is the same on all cardinal directions!!!
 SWORD_FRONT_RANGE = 15
 SWORD_SIDE_RANGE = 20
-SWORD_FREEZE_FRAMES = 8
+SWORD_FREEZE_FRAMES = 15
 SWORD_DAMAGE = 5
 SWORD_ACTIVE_FRAMES = ATTACK_ANIMATION_DELAY * 4
 SWORD_RECOIL_VEL = 5
 SWORD_SPRITE_WIDTH = 48
+SWORD_SOUND_EFFECT = 'hit'
 
 INTERACTIVE_FRONT_RANGE = 10
 INTERACTIVE_SIDE_RANGE = 2
+
 
 
 def create_player_at(center_x_pos: int, center_y_pos: int, world: zesper.World) -> int:
@@ -185,9 +187,11 @@ def handle_input(input_event: InputEvent, player_entity_id: int, world: zesper.W
         # Creates a temporary hitbox representing the sword weapon
         create_melee_weapon(player_entity_id, world)
 
-        # Block input until weapon lifetime is over and publish attach event. We need to block it one less than
-        # The active frames as we are counting already the frame when it is activated as active
+        # Block input until weapon lifetime is over and publish attach event. We need to block it one frame less than
+        # the number of active frames as we are counting already the frame when it is activated as active
+        sound_trigger_event = SoundTriggerEvent(SWORD_SOUND_EFFECT)
         block_event = BlockInputEvent(SWORD_ACTIVE_FRAMES - 1)
+        world.event_queue.enqueue_event(sound_trigger_event)
         world.event_queue.enqueue_event(block_event)
 
     if input_event.controller.is_button_pressed(Button.A):

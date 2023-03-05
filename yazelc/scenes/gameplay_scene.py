@@ -34,6 +34,7 @@ from yazelc.systems.movement_system import MovementSystem
 from yazelc.systems.player_input_system import PlayerInputSystem
 from yazelc.systems.render_system import RenderSystem
 from yazelc.systems.sound_system import SoundSystem
+from yazelc.systems.tween_system import TweenSystem
 from yazelc.systems.visual_effects_system import VisualEffectsSystem
 from yazelc.utils.game_utils import Direction, Status
 
@@ -46,6 +47,7 @@ COINS_IMAGE_PATH = Path('assets', 'sprites', 'coins.png')
 TREASURE_IMAGE_PATH = Path('assets', 'sprites', 'treasure.png')
 WEAPON_IMAGE_PATH = Path('assets', 'sprites', 'weapon')
 FONT_PATH = Path('assets', 'font', 'Anonymous Pro.ttf')
+SOUND_EFFECTS_PATH = Path('assets', 'sounds')
 FONT_SIZE = 12
 ZERO_THRESHOLD = 1e-2
 FONT_COLOR = cfg.C_WHITE
@@ -54,6 +56,7 @@ MAP_VELOCITY_TRANSITION = 4
 PROCESSOR_PRIORITY = {system: idx + 1 for idx, system in enumerate(reversed(
     [PlayerInputSystem,
      AISystem,
+     TweenSystem,
      MovementSystem,
      CollisionSystem,
      DialogMenuSystem,
@@ -89,6 +92,8 @@ class GameplayScene(BaseScene):
         self._generate_map()
         self._generate_objects()
 
+        pygame.mixer.music.load(r'assets/music/Quantic_y_Los_Míticos_del_Ritmo-Hotline_Bling.ogg')
+        pygame.mixer.music.play()
         # Add player entity
         player_x_pos, player_y_pos = self.maps.get_center_coord_from_tile(self.start_tile_x_pos, self.start_tile_y_pos)
         if self.player_entity_id is None:
@@ -126,6 +131,7 @@ class GameplayScene(BaseScene):
         collision_system = CollisionSystem()
         hud_system = HudSystem(hud_entity_id)
         ai_system = AISystem()
+        sound_system = SoundSystem()
         self.world.add_processor(ai_system, PROCESSOR_PRIORITY[AISystem])
         self.world.add_processor(input_system, PROCESSOR_PRIORITY[PlayerInputSystem])
         self.world.add_processor(MovementSystem(), PROCESSOR_PRIORITY[MovementSystem])
@@ -134,10 +140,11 @@ class GameplayScene(BaseScene):
         self.world.add_processor(inventory_system, PROCESSOR_PRIORITY[InventorySystem])
         self.world.add_processor(hud_system, PROCESSOR_PRIORITY[HudSystem])
         self.world.add_processor(vfx_system, PROCESSOR_PRIORITY[VisualEffectsSystem])
+        self.world.add_processor(TweenSystem(), PROCESSOR_PRIORITY[TweenSystem])
         self.world.add_processor(CameraSystem(self.camera), PROCESSOR_PRIORITY[CameraSystem])
         self.world.add_processor(entity_removal_system, PROCESSOR_PRIORITY[EntityRemovalSystem])
         self.world.add_processor(AnimationSystem(), PROCESSOR_PRIORITY[AnimationSystem])
-        self.world.add_processor(SoundSystem())
+        self.world.add_processor(sound_system, PROCESSOR_PRIORITY[SoundSystem])
         self.world.add_processor(RenderSystem(self.window, self.camera), PROCESSOR_PRIORITY[RenderSystem])
 
         # Register events
@@ -149,6 +156,7 @@ class GameplayScene(BaseScene):
         self.event_manager.subscribe_handler(entity_removal_system)
         self.event_manager.subscribe_handler(hud_system)
         self.event_manager.subscribe_handler(ai_system)
+        self.event_manager.subscribe_handler(sound_system)
         self.event_manager.subscribe_handler_method(events.DeathEvent, self.on_death)
         self.event_manager.subscribe_handler_method(events.HitDoorEvent, self.on_hit_door)
         self.event_manager.subscribe_handler_method(events.RestartEvent, self.on_restart)
@@ -171,6 +179,9 @@ class GameplayScene(BaseScene):
                                                         explicit_name=InventorySystem.TREASURE_TEXTURE_ID)
         self.world.resource_manager.add_animation_strip(COINS_IMAGE_PATH, items.COIN_TILE_SIZE, explicit_name=CollectableItemType.COIN.name)
         self.world.resource_manager.add_animation_strip(BOMB_IMG_PATH, weapons.BOMB_SPRITE_WIDTH, explicit_name=weapons.BOMB_SPRITES_ID)
+        for path in SOUND_EFFECTS_PATH.glob(f'*{self.resource_manager.OGG_FILETYPE}'):
+            self.world.resource_manager.add_sound(path)
+
         for direction in [Direction.UP, Direction.DOWN, Direction.RIGHT, Direction.LEFT]:
             for typ in [Status.MOVING, Status.ATTACKING]:
                 flip = False

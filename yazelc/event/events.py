@@ -97,3 +97,8 @@ class ExplosionEvent:
 @eventclass
 class BombExplosionEvent:
     bomb_entity_id: int
+
+
+@eventclass
+class SoundTriggerEvent:
+    id_str: str

@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 from dataclasses import dataclass as component
 from dataclasses import field, InitVar
 from enum import Enum, auto
@@ -77,6 +75,23 @@ class Dialog:
 class InteractorTag:
     """ Tag entity with Hitbox to signal the player interacting with colliding object """
     pass
+
+
+class TweenType(Enum):
+    EASE_OUT_CUBIC = auto()
+    EASE_OUT_QUINT = auto()
+    EASE_OUT_EXPO = auto()
+
+
+@component
+class Tween:
+    type: TweenType
+    direction: Direction
+    length: float
+    n_frames: int
+    rest_frames: int = 0  # Frames to rest at the end of the tween
+    frame_counter: int = field(init=False, default=1)
+    previous_relative_position: float = field(init=False, default=0.0)
 
 
 @component

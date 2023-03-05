@@ -1,17 +1,19 @@
 from yazelc import items
 from yazelc import zesper
-from yazelc.components import Collectable, InteractorTag, Health, Animation, Renderable, Position, Velocity, Acceleration
+from yazelc.components import Collectable, InteractorTag, Health, Animation, Renderable, Position, Velocity, Tween, TweenType
 from yazelc.event.events import CollectionEvent, HudUpdateEvent, DeleteEntityEvent
 from yazelc.player.player import MAX_HEALTH
+from yazelc.utils.game_utils import Direction
 
 
 class InventorySystem(zesper.Processor):
+    TREASURE_ITEM_TRAVEL_DISTANCE = 15
     TREASURE_TEXTURE_ID = 'TREASURE'
     TREASURE_TILE_SIZE = 16
     TREASURE_ANIMATION_DELAY = 5
     TREASURE_OBJECT_VELOCITY = -1
     TREASURE_OBJECT_ACCELERATION = 0.3
-    TREASURE_OBJECT_LIFETIME = 15
+    TREASURE_OBJECT_LIFETIME = 25
     TREASURE_OBJECT_OFFSET = 5
 
     def __init__(self, player_entity_id: int, inventory: dict[items.CollectableItemType, int]):
@@ -44,14 +46,13 @@ class InventorySystem(zesper.Processor):
             renderable = Renderable(images[0], depth=200)
             object_position = self.world.component_for_entity(collection_event.collectable_id, Position)
             position = Position(object_position.x, object_position.y - self.TREASURE_OBJECT_OFFSET)
-            velocity = Velocity(0, self.TREASURE_OBJECT_VELOCITY)
-            acceleration = Acceleration(0, self.TREASURE_OBJECT_ACCELERATION)
-            fake_entity_item = self.world.create_entity(velocity, position, renderable, acceleration)
+            velocity = Velocity()
+            tween = Tween(TweenType.EASE_OUT_EXPO, Direction.UP, self.TREASURE_ITEM_TRAVEL_DISTANCE, self.TREASURE_OBJECT_LIFETIME)
+            fake_entity_item = self.world.create_entity(position, renderable, velocity, tween)
             self.world.event_queue.enqueue_event(DeleteEntityEvent(fake_entity_item), self.TREASURE_OBJECT_LIFETIME)
 
             self._add_pickable(collection_event.collectable, self.player_entity_id)
             self.world.remove_component(collection_event.collectable_id, Collectable)
-            # TODO: Make a pause here
 
     def _add_pickable(self, collectable: Collectable, player_ent: int):
         """ Adds pickable to the player inventory"""

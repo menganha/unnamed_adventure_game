@@ -33,7 +33,7 @@ class AISystem(zesper.Processor):
 
         direction_choices = list(Direction)[:4]
         state.direction = choice(direction_choices)
-        state.status = Status.IDLE if random() < 0.5 else Status.MOVING  # TODO: Do we need statuses at all????!!
+        state.status = Status.IDLE if random() < 0.7 else Status.MOVING  # TODO: Do we need statuses at all????!!
 
         if state.status == Status.MOVING:
             velocity.x = state.direction.value.x

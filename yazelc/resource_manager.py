@@ -1,4 +1,5 @@
 import logging
+from enum import Enum
 from pathlib import Path
 
 import pygame
@@ -7,16 +8,24 @@ from yazelc import animation
 from yazelc.font import Font
 
 
+class SupportedFiletypes(Enum):
+    TRUE_TYPE_FONT = '.ttf'
+    PNG_FILETYPE = '.png'
+    OGG_FILETYPE = '.ogg'
+
 class ResourceManager:
     # TODO: HERE WE WOULD ALSO INITIALIZE THE SOUND RESOURCES
     TRUE_TYPE_FONT_FILETYPE = '.ttf'
     PNG_FILETYPE = '.png'
+    OGG_FILETYPE = '.ogg'
 
     def __init__(self):
         self._textures = {}
         self._animation_stripes = {}
         self._fonts = {}
+        self._sounds = {}
         self._pygame_font_objects = {}  # keeps track of pygame's loaded fonts (not the wrapper)
+
 
     def add_texture(self, path: Path, explicit_name: str = None) -> pygame.Surface:
         """ Uses file name stem if explicit name is not passed """
@@ -32,6 +41,21 @@ class ResourceManager:
         else:
             logging.info(f'Image on {path} has an existing texture instance with the id {name}')
             self.get_texture(name)
+
+    def add_sound(self, path: Path, explicit_name: str = None) -> pygame.mixer.Sound:
+        """ Uses file name stem if explicit name is not passed """
+        name = path.stem if not explicit_name else explicit_name
+        file_type = path.suffix
+        if name not in self._sounds:
+            if file_type == self.OGG_FILETYPE:
+                sound = pygame.mixer.Sound(path)
+                self._sounds.update({name: sound})
+                return sound
+            else:
+                raise ValueError(f'Unknown sound filetype: {path}')
+        else:
+            logging.info(f'Sound on {path} has an existing Sound instance with the id {name}')
+            self.get_sound(name)
 
     def add_font(self, path: Path, size: int, color: pygame.Color, explicit_name: str = None) -> Font:
         """
@@ -78,6 +102,9 @@ class ResourceManager:
 
     def get_font(self, name: str) -> Font:
         return self._fonts[name]
+
+    def get_sound(self, name: str) -> pygame.mixer.Sound:
+        return self._sounds[name]
 
     def get_animation_strip(self, name: str) -> list[pygame.Surface]:
         return self._animation_stripes[name]

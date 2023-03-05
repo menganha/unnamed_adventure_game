@@ -15,6 +15,8 @@ class CombatSystem(zesper.Processor):
     EXPLOSION_PARTICLES = 50
     EXPLOSION_MAX_VEL = 20
     EXPLOSION_COLOR = cfg.C_RED
+    RECOIL_LENGTH = 35
+    REST_FRAMES_AFTER_TWEEN = 3
 
     def __init__(self, player_entity_id: int):
         super().__init__()
@@ -69,15 +71,15 @@ class CombatSystem(zesper.Processor):
             self.world.add_component(damage_event.victim_id, cmp.BlendEffect(attacker_weapon.freeze_frames))
 
         # Effect on the recoil velocity
-        victim_vel = self.world.component_for_entity(damage_event.victim_id, cmp.Velocity)
         victim_hitbox = self.world.component_for_entity(damage_event.victim_id, cmp.HitBox)
         weapon_hitbox = self.world.component_for_entity(damage_event.attacker_id, cmp.HitBox)
 
         rel_pos_x = victim_hitbox.centerx - weapon_hitbox.centerx
         rel_pos_y = victim_hitbox.centery - weapon_hitbox.centery
         recoil_direction = Direction.closest_diagonal_direction(rel_pos_x, rel_pos_y)
-        victim_vel.x = recoil_direction.value.x * attacker_weapon.recoil_velocity
-        victim_vel.y = recoil_direction.value.y * attacker_weapon.recoil_velocity
+        recoil_tween = cmp.Tween(cmp.TweenType.EASE_OUT_EXPO, recoil_direction, self.RECOIL_LENGTH,
+                                 attacker_weapon.freeze_frames - self.REST_FRAMES_AFTER_TWEEN, self.REST_FRAMES_AFTER_TWEEN)
+        self.world.add_component(damage_event.victim_id, recoil_tween)
 
         # Block or freeze events
         if damage_event.victim_id == self.player_entity_id:
