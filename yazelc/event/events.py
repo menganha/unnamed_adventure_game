@@ -41,10 +41,12 @@ class CollectionEvent:
     collector_id: int
 
 
+@eventclass
 class EnemyDecisionEvent:
-    pass
+    enemy_id: int
 
 
+@eventclass
 class PauseEvent:
     pass
 
@@ -55,10 +57,12 @@ class DamageEvent:
     attacker_id: int
 
 
+@eventclass
 class ResumeEvent:
     pass
 
 
+@eventclass
 class RestartEvent:
     pass
 
@@ -67,6 +71,12 @@ class RestartEvent:
 class CollisionEvent:
     ent_1: int
     ent_2: int
+
+
+@eventclass
+class HitDoorEvent:
+    door_entity: int
+    transversing_entity: int
 
 
 @eventclass

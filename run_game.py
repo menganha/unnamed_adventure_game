@@ -9,6 +9,7 @@ from yazelc.keyboard import Keyboard
 
 pygame.init()
 pygame.freetype.init()
+pygame.mixer.init()
 
 from yazelc import config as cfg
 from yazelc import scene_manager

@@ -19,6 +19,6 @@ def create_jelly_at(x_pos: int, y_pos: int, world: zesper.World) -> int:
     world.add_component(enemy_entity, cmp.Position(x=x_pos, y=y_pos))
     world.add_component(enemy_entity, cmp.EnemyTag())
     world.add_component(enemy_entity, cmp.State(Status.IDLE, Direction.DOWN))
-    world.add_component(enemy_entity, cmp.Animation(image_strip, delay=JELLY_ANIMATION_DELAY))
+    world.add_component(enemy_entity, cmp.Animation.from_delay(image_strip, JELLY_ANIMATION_DELAY))
     world.add_component(enemy_entity, cmp.Renderable(image=image_strip[0]))
     return enemy_entity

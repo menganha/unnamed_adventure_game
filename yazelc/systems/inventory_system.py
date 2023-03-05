@@ -34,7 +34,7 @@ class InventorySystem(zesper.Processor):
         elif self.world.has_component(collection_event.collector_id, InteractorTag):
 
             image_strip = self.world.resource_manager.get_animation_strip(self.TREASURE_TEXTURE_ID)
-            animation = Animation(image_strip, delay=self.TREASURE_ANIMATION_DELAY, one_loop=True)
+            animation = Animation.from_delay(image_strip, self.TREASURE_ANIMATION_DELAY, one_loop=True)
             renderable = Renderable(image_strip[0])
             self.world.add_component(collection_event.collectable_id, animation)
             self.world.add_component(collection_event.collectable_id, renderable)

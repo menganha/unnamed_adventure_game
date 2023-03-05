@@ -33,6 +33,7 @@ from yazelc.systems.inventory_system import InventorySystem
 from yazelc.systems.movement_system import MovementSystem
 from yazelc.systems.player_input_system import PlayerInputSystem
 from yazelc.systems.render_system import RenderSystem
+from yazelc.systems.sound_system import SoundSystem
 from yazelc.systems.visual_effects_system import VisualEffectsSystem
 from yazelc.utils.game_utils import Direction, Status
 
@@ -63,6 +64,7 @@ PROCESSOR_PRIORITY = {system: idx + 1 for idx, system in enumerate(reversed(
      CameraSystem,
      AnimationSystem,
      EntityRemovalSystem,
+     SoundSystem,
      RenderSystem]))}
 
 
@@ -123,7 +125,8 @@ class GameplayScene(BaseScene):
         entity_removal_system = EntityRemovalSystem()
         collision_system = CollisionSystem()
         hud_system = HudSystem(hud_entity_id)
-        self.world.add_processor(AISystem(), PROCESSOR_PRIORITY[AISystem])
+        ai_system = AISystem()
+        self.world.add_processor(ai_system, PROCESSOR_PRIORITY[AISystem])
         self.world.add_processor(input_system, PROCESSOR_PRIORITY[PlayerInputSystem])
         self.world.add_processor(MovementSystem(), PROCESSOR_PRIORITY[MovementSystem])
         self.world.add_processor(collision_system, PROCESSOR_PRIORITY[CollisionSystem])
@@ -134,6 +137,7 @@ class GameplayScene(BaseScene):
         self.world.add_processor(CameraSystem(self.camera), PROCESSOR_PRIORITY[CameraSystem])
         self.world.add_processor(entity_removal_system, PROCESSOR_PRIORITY[EntityRemovalSystem])
         self.world.add_processor(AnimationSystem(), PROCESSOR_PRIORITY[AnimationSystem])
+        self.world.add_processor(SoundSystem())
         self.world.add_processor(RenderSystem(self.window, self.camera), PROCESSOR_PRIORITY[RenderSystem])
 
         # Register events
@@ -144,11 +148,12 @@ class GameplayScene(BaseScene):
         self.event_manager.subscribe_handler(collision_system)
         self.event_manager.subscribe_handler(entity_removal_system)
         self.event_manager.subscribe_handler(hud_system)
+        self.event_manager.subscribe_handler(ai_system)
         self.event_manager.subscribe_handler_method(events.DeathEvent, self.on_death)
+        self.event_manager.subscribe_handler_method(events.HitDoorEvent, self.on_hit_door)
         self.event_manager.subscribe_handler_method(events.RestartEvent, self.on_restart)
         self.event_manager.subscribe_handler_method(events.PauseEvent, self.on_pause)
         self.event_manager.subscribe_handler_method(events.ResumeEvent, self.on_resume)
-        self.event_manager.subscribe_handler_method(events.CollisionEvent, self.on_hit_door)
 
     def load_resources(self):
         """ Should load all resources for a given scene """
@@ -257,82 +262,80 @@ class GameplayScene(BaseScene):
         self.event_manager.remove_all_handlers()
         self.event_queue.clear()
 
-    def on_hit_door(self, collision_event: events.CollisionEvent):
-        # TODO: Fix bug where enemies can go through doors since there are no solid hitboxes preventing movement
-        if component := self.world.try_signature(collision_event.ent_1, collision_event.ent_2, cmp.Door):
-            ent_door, door, player_ent = component
-            if player_ent != self.player_entity_id:  # Check if the other entity is the players
-                return
-            if door.target_map.parent != self.map_data_file.parent:
-                self.in_scene = False
-                player_components = self.world.components_for_entity(self.player_entity_id)
-                current_scene_class = type(self)
-                self.next_scene = current_scene_class(self.window, door.target_map, door.target_x, door.target_y, player_components)
-            else:
-                self.empty_queues()
+    def on_hit_door(self, hit_door_event: events.HitDoorEvent):
+        if hit_door_event.transversing_entity != self.player_entity_id:  # Only player can go through door
+            return
+        door = self.world.component_for_entity(hit_door_event.door_entity, cmp.Door)
 
-                # Delete object entities and store references to old map layer image entities
-                for ent_id in self.maps.object_entities:
-                    if self.world.entity_exists(ent_id):
-                        self.world.delete_entity(ent_id)
-                previous_map_layers = self.maps.layer_entities
+        if door.target_map.parent != self.map_data_file.parent:  # If it is not part of the same parent map, i.e., another world
+            self.in_scene = False
+            player_components = self.world.components_for_entity(self.player_entity_id)
+            current_scene_class = type(self)
+            self.next_scene = current_scene_class(self.window, self.controller, door.target_map, door.target_x, door.target_y,
+                                                  player_components)
+        else:
+            self.event_queue.clear()
 
-                player_position = self.world.component_for_entity(player_ent, cmp.Position)
-                player_hitbox = self.world.component_for_entity(player_ent, cmp.HitBox)
-                player_velocity = self.world.component_for_entity(player_ent, cmp.Velocity)
+            # Delete object entities and store references to old map layer image entities for generating the "scroll" effect
+            for ent_id in self.maps.object_entities:
+                if self.world.entity_exists(ent_id):
+                    self.world.delete_entity(ent_id)
+            previous_map_layers = self.maps.layer_entities
 
-                # player_position.x, player_position.y = self.maps.get_coord_from_tile(door.target_x, door.target_y)
-                # player_hitbox.rect.centerx, player_hitbox.rect.centery = player.get_position_of_hitbox(player_position)
+            player_position = self.world.component_for_entity(self.player_entity_id, cmp.Position)
+            player_hitbox = self.world.component_for_entity(self.player_entity_id, cmp.HitBox)
+            player_velocity = self.world.component_for_entity(self.player_entity_id, cmp.Velocity)
 
-                normal = [0 if abs(value) < ZERO_THRESHOLD else copysign(1, value) for value in (player_velocity.x, player_velocity.y)]
-                map_velocity = [- value * MAP_VELOCITY_TRANSITION for value in normal]
-                new_map_position = [nor * res for (nor, res) in zip(normal, cfg.RESOLUTION)]
+            # player_position.x, player_position.y = self.maps.get_coord_from_tile(door.target_x, door.target_y)
+            # player_hitbox.rect.centerx, player_hitbox.rect.centery = player.get_position_of_hitbox(player_position)
 
-                # Generate new map and add velocity to the map layers and player
-                self.map_data_file = door.target_map
-                self._generate_map(*new_map_position)
+            normal = [0 if abs(value) < ZERO_THRESHOLD else copysign(1, value) for value in (player_velocity.x, player_velocity.y)]
+            map_velocity = [- value * MAP_VELOCITY_TRANSITION for value in normal]
+            new_map_position = [nor * res for (nor, res) in zip(normal, cfg.RESOLUTION)]
 
-                for layer_entity_id in self.maps.layer_entities:
-                    self.world.add_component(layer_entity_id, cmp.Velocity(*map_velocity))
-                for layer_entity_id in previous_map_layers:
-                    self.world.add_component(layer_entity_id, cmp.Velocity(*map_velocity))
+            # Generate new map and add velocity to the map layers and player
+            self.map_data_file = door.target_map
+            self._generate_map(*new_map_position)
 
-                # Store some processors and remove them temporarily
-                # TODO: Remove input handlers
-                for processor_type in (CollisionSystem, CameraSystem):
-                    proc = self.world.get_processor(processor_type)
-                    self._cached_scene_processors.append(proc)
-                    self.world.remove_processor(processor_type)
+            for layer_entity_id in self.maps.layer_entities:
+                self.world.add_component(layer_entity_id, cmp.Velocity(*map_velocity))
+            for layer_entity_id in previous_map_layers:
+                self.world.add_component(layer_entity_id, cmp.Velocity(*map_velocity))
 
-                # Run the animation. Remove magic numbers
-                distance = (cfg.RESOLUTION.x if abs(normal[0]) > ZERO_THRESHOLD else cfg.RESOLUTION.y)
-                frames_to_exit = round(distance / MAP_VELOCITY_TRANSITION)
-                # TODO: The amount of tiles is variable. For example for transitions without doors it , e.g., 1.2 instead of 3
-                velocity_for_three_tiles = [map_vel + 3 * cfg.TILE_WIDTH * nor / frames_to_exit for (map_vel, nor) in
-                                            zip(map_velocity, normal)]
-                player_velocity.x, player_velocity.y = velocity_for_three_tiles
-                while frames_to_exit > 0:
-                    self.world.process()
-                    frames_to_exit -= 1
+            # Store some processors and remove them temporarily
+            # TODO: Remove input handlers
 
-                player_velocity.x, player_velocity.y = 0, 0
-                player_position.x, player_position.y = self.maps.get_coord_from_tile(door.target_x, door.target_y)
-                player_hitbox.centerx, player_hitbox.centery = player.get_position_of_hitbox(player_position)
+            for processor_type in (CollisionSystem, CameraSystem):
+                proc = self.world.get_processor(processor_type)
+                self._cached_scene_processors.append(proc)
+                self.world.remove_processor(processor_type)
 
-                # Remove velocity components and delete old map layer entities
-                for layer_entity_id in self.maps.layer_entities:
-                    self.world.remove_component(layer_entity_id, cmp.Velocity)
-                for layer_entity_id in previous_map_layers:
-                    self.world.delete_entity(layer_entity_id)
+            # Run the animation. Remove magic numbers
+            distance = (cfg.RESOLUTION.x if abs(normal[0]) > ZERO_THRESHOLD else cfg.RESOLUTION.y)
+            frames_to_exit = round(distance / MAP_VELOCITY_TRANSITION)
+            # TODO: The amount of tiles is variable. For example for transitions without doors it , e.g., 1.2 instead of 3
+            velocity_for_three_tiles = [map_vel + 3 * cfg.TILE_WIDTH * nor / frames_to_exit for (map_vel, nor) in
+                                        zip(map_velocity, normal)]
+            player_velocity.x, player_velocity.y = velocity_for_three_tiles
+            while frames_to_exit > 0:
+                self.world.process()
+                frames_to_exit -= 1
 
-                # Generate new objects and add the cached processors
-                self._generate_objects()
-                for proc in self._cached_scene_processors:
-                    self.world.add_processor(proc, PROCESSOR_PRIORITY[type(proc)])
-                self._cached_scene_processors = []
+            player_velocity.x, player_velocity.y = 0, 0
+            player_position.x, player_position.y = self.maps.get_coord_from_tile(door.target_x, door.target_y)
+            player_hitbox.centerx, player_hitbox.centery = player.get_position_of_hitbox(player_position)
 
-                # Marks the event as handled
-                return True
+            # Remove velocity components and delete old map layer entities
+            for layer_entity_id in self.maps.layer_entities:
+                self.world.remove_component(layer_entity_id, cmp.Velocity)
+            for layer_entity_id in previous_map_layers:
+                self.world.delete_entity(layer_entity_id)
+
+            # Generate new objects and add the cached processors
+            self._generate_objects()
+            for proc in self._cached_scene_processors:
+                self.world.add_processor(proc, PROCESSOR_PRIORITY[type(proc)])
+            self._cached_scene_processors = []
 
     def on_death(self, death_event: events.DeathEvent):
         """

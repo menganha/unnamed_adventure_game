@@ -1,7 +1,7 @@
 from yazelc import dialog_box
 from yazelc import zesper
-from yazelc.components import Position, Velocity, HitBox, InteractorTag, Dialog, Weapon, Health, Collectable
-from yazelc.event.events import CollisionEvent, PauseEvent, DamageEvent, CollectionEvent
+from yazelc.components import Position, Velocity, HitBox, InteractorTag, Dialog, Weapon, Health, Collectable, Door
+from yazelc.event.events import CollisionEvent, PauseEvent, DamageEvent, CollectionEvent, HitDoorEvent
 from yazelc.player.player import VELOCITY
 
 
@@ -55,6 +55,10 @@ class CollisionSystem(zesper.Processor):
             victim_id, _, attacker_id, _ = components
             damage_event = DamageEvent(victim_id, attacker_id)
             self.world.event_queue.enqueue_event(damage_event)
+        elif component := self.world.try_signature(collision_event.ent_1, collision_event.ent_2, Door):
+            door_entity_id, _, transversing_entity_id = component
+            hit_door_event = HitDoorEvent(door_entity_id, transversing_entity_id)
+            self.world.event_queue.enqueue_event(hit_door_event)
 
     def _handle_corner_push(self, position: Position, velocity: Velocity, hitbox: HitBox, colliding_wall: HitBox,
                             impenetrable_hitboxes: list[HitBox]):

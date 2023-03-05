@@ -21,7 +21,7 @@ def create_entity(item_type: CollectableItemType, pos_x: int, pos_y: int, world:
     ent_id = world.create_entity()
     images = get_images(world, item_type)
     if len(images) > 1:
-        world.add_component(ent_id, cmp.Animation(images, COIN_ANIMATION_FRAME_DELAY))  # TODO: only works for coins now
+        world.add_component(ent_id, cmp.Animation.from_delay(images, COIN_ANIMATION_FRAME_DELAY))  # TODO: only works for coins now
     world.add_component(ent_id, cmp.Renderable(images[0]))
     world.add_component(ent_id, cmp.Position(pos_x, pos_y))
     world.add_component(ent_id, cmp.Collectable(item_type))

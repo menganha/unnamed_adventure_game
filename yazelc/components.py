@@ -202,9 +202,13 @@ class HitBox(pygame.Rect):
 @component
 class Brain:
     """ Brain given to an NPC character / Enemy AI"""
-    # direction: Direction = Direction.DOWN
-    think_frames: int = 0  # amount of frames it takes to take a new decision
-    think_counter: int = field(init=False, default=0)
+    think_frames: InitVar[int]
+    timer: Timer = field(init=False)
+    block_timer: Timer = field(init=False)
+
+    def __post_init__(self, think_frames: int):
+        self.timer = Timer(think_frames)
+        self.block_timer = Timer()
 
 
 @component
@@ -264,12 +268,23 @@ class State:
 @component
 class Animation:
     strip: list[pygame.Surface]
-    delay: int
-    frame_sequence: list[int] = None
-    index: int = 0
-    frame_counter: int = 0
+    frame_sequence: list[int]
     one_loop: bool = False
+    index: int = field(init=False)
+    frame_counter: int = field(init=False)
+    is_playing: bool = field(init=False, default=True)
 
     def __post_init__(self):
-        if self.frame_sequence is None:
-            self.frame_sequence = [idx for idx in range(len(self.strip)) for _ in range(self.delay)]
+        self.frame_counter = 0
+        self.index = 0
+
+    def stop(self):
+        self.is_playing = False
+
+    def resume(self):
+        self.is_playing = True
+
+    @classmethod
+    def from_delay(cls, strip: list[pygame.Surface], delay: int, one_loop: bool = False):
+        frame_sequence = [idx for idx in range(len(strip)) for _ in range(delay)]
+        return cls(strip, frame_sequence, one_loop)

@@ -22,16 +22,16 @@ SPRITE_DEPTH = 200
 
 MAX_HEALTH = 10  # Should always be divisible by two
 
-ATTACK_ANIMATION_FRAMES = 4
+ATTACK_ANIMATION_DELAY = 4
 IDLE_ANIMATION_FRAME = 10
-MOVE_ANIMATION_FRAMES = 5
+MOVE_ANIMATION_DELAY = 5
 
 # TODO: Modify the sprite such that the range of the sword is the same on all cardinal directions!!!
 SWORD_FRONT_RANGE = 15
 SWORD_SIDE_RANGE = 20
 SWORD_FREEZE_FRAMES = 8
 SWORD_DAMAGE = 5
-SWORD_ACTIVE_FRAMES = ATTACK_ANIMATION_FRAMES * 4
+SWORD_ACTIVE_FRAMES = ATTACK_ANIMATION_DELAY * 4
 SWORD_RECOIL_VEL = 5
 SWORD_SPRITE_WIDTH = 48
 
@@ -97,7 +97,7 @@ def create_melee_weapon(player_entity_id: int, world: zesper.World):
 
     direction = world.component_for_entity(player_entity_id, cmp.State).direction
     strip = world.resource_manager.get_animation_strip(f'wooden_sword_{direction.name}')
-    world.add_component(weapon_entity_id, cmp.Animation(strip, ATTACK_ANIMATION_FRAMES, one_loop=True))
+    world.add_component(weapon_entity_id, cmp.Animation.from_delay(strip, ATTACK_ANIMATION_DELAY, one_loop=True))
     world.add_component(weapon_entity_id, cmp.Renderable(strip[0], SPRITE_DEPTH + 1))
     player_position = world.component_for_entity(player_entity_id, cmp.Position)
     weapon_position_x = player_position.x - (SWORD_SPRITE_WIDTH - SPRITE_SIZE) // 2
@@ -120,13 +120,13 @@ def handle_animation_for_input(ent_id: int, state: cmp.State, world: zesper.Worl
         strip = strip[:1]
         animation_frames = 1
     elif state.status.MOVING:
-        animation_frames = MOVE_ANIMATION_FRAMES
+        animation_frames = MOVE_ANIMATION_DELAY
     elif state.status.ATTACKING:
-        animation_frames = ATTACK_ANIMATION_FRAMES
+        animation_frames = ATTACK_ANIMATION_DELAY
     else:
         raise RuntimeError(f'Animation frame for player not specified for the status {state.status} and direction {state.direction}')
 
-    world.add_component(ent_id, cmp.Animation(strip, animation_frames))
+    world.add_component(ent_id, cmp.Animation.from_delay(strip, animation_frames))
 
 
 def handle_input(input_event: InputEvent, player_entity_id: int, world: zesper.World):

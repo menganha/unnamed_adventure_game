@@ -4,7 +4,7 @@ from yazelc import components as cmp
 from yazelc import config as cfg
 from yazelc import weapons
 from yazelc import zesper
-from yazelc.event.events import DeathEvent, HudUpdateEvent, BombExplosionEvent, DamageEvent, ExplosionEvent, DeleteEntityEvent
+from yazelc.event.events import DeathEvent, HudUpdateEvent, BombExplosionEvent, DamageEvent, ExplosionEvent, DeleteEntityEvent, BlockInputEvent
 from yazelc.items import CollectableItemType
 from yazelc.utils.game_utils import Direction
 from yazelc.utils.game_utils import Status
@@ -58,18 +58,17 @@ class CombatSystem(zesper.Processor):
         if is_invincible or is_enemy_enemy_damage:
             return
 
-        # We could send an event here for entity specific handling. Like a Getting Hit event!
+        # Damage Taken
+        victim_health.cooldown_timer.reset()
+        victim_health.points -= attacker_weapon.damage
+
+        # Effects on the animation/renderable
         if state := self.world.try_component(damage_event.victim_id, cmp.State):
-            state.status = Status.HIT
-            if self.world.has_component(damage_event.victim_id, cmp.Animation):
-                self.world.remove_component(damage_event.victim_id, cmp.Animation)
-            if self.world.has_component(damage_event.victim_id, cmp.Renderable):
-                self.world.add_component(damage_event.victim_id, cmp.BlendEffect(attacker_weapon.freeze_frames))
+            state.status = Status.HIT  # todo: is this necessary at all? why do we need this?
+        if self.world.has_component(damage_event.victim_id, cmp.Renderable):
+            self.world.add_component(damage_event.victim_id, cmp.BlendEffect(attacker_weapon.freeze_frames))
 
-        # if input_ := self.world.try_component(damage_event.victim_id, cmp.Input):
-        #     input_.block_counter = damage_event.attacker_weapon.freeze_frames
-        # TODO: Perhaps add freeze state
-
+        # Effect on the recoil velocity
         victim_vel = self.world.component_for_entity(damage_event.victim_id, cmp.Velocity)
         victim_hitbox = self.world.component_for_entity(damage_event.victim_id, cmp.HitBox)
         weapon_hitbox = self.world.component_for_entity(damage_event.attacker_id, cmp.HitBox)
@@ -80,12 +79,18 @@ class CombatSystem(zesper.Processor):
         victim_vel.x = recoil_direction.value.x * attacker_weapon.recoil_velocity
         victim_vel.y = recoil_direction.value.y * attacker_weapon.recoil_velocity
 
-        victim_health.cooldown_timer.reset()
-        victim_health.points -= attacker_weapon.damage
-
+        # Block or freeze events
         if damage_event.victim_id == self.player_entity_id:
             hud_event = HudUpdateEvent(CollectableItemType.HEART, victim_health.points)
             self.world.event_queue.enqueue_event(hud_event)
+            block_event = BlockInputEvent(attacker_weapon.freeze_frames)
+            self.world.event_queue.enqueue_event(block_event)
+            self.world.remove_component(damage_event.victim_id, cmp.Animation)
+
+        if brain := self.world.try_component(damage_event.victim_id, cmp.Brain):
+            brain.block_timer.set(attacker_weapon.freeze_frames)
+            if animation := self.world.try_component(damage_event.victim_id, cmp.Animation):
+                animation.stop()
 
         logging.info(
             f'Entity {damage_event.victim_id} has received {attacker_weapon.damage} and has {victim_health.points} health points remaining')

@@ -22,13 +22,16 @@ def create_bomb(position: Position, world: zesper.World):
     strip = world.resource_manager.get_animation_strip(BOMB_SPRITES_ID)
     bomb_renderable_component = Renderable(image=strip[0])
     world.add_component(entity_id, bomb_renderable_component)
-    world.add_component(entity_id, Animation(strip, 0, BOMB_FRAME_SEQUENCE))
+    world.add_component(entity_id, Animation(strip, BOMB_FRAME_SEQUENCE))
     world.add_component(entity_id, position)
 
     bomb_explosion_event = BombExplosionEvent(entity_id)
     world.event_queue.enqueue_event(bomb_explosion_event, BOMB_EXPLOSION_DELAY_TIME)
 
-    explosion_event = ExplosionEvent(tuple(position), BOMB_EXPLOSION_PARTICLES, BOMB_RANGE, BOMB_EXPLOSION_COLOR)
+    x_center = position.x + BOMB_SPRITE_WIDTH // 2
+    y_center = position.y + BOMB_SPRITE_WIDTH // 2
+
+    explosion_event = ExplosionEvent((x_center, y_center), BOMB_EXPLOSION_PARTICLES, BOMB_RANGE, BOMB_EXPLOSION_COLOR)
     world.event_queue.enqueue_event(explosion_event, BOMB_EXPLOSION_DELAY_TIME)
 
 

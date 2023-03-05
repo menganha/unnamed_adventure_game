@@ -22,3 +22,6 @@ class Timer:
 
     def is_set(self) -> bool:
         return self._time != 0
+
+    def __str__(self):
+        return f'Timer({self._time})'
