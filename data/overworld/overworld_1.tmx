@@ -377,7 +377,8 @@
   </object>
   <object id="43455" x="448" y="160" width="16" height="16">
    <properties>
-    <property name="text" value="''"/>
+    <property name="text"
+              value="Tenga mucho cuidado. En esta direccion esta el bosque maldito. De verdad, no es mentira, se lo prometo. Un dia paseaba por aqui y vi algo raro que se movia entre los arboles, como ocultandose. Me dio mucho miedo"/>
    </properties>
   </object>
  </objectgroup>

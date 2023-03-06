@@ -102,3 +102,13 @@ class BombExplosionEvent:
 @eventclass
 class SoundTriggerEvent:
     id_str: str
+
+
+@eventclass
+class SoundEndEvent:
+    id_str: str
+
+
+@eventclass
+class DialogTriggerEvent:
+    dialog_entity_id: int

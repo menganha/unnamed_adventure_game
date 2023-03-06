@@ -132,6 +132,7 @@ class GameplayScene(BaseScene):
         hud_system = HudSystem(hud_entity_id)
         ai_system = AISystem()
         sound_system = SoundSystem()
+        dialog_system = DialogMenuSystem()
         self.world.add_processor(ai_system, PROCESSOR_PRIORITY[AISystem])
         self.world.add_processor(input_system, PROCESSOR_PRIORITY[PlayerInputSystem])
         self.world.add_processor(MovementSystem(), PROCESSOR_PRIORITY[MovementSystem])
@@ -140,6 +141,7 @@ class GameplayScene(BaseScene):
         self.world.add_processor(inventory_system, PROCESSOR_PRIORITY[InventorySystem])
         self.world.add_processor(hud_system, PROCESSOR_PRIORITY[HudSystem])
         self.world.add_processor(vfx_system, PROCESSOR_PRIORITY[VisualEffectsSystem])
+        self.world.add_processor(dialog_system, PROCESSOR_PRIORITY[DialogMenuSystem])
         self.world.add_processor(TweenSystem(), PROCESSOR_PRIORITY[TweenSystem])
         self.world.add_processor(CameraSystem(self.camera), PROCESSOR_PRIORITY[CameraSystem])
         self.world.add_processor(entity_removal_system, PROCESSOR_PRIORITY[EntityRemovalSystem])
@@ -157,6 +159,7 @@ class GameplayScene(BaseScene):
         self.event_manager.subscribe_handler(hud_system)
         self.event_manager.subscribe_handler(ai_system)
         self.event_manager.subscribe_handler(sound_system)
+        self.event_manager.subscribe_handler(dialog_system)
         self.event_manager.subscribe_handler_method(events.DeathEvent, self.on_death)
         self.event_manager.subscribe_handler_method(events.HitDoorEvent, self.on_hit_door)
         self.event_manager.subscribe_handler_method(events.RestartEvent, self.on_restart)
@@ -248,11 +251,7 @@ class GameplayScene(BaseScene):
 
         input_processor = self.world.get_processor(PlayerInputSystem)
         self.event_manager.remove_handler(input_processor)
-        self._cached_scene_processors = self.world.remove_all_processors_except(RenderSystem)
-
-        dialog_system = DialogMenuSystem()
-        self.world.add_processor(dialog_system)
-        self.event_manager.subscribe_handler(dialog_system)
+        self._cached_scene_processors = self.world.remove_all_processors_except(RenderSystem, DialogMenuSystem)
 
     def on_resume(self, resume_event: events.ResumeEvent):
         for proc in self._cached_scene_processors:
@@ -260,10 +259,6 @@ class GameplayScene(BaseScene):
         input_processor = self.world.get_processor(PlayerInputSystem)
         self.event_manager.subscribe_handler(input_processor)
         self._cached_scene_processors = []
-
-        dialog_system = self.world.get_processor(DialogMenuSystem)
-        self.event_manager.remove_handler(dialog_system)
-        self.world.remove_processor(DialogMenuSystem)
 
     def on_restart(self, restart_event: events.RestartEvent):
         self.in_scene = False
