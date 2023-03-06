@@ -4,7 +4,7 @@ from yazelc import components as cmp
 from yazelc import config as cfg
 from yazelc import weapons
 from yazelc import zesper
-from yazelc.event.events import DeathEvent, HudUpdateEvent, BombExplosionEvent, DamageEvent, ExplosionEvent, DeleteEntityEvent, BlockInputEvent
+from yazelc.event.events import DeathEvent, HudUpdateEvent, BombExplosionEvent, DamageEvent, ExplosionEvent, DeleteEntityEvent, BlockInputEvent, SoundTriggerEvent
 from yazelc.items import CollectableItemType
 from yazelc.utils.game_utils import Direction
 from yazelc.utils.game_utils import Status
@@ -17,6 +17,8 @@ class CombatSystem(zesper.Processor):
     EXPLOSION_COLOR = cfg.C_RED
     RECOIL_LENGTH = 35
     REST_FRAMES_AFTER_TWEEN = 3
+    DAMAGE_SOUND_ID = 'hit_2'
+    ENEMY_DEATH_SOUND = 'explosion'
 
     def __init__(self, player_entity_id: int):
         super().__init__()
@@ -45,6 +47,7 @@ class CombatSystem(zesper.Processor):
                     position = self.world.component_for_entity(ent, cmp.Position)
                     explosion_event = ExplosionEvent(position, self.EXPLOSION_PARTICLES, self.EXPLOSION_MAX_VEL, self.EXPLOSION_COLOR)
                     self.world.event_queue.enqueue_event(explosion_event, self.TIME_TO_REMOVE_ENT_AFTER_DEATH)
+                    self.world.event_queue.enqueue_event(SoundTriggerEvent(self.ENEMY_DEATH_SOUND), self.TIME_TO_REMOVE_ENT_AFTER_DEATH)
 
     def on_bomb_explosion(self, bomb_explosion_event: BombExplosionEvent):
         weapons.add_weapon_component_to_bomb(bomb_explosion_event.bomb_entity_id, self.world)
@@ -69,6 +72,7 @@ class CombatSystem(zesper.Processor):
             state.status = Status.HIT  # todo: is this necessary at all? why do we need this?
         if self.world.has_component(damage_event.victim_id, cmp.Renderable):
             self.world.add_component(damage_event.victim_id, cmp.BlendEffect(attacker_weapon.freeze_frames))
+        self.world.event_queue.enqueue_event(SoundTriggerEvent(self.DAMAGE_SOUND_ID))
 
         # Effect on the recoil velocity
         victim_hitbox = self.world.component_for_entity(damage_event.victim_id, cmp.HitBox)

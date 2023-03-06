@@ -74,7 +74,7 @@ PROCESSOR_PRIORITY = {system: idx + 1 for idx, system in enumerate(reversed(
 class GameplayScene(BaseScene):
 
     def __init__(self, window: pygame.Surface, controller: Controller, map_file_path: Path, start_tile_x_pos: int, start_tile_y_pos: int,
-                 player_components: Optional[tuple[Any, ...]] = None):
+                 player_components: Optional[tuple[Any, ...]] = None, music_path: Path = None):
         super().__init__(window, controller)
         self.map_data_file = map_file_path
         self.start_tile_x_pos = start_tile_x_pos
@@ -85,6 +85,7 @@ class GameplayScene(BaseScene):
         self.maps: Optional[Map] = None
         if player_components:
             self.player_entity_id = self.world.create_entity(*player_components)
+        self.music_path = music_path
 
     def on_enter(self):
 
@@ -92,8 +93,10 @@ class GameplayScene(BaseScene):
         self._generate_map()
         self._generate_objects()
 
-        pygame.mixer.music.load(r'assets/music/Quantic_y_Los_Míticos_del_Ritmo-Hotline_Bling.ogg')
-        pygame.mixer.music.play()
+        if self.music_path:
+            pygame.mixer.music.load(self.music_path)
+            pygame.mixer.music.play(-1)
+
         # Add player entity
         player_x_pos, player_y_pos = self.maps.get_center_coord_from_tile(self.start_tile_x_pos, self.start_tile_y_pos)
         if self.player_entity_id is None:
@@ -242,6 +245,7 @@ class GameplayScene(BaseScene):
     def on_exit(self):
         if type(self.next_scene) == type(self) and self.next_scene != self:  # Why do we make this check?
             transition_effects.closing_circle(self.player_entity_id, self.camera, self.world)
+        pygame.mixer.music.fadeout(20)
 
     def on_pause(self, pause_event: events.PauseEvent):
         """
@@ -276,9 +280,10 @@ class GameplayScene(BaseScene):
         if door.target_map.parent != self.map_data_file.parent:  # If it is not part of the same parent map, i.e., another world
             self.in_scene = False
             player_components = self.world.components_for_entity(self.player_entity_id)
-            current_scene_class = type(self)
+            current_scene_class = type(self)  # NOTE: It may be other type of scenes
+            non_overworld_music_path = Path('assets', 'music', 'Los_Miticos_del_Ritmo-La_Libanessa.ogg')
             self.next_scene = current_scene_class(self.window, self.controller, door.target_map, door.target_x, door.target_y,
-                                                  player_components)
+                                                  player_components, non_overworld_music_path)
         else:
             self.event_queue.clear()
 

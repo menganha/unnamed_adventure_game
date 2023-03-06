@@ -17,6 +17,7 @@ from yazelc.scenes.gameplay_scene import GameplayScene
 from yazelc.utils.game_utils import ImmutableVec
 
 INITIAL_MAP = Path('data', 'overworld', 'overworld_1.tmx')
+INITIAL_MUSIC_PATH = Path('assets', 'music', 'Quantic_y_Los_Míticos_del_Ritmo-Hotline_Bling.ogg')
 INITIAL_POS = ImmutableVec(10, 24)
 
 if __name__ == '__main__':
@@ -41,6 +42,6 @@ if __name__ == '__main__':
         pygame.joystick.quit()
         logging.info('Using keyboard controller')
 
-    gameplay_scene = GameplayScene(window, controller, map_path, initial_pos_x, initial_pos_y)
+    gameplay_scene = GameplayScene(window, controller, map_path, initial_pos_x, initial_pos_y, music_path=INITIAL_MUSIC_PATH)
     scene_manager.run_game_loop(initial_scene=gameplay_scene)
     pygame.quit()
