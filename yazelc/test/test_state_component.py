@@ -22,16 +22,16 @@ class TestStateComponents(unittest.TestCase):
         self.assertEqual(self.state.prev_direction, Direction.LEFT)
 
     def test_state_update(self):
-        self.state.status = Status.MOVING
+        self.state.status = Status.WALKING
         self.state.direction = Direction.RIGHT
         self.assertEqual(self.state.prev_direction, Direction.LEFT)
         self.assertEqual(self.state.prev_status, Status.IDLE)
         self.state.update()
         self.assertEqual(self.state.prev_direction, Direction.RIGHT)
-        self.assertEqual(self.state.prev_status, Status.MOVING)
+        self.assertEqual(self.state.prev_status, Status.WALKING)
 
     def test_state_has_changed(self):
-        self.state.status = Status.MOVING
+        self.state.status = Status.WALKING
         self.state.direction = Direction.RIGHT
         self.assertTrue(self.state.has_changed())
 

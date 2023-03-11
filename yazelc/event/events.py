@@ -44,6 +44,7 @@ class CollectionEvent:
 @eventclass
 class EnemyDecisionEvent:
     enemy_id: int
+    behaviour_type: int
 
 
 @eventclass

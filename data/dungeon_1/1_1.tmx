@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <map version="1.9" tiledversion="1.9.2" orientation="orthogonal" renderorder="right-down" width="17" height="15" tilewidth="16"
-     tileheight="16" infinite="0" nextlayerid="6" nextobjectid="1563">
+     tileheight="16" infinite="0" nextlayerid="6" nextobjectid="1947">
     <tileset firstgid="1" source="../tilesets/dungeon.tsx"/>
     <layer id="1" name="ground" width="17" height="15">
         <data encoding="csv">
@@ -60,73 +60,79 @@
         </data>
     </layer>
     <objectgroup id="3" name="colliders">
-        <object id="1515" x="32" y="16" width="16" height="16"/>
-        <object id="1516" x="48" y="16" width="16" height="16"/>
-        <object id="1517" x="64" y="16" width="16" height="16"/>
-        <object id="1518" x="80" y="16" width="16" height="16"/>
-        <object id="1519" x="96" y="16" width="16" height="16"/>
-        <object id="1520" x="160" y="16" width="16" height="16"/>
-        <object id="1521" x="176" y="16" width="16" height="16"/>
-        <object id="1522" x="192" y="16" width="16" height="16"/>
-        <object id="1523" x="208" y="16" width="16" height="16"/>
-        <object id="1524" x="224" y="16" width="16" height="16"/>
-        <object id="1525" x="112" y="16" width="16" height="16"/>
-        <object id="1526" x="144" y="16" width="16" height="16"/>
-        <object id="1527" x="240" y="32" width="16" height="16"/>
-        <object id="1528" x="240" y="48" width="16" height="16"/>
-        <object id="1529" x="240" y="64" width="16" height="16"/>
-        <object id="1530" x="240" y="80" width="16" height="16"/>
-        <object id="1531" x="240" y="144" width="16" height="16"/>
-        <object id="1532" x="240" y="160" width="16" height="16"/>
-        <object id="1533" x="240" y="176" width="16" height="16"/>
-        <object id="1534" x="240" y="192" width="16" height="16"/>
-        <object id="1535" x="16" y="96" width="16" height="16"/>
-        <object id="1536" x="112" y="208" width="16" height="16"/>
-        <object id="1537" x="144" y="208" width="16" height="16"/>
-        <object id="1538" x="32" y="208" width="16" height="16"/>
-        <object id="1539" x="48" y="208" width="16" height="16"/>
-        <object id="1540" x="64" y="208" width="16" height="16"/>
-        <object id="1541" x="80" y="208" width="16" height="16"/>
-        <object id="1542" x="96" y="208" width="16" height="16"/>
-        <object id="1543" x="160" y="208" width="16" height="16"/>
-        <object id="1544" x="176" y="208" width="16" height="16"/>
-        <object id="1545" x="192" y="208" width="16" height="16"/>
-        <object id="1546" x="208" y="208" width="16" height="16"/>
-        <object id="1547" x="224" y="208" width="16" height="16"/>
-        <object id="1548" x="240" y="96" width="16" height="16"/>
-        <object id="1549" x="16" y="128" width="16" height="16"/>
-        <object id="1550" x="240" y="128" width="16" height="16"/>
-        <object id="1551" x="16" y="32" width="16" height="16"/>
-        <object id="1552" x="16" y="48" width="16" height="16"/>
-        <object id="1553" x="16" y="64" width="16" height="16"/>
-        <object id="1554" x="16" y="80" width="16" height="16"/>
-        <object id="1555" x="16" y="144" width="16" height="16"/>
-        <object id="1556" x="16" y="160" width="16" height="16"/>
-        <object id="1557" x="16" y="176" width="16" height="16"/>
-        <object id="1558" x="16" y="192" width="16" height="16"/>
+        <object id="1899" x="32" y="16" width="16" height="16"/>
+        <object id="1900" x="48" y="16" width="16" height="16"/>
+        <object id="1901" x="64" y="16" width="16" height="16"/>
+        <object id="1902" x="80" y="16" width="16" height="16"/>
+        <object id="1903" x="96" y="16" width="16" height="16"/>
+        <object id="1904" x="160" y="16" width="16" height="16"/>
+        <object id="1905" x="176" y="16" width="16" height="16"/>
+        <object id="1906" x="192" y="16" width="16" height="16"/>
+        <object id="1907" x="208" y="16" width="16" height="16"/>
+        <object id="1908" x="224" y="16" width="16" height="16"/>
+        <object id="1909" x="112" y="16" width="16" height="16"/>
+        <object id="1910" x="144" y="16" width="16" height="16"/>
+        <object id="1911" x="240" y="32" width="16" height="16"/>
+        <object id="1912" x="240" y="48" width="16" height="16"/>
+        <object id="1913" x="240" y="64" width="16" height="16"/>
+        <object id="1914" x="240" y="80" width="16" height="16"/>
+        <object id="1915" x="240" y="144" width="16" height="16"/>
+        <object id="1916" x="240" y="160" width="16" height="16"/>
+        <object id="1917" x="240" y="176" width="16" height="16"/>
+        <object id="1918" x="240" y="192" width="16" height="16"/>
+        <object id="1919" x="16" y="96" width="16" height="16"/>
+        <object id="1920" x="112" y="208" width="16" height="16"/>
+        <object id="1921" x="144" y="208" width="16" height="16"/>
+        <object id="1922" x="32" y="208" width="16" height="16"/>
+        <object id="1923" x="48" y="208" width="16" height="16"/>
+        <object id="1924" x="64" y="208" width="16" height="16"/>
+        <object id="1925" x="80" y="208" width="16" height="16"/>
+        <object id="1926" x="96" y="208" width="16" height="16"/>
+        <object id="1927" x="160" y="208" width="16" height="16"/>
+        <object id="1928" x="176" y="208" width="16" height="16"/>
+        <object id="1929" x="192" y="208" width="16" height="16"/>
+        <object id="1930" x="208" y="208" width="16" height="16"/>
+        <object id="1931" x="224" y="208" width="16" height="16"/>
+        <object id="1932" x="240" y="96" width="16" height="16"/>
+        <object id="1933" x="16" y="128" width="16" height="16"/>
+        <object id="1934" x="240" y="128" width="16" height="16"/>
+        <object id="1935" x="16" y="32" width="16" height="16"/>
+        <object id="1936" x="16" y="48" width="16" height="16"/>
+        <object id="1937" x="16" y="64" width="16" height="16"/>
+        <object id="1938" x="16" y="80" width="16" height="16"/>
+        <object id="1939" x="16" y="144" width="16" height="16"/>
+        <object id="1940" x="16" y="160" width="16" height="16"/>
+        <object id="1941" x="16" y="176" width="16" height="16"/>
+        <object id="1942" x="16" y="192" width="16" height="16"/>
     </objectgroup>
     <objectgroup id="4" name="doors">
-        <object id="95" x="128" y="12" width="16" height="4">
+        <object id="1943" x="12" y="112" width="4" height="16">
             <properties>
                 <property name="target_door" value="''"/>
                 <property name="target_x" type="int" value="0"/>
                 <property name="target_y" type="int" value="0"/>
             </properties>
         </object>
-        <object id="96" x="260" y="112" width="16" height="4" rotation="90">
+        <object id="1944" x="128" y="12" width="16" height="4">
             <properties>
                 <property name="target_door" value="''"/>
                 <property name="target_x" type="int" value="0"/>
                 <property name="target_y" type="int" value="0"/>
             </properties>
         </object>
-        <object id="145" x="128" y="224" width="16" height="4">
+        <object id="1945" x="260" y="112" width="16" height="4" rotation="90">
             <properties>
-                <property name="target_door" value="dungeon_1:1_0.tmx"/>
-                <property name="target_x" type="int" value="8"/>
-                <property name="target_y" type="int" value="1"/>
+                <property name="target_door" value="''"/>
+                <property name="target_x" type="int" value="0"/>
+                <property name="target_y" type="int" value="0"/>
             </properties>
         </object>
-        <object id="1559" x="12" y="112" width="4" height="16"/>
+        <object id="1946" x="128" y="224" width="16" height="4">
+            <properties>
+                <property name="target_door" value="''"/>
+                <property name="target_x" type="int" value="0"/>
+                <property name="target_y" type="int" value="0"/>
+            </properties>
+        </object>
     </objectgroup>
 </map>

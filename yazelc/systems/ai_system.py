@@ -21,7 +21,7 @@ class AISystem(zesper.Processor):
 
             if brain.timer.has_finished() and not brain.block_timer.is_set():
                 brain.timer.reset()
-                self.world.event_queue.enqueue_event(EnemyDecisionEvent(ent))
+                self.world.event_queue.enqueue_event(EnemyDecisionEvent(ent, brain.behaviour_type))
 
             brain.timer.tick()
 
@@ -33,9 +33,9 @@ class AISystem(zesper.Processor):
 
         direction_choices = list(Direction)[:4]
         state.direction = choice(direction_choices)
-        state.status = Status.IDLE if random() < 0.7 else Status.MOVING  # TODO: Do we need statuses at all????!!
+        state.status = Status.IDLE if random() < 0.7 else Status.WALKING  # TODO: Do we need statuses at all????!!
 
-        if state.status == Status.MOVING:
+        if state.status == Status.WALKING:
             velocity.x = state.direction.value.x
             velocity.y = state.direction.value.y
         else:

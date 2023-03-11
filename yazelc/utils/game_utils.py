@@ -7,7 +7,7 @@ ImmutableVec = namedtuple('ImmutableVec', ['x', 'y'])
 
 class Status(Enum):
     IDLE = auto()
-    MOVING = auto()
+    WALKING = auto()
     HIT = auto()
     ATTACKING = auto()
     FREEZE = auto()

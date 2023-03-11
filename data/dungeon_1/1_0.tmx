@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.9" tiledversion="1.9.2" orientation="orthogonal" renderorder="right-down" width="17" height="15" tilewidth="16"
-     tileheight="16" infinite="0" nextlayerid="6" nextobjectid="1917">
+<map version="1.10" tiledversion="1.10.0" orientation="orthogonal" renderorder="right-down" width="17" height="15" tilewidth="16"
+     tileheight="16" infinite="0" nextlayerid="7" nextobjectid="2269">
  <tileset firstgid="1" source="../tilesets/dungeon.tsx"/>
  <layer id="1" name="ground" width="17" height="15">
   <data encoding="csv">
@@ -82,53 +82,67 @@
    </properties>
   </object>
  </objectgroup>
+ <objectgroup id="6" name="enemy">
+  <object id="2267" x="84" y="72">
+   <properties>
+    <property name="enemy" type="int" value="1"/>
+   </properties>
+   <point/>
+  </object>
+  <object id="2268" x="188" y="184">
+   <properties>
+    <property name="enemy" type="int" value="1"/>
+   </properties>
+   <point/>
+  </object>
+ </objectgroup>
  <objectgroup id="4" name="colliders">
-  <object id="1574" x="32" y="16" width="16" height="16"/>
-  <object id="1575" x="48" y="16" width="16" height="16"/>
-  <object id="1576" x="64" y="16" width="16" height="16"/>
-  <object id="1577" x="80" y="16" width="16" height="16"/>
-  <object id="1578" x="96" y="16" width="16" height="16"/>
-  <object id="1579" x="160" y="16" width="16" height="16"/>
-  <object id="1580" x="176" y="16" width="16" height="16"/>
-  <object id="1581" x="192" y="16" width="16" height="16"/>
-  <object id="1582" x="208" y="16" width="16" height="16"/>
-  <object id="1583" x="224" y="16" width="16" height="16"/>
-  <object id="1584" x="112" y="16" width="16" height="16"/>
-  <object id="1585" x="144" y="16" width="16" height="16"/>
-  <object id="1586" x="240" y="32" width="16" height="16"/>
-  <object id="1587" x="240" y="48" width="16" height="16"/>
-  <object id="1588" x="240" y="64" width="16" height="16"/>
-  <object id="1589" x="240" y="80" width="16" height="16"/>
-  <object id="1590" x="240" y="144" width="16" height="16"/>
-  <object id="1591" x="240" y="160" width="16" height="16"/>
-  <object id="1592" x="240" y="176" width="16" height="16"/>
-  <object id="1593" x="240" y="192" width="16" height="16"/>
-  <object id="1594" x="16" y="96" width="16" height="16"/>
-  <object id="1595" x="32" y="208" width="16" height="16"/>
-  <object id="1596" x="48" y="208" width="16" height="16"/>
-  <object id="1597" x="64" y="208" width="16" height="16"/>
-  <object id="1598" x="80" y="208" width="16" height="16"/>
-  <object id="1599" x="96" y="208" width="16" height="16"/>
-  <object id="1600" x="112" y="208" width="16" height="16"/>
-  <object id="1601" x="128" y="208" width="16" height="16"/>
-  <object id="1602" x="144" y="208" width="16" height="16"/>
-  <object id="1603" x="160" y="208" width="16" height="16"/>
-  <object id="1604" x="176" y="208" width="16" height="16"/>
-  <object id="1605" x="192" y="208" width="16" height="16"/>
-  <object id="1606" x="208" y="208" width="16" height="16"/>
-  <object id="1607" x="224" y="208" width="16" height="16"/>
-  <object id="1608" x="240" y="96" width="16" height="16"/>
-  <object id="1609" x="16" y="128" width="16" height="16"/>
-  <object id="1610" x="112" y="112" width="16" height="16"/>
-  <object id="1611" x="144" y="112" width="16" height="16"/>
-  <object id="1612" x="240" y="128" width="16" height="16"/>
-  <object id="1613" x="16" y="32" width="16" height="16"/>
-  <object id="1614" x="16" y="48" width="16" height="16"/>
-  <object id="1615" x="16" y="64" width="16" height="16"/>
-  <object id="1616" x="16" y="80" width="16" height="16"/>
-  <object id="1617" x="16" y="144" width="16" height="16"/>
-  <object id="1618" x="16" y="160" width="16" height="16"/>
-  <object id="1619" x="16" y="176" width="16" height="16"/>
-  <object id="1620" x="16" y="192" width="16" height="16"/>
+  <object id="2217" x="32" y="16" width="16" height="16"/>
+  <object id="2218" x="48" y="16" width="16" height="16"/>
+  <object id="2219" x="64" y="16" width="16" height="16"/>
+  <object id="2220" x="80" y="16" width="16" height="16"/>
+  <object id="2221" x="96" y="16" width="16" height="16"/>
+  <object id="2222" x="160" y="16" width="16" height="16"/>
+  <object id="2223" x="176" y="16" width="16" height="16"/>
+  <object id="2224" x="192" y="16" width="16" height="16"/>
+  <object id="2225" x="208" y="16" width="16" height="16"/>
+  <object id="2226" x="224" y="16" width="16" height="16"/>
+  <object id="2227" x="112" y="16" width="16" height="16"/>
+  <object id="2228" x="144" y="16" width="16" height="16"/>
+  <object id="2229" x="240" y="32" width="16" height="16"/>
+  <object id="2230" x="240" y="48" width="16" height="16"/>
+  <object id="2231" x="240" y="64" width="16" height="16"/>
+  <object id="2232" x="240" y="80" width="16" height="16"/>
+  <object id="2233" x="240" y="144" width="16" height="16"/>
+  <object id="2234" x="240" y="160" width="16" height="16"/>
+  <object id="2235" x="240" y="176" width="16" height="16"/>
+  <object id="2236" x="240" y="192" width="16" height="16"/>
+  <object id="2237" x="16" y="96" width="16" height="16"/>
+  <object id="2238" x="32" y="208" width="16" height="16"/>
+  <object id="2239" x="48" y="208" width="16" height="16"/>
+  <object id="2240" x="64" y="208" width="16" height="16"/>
+  <object id="2241" x="80" y="208" width="16" height="16"/>
+  <object id="2242" x="96" y="208" width="16" height="16"/>
+  <object id="2243" x="112" y="208" width="16" height="16"/>
+  <object id="2244" x="128" y="208" width="16" height="16"/>
+  <object id="2245" x="144" y="208" width="16" height="16"/>
+  <object id="2246" x="160" y="208" width="16" height="16"/>
+  <object id="2247" x="176" y="208" width="16" height="16"/>
+  <object id="2248" x="192" y="208" width="16" height="16"/>
+  <object id="2249" x="208" y="208" width="16" height="16"/>
+  <object id="2250" x="224" y="208" width="16" height="16"/>
+  <object id="2251" x="240" y="96" width="16" height="16"/>
+  <object id="2252" x="16" y="128" width="16" height="16"/>
+  <object id="2253" x="112" y="112" width="16" height="16"/>
+  <object id="2254" x="144" y="112" width="16" height="16"/>
+  <object id="2255" x="240" y="128" width="16" height="16"/>
+  <object id="2256" x="16" y="32" width="16" height="16"/>
+  <object id="2257" x="16" y="48" width="16" height="16"/>
+  <object id="2258" x="16" y="64" width="16" height="16"/>
+  <object id="2259" x="16" y="80" width="16" height="16"/>
+  <object id="2260" x="16" y="144" width="16" height="16"/>
+  <object id="2261" x="16" y="160" width="16" height="16"/>
+  <object id="2262" x="16" y="176" width="16" height="16"/>
+  <object id="2263" x="16" y="192" width="16" height="16"/>
  </objectgroup>
 </map>

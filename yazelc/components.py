@@ -218,6 +218,7 @@ class HitBox(pygame.Rect):
 class Brain:
     """ Brain given to an NPC character / Enemy AI"""
     think_frames: InitVar[int]
+    behaviour_type: int = 0
     timer: Timer = field(init=False)
     block_timer: Timer = field(init=False)
 

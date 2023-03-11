@@ -36,12 +36,13 @@ from yazelc.systems.render_system import RenderSystem
 from yazelc.systems.sound_system import SoundSystem
 from yazelc.systems.tween_system import TweenSystem
 from yazelc.systems.visual_effects_system import VisualEffectsSystem
-from yazelc.utils.game_utils import Direction, Status
+from yazelc.utils.game_utils import Direction
 
 FULL_HEART_IMAGE_PATH = Path('assets', 'sprites', 'full_heart.png')
 PLAYER_IMAGE_PATH = Path('assets', 'sprites', 'player')
 HALF_HEART_IMAGE_PATH = Path('assets', 'sprites', 'half_heart.png')
 EMPTY_HEART_IMAGE_PATH = Path('assets', 'sprites', 'empty_heart.png')
+ENEMY_PATH = Path('assets', 'sprites', 'enemy')
 JELLY_ENEMY_PATH = Path('assets', 'sprites', 'enemy', 'jelly_idle.png')
 COINS_IMAGE_PATH = Path('assets', 'sprites', 'coins.png')
 TREASURE_IMAGE_PATH = Path('assets', 'sprites', 'treasure.png')
@@ -188,23 +189,10 @@ class GameplayScene(BaseScene):
         for path in SOUND_EFFECTS_PATH.glob(f'*{self.resource_manager.OGG_FILETYPE}'):
             self.world.resource_manager.add_sound(path)
 
-        for direction in [Direction.UP, Direction.DOWN, Direction.RIGHT, Direction.LEFT]:
-            for typ in [Status.MOVING, Status.ATTACKING]:
-                flip = False
-                identifier = f'{typ.name}_{direction.name}'
-                dir_str = direction.name
-                if direction == Direction.LEFT:
-                    flip = True
-                    dir_str = Direction.RIGHT.name
-                img_path = PLAYER_IMAGE_PATH / f'{typ.name}_{dir_str}.png'.lower()
-                self.world.resource_manager.add_animation_strip(img_path, player.SPRITE_SIZE, flip, identifier)
+        self.world.resource_manager.add_all_animation_strips(ENEMY_PATH, enemy.KEFER_ID, enemy.KEFER_SPRITE_WIDTH)
+        self.world.resource_manager.add_all_animation_strips(PLAYER_IMAGE_PATH, player.SPRITE_SHEET_ID, player.SPRITE_SIZE)
 
         # idle animation
-        for direction in [Direction.UP, Direction.DOWN, Direction.RIGHT, Direction.LEFT]:
-            identifier = f'{Status.MOVING.name}_{direction.name}'
-            alias = f'{Status.IDLE.name}_{direction.name}'
-            self.world.resource_manager.add_animation_alias(identifier, alias)
-
         for direction in [Direction.UP, Direction.DOWN, Direction.RIGHT, Direction.LEFT]:
             identifier = f'wooden_sword_{direction.name}'
             img_path = WEAPON_IMAGE_PATH / f'{identifier}.png'.lower()
@@ -239,7 +227,7 @@ class GameplayScene(BaseScene):
             ent_id = self.world.create_entity(door, hitbox)
             self.maps.object_entities.append(ent_id)
         for pos_x, pos_y, enemy_type in self.maps.create_enemies():
-            ent_id = enemy.create_jelly_at(pos_x, pos_y, self.world)  # TODO: Generalize for any type of enemy
+            ent_id = enemy.create_enemy_at(pos_x, pos_y, self.world, enemy_type)  # TODO: Generalize for any type of enemy
             self.maps.object_entities.append(ent_id)
 
     def on_exit(self):

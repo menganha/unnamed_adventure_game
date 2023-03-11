@@ -6,12 +6,14 @@ import pygame
 
 from yazelc import animation
 from yazelc.font import Font
+from yazelc.utils.game_utils import Direction, Status
 
 
 class SupportedFiletypes(Enum):
     TRUE_TYPE_FONT = '.ttf'
     PNG_FILETYPE = '.png'
     OGG_FILETYPE = '.ogg'
+
 
 class ResourceManager:
     # TODO: HERE WE WOULD ALSO INITIALIZE THE SOUND RESOURCES
@@ -26,7 +28,6 @@ class ResourceManager:
         self._sounds = {}
         self._pygame_font_objects = {}  # keeps track of pygame's loaded fonts (not the wrapper)
 
-
     def add_texture(self, path: Path, explicit_name: str = None) -> pygame.Surface:
         """ Uses file name stem if explicit name is not passed """
         name = path.stem if not explicit_name else explicit_name
@@ -40,7 +41,7 @@ class ResourceManager:
                 raise ValueError(f'Unknown texture filetype: {path}')
         else:
             logging.info(f'Image on {path} has an existing texture instance with the id {name}')
-            self.get_texture(name)
+            return self.get_texture(name)
 
     def add_sound(self, path: Path, explicit_name: str = None) -> pygame.mixer.Sound:
         """ Uses file name stem if explicit name is not passed """
@@ -108,3 +109,39 @@ class ResourceManager:
 
     def get_animation_strip(self, name: str) -> list[pygame.Surface]:
         return self._animation_stripes[name]
+
+    def add_all_animation_strips(self, file_path: Path, name: str, sprite_width: int):
+        """ Expects file in the format name_<status>_<direction>.png and stores them in the name_<status>_<direction> """
+
+        for direction in (Direction.UP, Direction.DOWN, Direction.RIGHT, Direction.LEFT):
+            flip = True if direction == Direction.LEFT else False
+            direction_resource = Direction.RIGHT if direction == Direction.LEFT else direction
+            for typ in Status:
+                identifier = f'{name}_{typ.name}_{direction.name}'.lower()
+                img_path = file_path / f'{name}_{typ.name}_{direction_resource.name}.png'.lower()
+
+                if not img_path.exists():
+                    logging.info(f'The requested path for the animation strip {img_path} does not exists')
+                    continue
+
+                self.add_animation_strip(img_path, sprite_width, flip, identifier)
+
+        # If no idle then use the first frame of the walking animation as a temporary solution
+        has_idle = False
+        for direction in (Direction.UP, Direction.DOWN, Direction.RIGHT, Direction.LEFT):
+            status = Status.IDLE
+            identifier = f'{name}_{status.name}_{direction.name}'.lower()
+            if identifier not in self._animation_stripes:
+                walking_animation_id = f'{name}_{status.WALKING.name}_{direction.name}'.lower()
+                if walking_animation_id not in self._animation_stripes:
+                    continue
+                strip = self.get_animation_strip(walking_animation_id)
+                logging.info(f'No idle animation found for direction {direction.name}. '
+                             f'Using the first frame of walking animation to replace it {walking_animation_id}')
+                self._animation_stripes.update({identifier: strip[:1]})
+                has_idle = True
+            else:
+                has_idle = True
+
+        if not has_idle:
+            logging.error(f'Could not get a replacement idle animation for animation {name} in {file_path}')

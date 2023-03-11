@@ -19,6 +19,7 @@ HITBOX_Y_OFFSET = 2
 SKIN_DEPTH = 5
 SPRITE_SIZE = 16
 SPRITE_DEPTH = 200
+SPRITE_SHEET_ID = 'player'
 
 MAX_HEALTH = 10  # Should always be divisible by two
 
@@ -45,7 +46,8 @@ def create_player_at(center_x_pos: int, center_y_pos: int, world: zesper.World) 
     """ Creates the player entity centered at the given position"""
 
     player_entity_id = world.create_entity()
-    stripe = world.resource_manager.get_animation_strip(f'{Status.IDLE.name}_{Direction.DOWN.name}')
+    stripe = world.resource_manager.get_animation_strip(
+        f'player_{Status.IDLE.name}_{Direction.DOWN.name}'.lower())  # TODO: Generate a function to retrieve these!
     world.add_component(player_entity_id, cmp.Renderable(stripe[0], depth=SPRITE_DEPTH))
     # world.add_component(player_entity_id, cmp.Animation(stripe[:1], delay=IDLE_ANIMATION_FRAME))
 
@@ -115,13 +117,13 @@ def create_interactive_hitbox(player_entity_id: int, world: zesper.World):
 
 
 def handle_animation_for_input(ent_id: int, state: cmp.State, world: zesper.World):
-    animation_identifier = f'{state.status.name}_{state.direction.name}'
+    animation_identifier = f'player_{state.status.name}_{state.direction.name}'.lower()  # TODO: Make a general function!
     strip = world.resource_manager.get_animation_strip(animation_identifier)
 
     if state.status == Status.IDLE:
-        strip = strip[:1]
+        # strip = strip[:1]
         animation_frames = 1
-    elif state.status.MOVING:
+    elif state.status.WALKING:
         animation_frames = MOVE_ANIMATION_DELAY
     elif state.status.ATTACKING:
         animation_frames = ATTACK_ANIMATION_DELAY
@@ -158,7 +160,7 @@ def handle_input(input_event: InputEvent, player_entity_id: int, world: zesper.W
     state = world.component_for_entity(player_entity_id, cmp.State)
     state.update()
 
-    if (horizontal_key_released or vertical_key_released) or state.status != Status.MOVING:  # If it's moving don't change directions
+    if (horizontal_key_released or vertical_key_released) or state.status != Status.WALKING:  # If it's moving don't change directions
         if direction_x > 0:
             state.direction = Direction.RIGHT
         elif direction_x < 0:
@@ -168,17 +170,13 @@ def handle_input(input_event: InputEvent, player_entity_id: int, world: zesper.W
         elif direction_y < 0:
             state.direction = Direction.UP
 
-    if input_event.controller.is_button_pressed(Button.B):
-        state.status = Status.ATTACKING
-    elif not direction_x and not direction_y:
+    if not direction_x and not direction_y:
         state.status = Status.IDLE
     else:
-        state.status = Status.MOVING
-
-    if state.has_changed():
-        handle_animation_for_input(player_entity_id, state, world)
+        state.status = Status.WALKING
 
     if input_event.controller.is_button_pressed(Button.B):
+        state.status = Status.ATTACKING
         velocity.x = 0  # Stop player when is attacking
         velocity.y = 0
 
@@ -194,18 +192,21 @@ def handle_input(input_event: InputEvent, player_entity_id: int, world: zesper.W
         world.event_queue.enqueue_event(sound_trigger_event)
         world.event_queue.enqueue_event(block_event)
 
-    if input_event.controller.is_button_pressed(Button.A):
+    elif input_event.controller.is_button_pressed(Button.A):
         create_interactive_hitbox(player_entity_id, world)
 
-    if input_event.controller.is_button_pressed(Button.L):
+    elif input_event.controller.is_button_pressed(Button.L):
         explosion_event = ExplosionEvent(position, 30, 30, cfg.C_WHITE)
         world.event_queue.enqueue_event(explosion_event)
 
-    if input_event.controller.is_button_pressed(Button.X):
+    elif input_event.controller.is_button_pressed(Button.X):
         drop_bomb(player_entity_id, world)
 
-    if input_event.controller.is_button_pressed(Button.SELECT):
+    elif input_event.controller.is_button_pressed(Button.SELECT):
         cfg.DEBUG_MODE = not cfg.DEBUG_MODE
+
+    if state.has_changed():
+        handle_animation_for_input(player_entity_id, state, world)
 
 
 def _create_hitbox_in_front(player_entity_id: int, front_range: int, side_range: int, world: zesper.World) -> int:
