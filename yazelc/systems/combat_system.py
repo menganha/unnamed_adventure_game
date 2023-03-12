@@ -39,7 +39,7 @@ class CombatSystem(zesper.Processor):
                 if ent == self.player_entity_id:
                     self.world.event_queue.enqueue_event(DeathEvent())
                 else:
-                    for component in (cmp.Brain, cmp.Health, cmp.EnemyTag, cmp.Weapon):
+                    for component in (cmp.Brain, cmp.Health, cmp.Enemy, cmp.Weapon):
                         if self.world.has_component(ent, component):
                             self.world.remove_component(ent, component)
 
@@ -58,8 +58,8 @@ class CombatSystem(zesper.Processor):
         attacker_weapon = self.world.component_for_entity(damage_event.attacker_id, cmp.Weapon)
 
         is_invincible = not victim_health.cooldown_timer.has_finished()
-        is_enemy_enemy_damage = self.world.has_component(damage_event.victim_id, cmp.EnemyTag) and \
-                                self.world.has_component(damage_event.attacker_id, cmp.EnemyTag)
+        is_enemy_enemy_damage = self.world.has_component(damage_event.victim_id, cmp.Enemy) and \
+                                self.world.has_component(damage_event.attacker_id, cmp.Enemy)
         if is_invincible or is_enemy_enemy_damage:
             return
 
@@ -95,8 +95,8 @@ class CombatSystem(zesper.Processor):
 
         if brain := self.world.try_component(damage_event.victim_id, cmp.Brain):
             brain.block_timer.set(attacker_weapon.freeze_frames)
-            if animation := self.world.try_component(damage_event.victim_id, cmp.Animation):
-                animation.stop()
+            if self.world.has_component(damage_event.victim_id, cmp.Animation):
+                self.world.remove_component(damage_event.victim_id, cmp.Animation)
 
         logging.info(
             f'Entity {damage_event.victim_id} has received {attacker_weapon.damage} and has {victim_health.points} health points remaining')

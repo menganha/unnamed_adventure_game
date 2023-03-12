@@ -117,11 +117,10 @@ def create_interactive_hitbox(player_entity_id: int, world: zesper.World):
 
 
 def handle_animation_for_input(ent_id: int, state: cmp.State, world: zesper.World):
-    animation_identifier = f'player_{state.status.name}_{state.direction.name}'.lower()  # TODO: Make a general function!
+    animation_identifier = world.resource_manager.get_animation_identifier(SPRITE_SHEET_ID, state.status, state.direction)
     strip = world.resource_manager.get_animation_strip(animation_identifier)
 
     if state.status == Status.IDLE:
-        # strip = strip[:1]
         animation_frames = 1
     elif state.status.WALKING:
         animation_frames = MOVE_ANIMATION_DELAY

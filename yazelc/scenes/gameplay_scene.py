@@ -43,7 +43,7 @@ PLAYER_IMAGE_PATH = Path('assets', 'sprites', 'player')
 HALF_HEART_IMAGE_PATH = Path('assets', 'sprites', 'half_heart.png')
 EMPTY_HEART_IMAGE_PATH = Path('assets', 'sprites', 'empty_heart.png')
 ENEMY_PATH = Path('assets', 'sprites', 'enemy')
-JELLY_ENEMY_PATH = Path('assets', 'sprites', 'enemy', 'jelly_idle.png')
+# JELLY_ENEMY_PATH = Path('assets', 'sprites', 'enemy', 'jelly_idle.png')
 COINS_IMAGE_PATH = Path('assets', 'sprites', 'coins.png')
 TREASURE_IMAGE_PATH = Path('assets', 'sprites', 'treasure.png')
 WEAPON_IMAGE_PATH = Path('assets', 'sprites', 'weapon')
@@ -181,7 +181,6 @@ class GameplayScene(BaseScene):
         self.world.resource_manager.add_texture(FULL_HEART_IMAGE_PATH)
         self.world.resource_manager.add_texture(HALF_HEART_IMAGE_PATH)
         self.world.resource_manager.add_texture(EMPTY_HEART_IMAGE_PATH)
-        self.world.resource_manager.add_animation_strip(JELLY_ENEMY_PATH, enemy.JELLY_SPRITE_WIDTH, explicit_name=enemy.JELLY_ID)
         self.world.resource_manager.add_animation_strip(TREASURE_IMAGE_PATH, InventorySystem.TREASURE_TILE_SIZE,
                                                         explicit_name=InventorySystem.TREASURE_TEXTURE_ID)
         self.world.resource_manager.add_animation_strip(COINS_IMAGE_PATH, items.COIN_TILE_SIZE, explicit_name=CollectableItemType.COIN.name)
@@ -191,6 +190,7 @@ class GameplayScene(BaseScene):
 
         self.world.resource_manager.add_all_animation_strips(ENEMY_PATH, enemy.KEFER_ID, enemy.KEFER_SPRITE_WIDTH)
         self.world.resource_manager.add_all_animation_strips(PLAYER_IMAGE_PATH, player.SPRITE_SHEET_ID, player.SPRITE_SIZE)
+        self.world.resource_manager.add_all_animation_strips(ENEMY_PATH, enemy.JELLY_ID, enemy.JELLY_SPRITE_WIDTH)
 
         # idle animation
         for direction in [Direction.UP, Direction.DOWN, Direction.RIGHT, Direction.LEFT]:

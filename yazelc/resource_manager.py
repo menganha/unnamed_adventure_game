@@ -110,19 +110,31 @@ class ResourceManager:
     def get_animation_strip(self, name: str) -> list[pygame.Surface]:
         return self._animation_stripes[name]
 
+    @staticmethod
+    def get_animation_identifier(name_id: str, status: Status, direction: Direction = None) -> str:
+        if direction:
+            return f'{name_id}_{status.name}_{direction.name}'.lower()
+        else:
+            return f'{name_id}_{status.name}'.lower()
+
     def add_all_animation_strips(self, file_path: Path, name: str, sprite_width: int):
-        """ Expects file in the format name_<status>_<direction>.png and stores them in the name_<status>_<direction> """
+        """
+        Expects file in the format name_<status>_<direction>.png and stores them in the name_<status>_<direction>. This is useful for
+        moving characters (and possibly items) in the four directions.
+        """
 
         for direction in (Direction.UP, Direction.DOWN, Direction.RIGHT, Direction.LEFT):
             flip = True if direction == Direction.LEFT else False
             direction_resource = Direction.RIGHT if direction == Direction.LEFT else direction
-            for typ in Status:
-                identifier = f'{name}_{typ.name}_{direction.name}'.lower()
-                img_path = file_path / f'{name}_{typ.name}_{direction_resource.name}.png'.lower()
+            for status in Status:
+                identifier = self.get_animation_identifier(name, status, direction)
+                img_path = file_path / (self.get_animation_identifier(name, status, direction_resource) + '.png')
 
                 if not img_path.exists():
-                    logging.info(f'The requested path for the animation strip {img_path} does not exists')
-                    continue
+                    logging.info(f'The requested path for the animation strip {img_path} does not exists. Trying alternative...')
+                    img_path = file_path / (self.get_animation_identifier(name, status) + '.png')
+                    if not img_path.exists():
+                        continue
 
                 self.add_animation_strip(img_path, sprite_width, flip, identifier)
 
@@ -130,9 +142,9 @@ class ResourceManager:
         has_idle = False
         for direction in (Direction.UP, Direction.DOWN, Direction.RIGHT, Direction.LEFT):
             status = Status.IDLE
-            identifier = f'{name}_{status.name}_{direction.name}'.lower()
+            identifier = self.get_animation_identifier(name, status, direction)
             if identifier not in self._animation_stripes:
-                walking_animation_id = f'{name}_{status.WALKING.name}_{direction.name}'.lower()
+                walking_animation_id = self.get_animation_identifier(name, Status.WALKING, direction)
                 if walking_animation_id not in self._animation_stripes:
                     continue
                 strip = self.get_animation_strip(walking_animation_id)

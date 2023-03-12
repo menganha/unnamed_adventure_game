@@ -236,9 +236,9 @@ class Collectable:
 
 
 @component
-class EnemyTag:
+class Enemy:
     """ Tags enemies and represent the value when colliding with them """
-    pass
+    type: str  # Also labels the corresponding animation
 
 
 @component
@@ -293,12 +293,6 @@ class Animation:
     def __post_init__(self):
         self.frame_counter = 0
         self.index = 0
-
-    def stop(self):
-        self.is_playing = False
-
-    def resume(self):
-        self.is_playing = True
 
     @classmethod
     def from_delay(cls, strip: list[pygame.Surface], delay: int, one_loop: bool = False):

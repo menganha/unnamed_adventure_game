@@ -10,6 +10,9 @@ class Timer:
     def reset(self):
         self._counter = self._time
 
+    def end(self):
+        self._counter = 0
+
     def module(self, mod: int):
         return self._counter % mod == 0
 

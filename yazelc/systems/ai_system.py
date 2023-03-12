@@ -1,7 +1,7 @@
 from random import choice, random
 
 from yazelc import zesper
-from yazelc.components import Brain, State, Velocity, Animation
+from yazelc.components import Brain, State, Velocity, Animation, Enemy
 from yazelc.event.events import EnemyDecisionEvent
 from yazelc.utils.game_utils import Direction, Status
 
@@ -15,9 +15,9 @@ class AISystem(zesper.Processor):
             if brain.block_timer.is_set():
                 if brain.block_timer.has_finished():
                     brain.block_timer.set(0)
-                    if animation := self.world.try_component(ent, Animation):
-                        animation.resume()
+                    brain.timer.end()
                 brain.block_timer.tick()
+
 
             if brain.timer.has_finished() and not brain.block_timer.is_set():
                 brain.timer.reset()
@@ -34,6 +34,14 @@ class AISystem(zesper.Processor):
         direction_choices = list(Direction)[:4]
         state.direction = choice(direction_choices)
         state.status = Status.IDLE if random() < 0.7 else Status.WALKING  # TODO: Do we need statuses at all????!!
+
+        # This considers all enemies have animations!
+        enemy_type = self.world.component_for_entity(enemy_decision_event.enemy_id, Enemy).type
+        animation_identifier = self.world.resource_manager.get_animation_identifier(enemy_type, state.status, state.direction)
+        animation_strip = self.world.resource_manager.get_animation_strip(animation_identifier)
+        animation = Animation.from_delay(animation_strip,
+                                         10)  # TODO: This is hardcoded. Berrry bad! Maybe include the frame information on the animation stripe
+        self.world.add_component(enemy_decision_event.enemy_id, animation)
 
         if state.status == Status.WALKING:
             velocity.x = state.direction.value.x
