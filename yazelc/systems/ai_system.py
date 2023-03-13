@@ -62,7 +62,7 @@ class AISystem(zesper.Processor):
         velocity = Velocity(direction.value.x * 1, direction.value.y * 1)
         position_projectile = Position(position.x, position.y)
 
-        self.world.add_component(projectile_ent, Weapon(1, -1, 7, 7))
+        self.world.add_component(projectile_ent, Weapon(1, -1, 7, 3))
         self.world.add_component(projectile_ent, HitBox(int(position.x), int(position.y), 5, 5, destroy_on_contact=True))
         self.world.add_component(projectile_ent, position_projectile)
         self.world.add_component(projectile_ent, velocity)

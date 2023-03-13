@@ -1,3 +1,16 @@
+# Devlog (2023-03-13)
+
+Big development: Sound system added. It is in its early stages but it does it job well. I've added more a more streamlined animation
+inclusion
+for enemies which should help also when designing other weapons.
+
+I want to focus now on two main aspects. One would be to introduce the splash screen. The second would be to add a weapon that could be
+used at a distance, probably the boomerang.
+
+I'm doing everything a little dirty at the moment. There must be a moment where I will pick up and clean huge parts of the codebase. But
+for now, it helps motivation-wise to keep doing things and looking at the results immediately. It definitely gives a sense of accomplishment
+that helps me continue further.
+
 # Devlog (2023-02-07)
 
 I'm not sure what would be the best way to set up events. The main question is whether we should pass or not the world instance reference.
