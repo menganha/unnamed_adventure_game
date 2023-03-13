@@ -28,6 +28,8 @@ class CollisionSystem(zesper.Processor):
                 if hitbox.skin_depth and len(colliding_hitboxes_indices) == 1:
                     colliding_wall = impenetrable_hitboxes[colliding_hitboxes_indices[0]]
                     self._handle_corner_push(position, velocity, hitbox, colliding_wall, impenetrable_hitboxes)
+                elif hitbox.destroy_on_contact:
+                    self.world.delete_entity(ent)
                 else:
                     self._resolve_collision(position, velocity, hitbox, impenetrable_hitboxes)
 

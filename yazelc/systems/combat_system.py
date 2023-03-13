@@ -15,7 +15,7 @@ class CombatSystem(zesper.Processor):
     EXPLOSION_PARTICLES = 50
     EXPLOSION_MAX_VEL = 20
     EXPLOSION_COLOR = cfg.C_RED
-    RECOIL_LENGTH = 35
+    RECOIL_LENGTH = 30
     REST_FRAMES_AFTER_TWEEN = 3
     DAMAGE_SOUND_ID = 'hit_2'
     ENEMY_DEATH_SOUND = 'explosion'

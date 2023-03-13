@@ -160,10 +160,12 @@ class HitBox(pygame.Rect):
     hitboxes. These are used to implement the "soft corner collision" seen in games like Zelda: A Link to the Past.
     """
 
-    def __init__(self, x_pos: int, y_pos: int, width: int, height: int, impenetrable: bool = False, skin_depth: int = 0):
+    def __init__(self, x_pos: int, y_pos: int, width: int, height: int, impenetrable: bool = False, skin_depth: int = 0,
+                 destroy_on_contact: bool = False):
         super().__init__(x_pos, y_pos, width, height)
         self.impenetrable = impenetrable
         self.skin_depth = skin_depth
+        self.destroy_on_contact = destroy_on_contact
         self.corner_rects: list[pygame.Rect] = []
         if self.skin_depth:
             self.corner_rects = [pygame.Rect(0, 0, skin_depth, skin_depth) for _ in range(4)]
