@@ -39,7 +39,7 @@ class DialogMenuSystem(zesper.Processor):
                 dialog.x_pos, dialog.y_pos = dialog_box.X_MARGIN, dialog.font.char_height + dialog_box.Y_MARGIN
                 dialog.index_start = dialog.index
                 dialog.idle = True
-                self.world.event_queue.enqueue_event(SoundEndEvent(self.TEXT_SCROLL_SOUND_ID))
+                self.world.event_queue.add(SoundEndEvent(self.TEXT_SCROLL_SOUND_ID))
                 continue
 
             char_to_render = dialog.next_char()
@@ -51,7 +51,7 @@ class DialogMenuSystem(zesper.Processor):
             if dialog.is_at_end():
                 dialog_box.add_triangle_signal(entity, self.world)
                 dialog.idle = True
-                self.world.event_queue.enqueue_event(SoundEndEvent(self.TEXT_SCROLL_SOUND_ID))
+                self.world.event_queue.add(SoundEndEvent(self.TEXT_SCROLL_SOUND_ID))
 
     def on_input(self, input_event: InputEvent):
 
@@ -62,12 +62,12 @@ class DialogMenuSystem(zesper.Processor):
                     self.world.remove_component(entity, Position)
                     dialog_.index = 0
                     dialog_.index_start = 0
-                    self.world.event_queue.enqueue_event(ResumeEvent())
+                    self.world.event_queue.add(ResumeEvent())
                 else:
                     dialog_.idle = False
                     surface = renderable_.image
                     surface.fill(cfg.C_BLACK)
-                    self.world.event_queue.enqueue_event(SoundTriggerEvent(self.TEXT_SCROLL_SOUND_ID))
+                    self.world.event_queue.add(SoundTriggerEvent(self.TEXT_SCROLL_SOUND_ID))
 
         for entity, (menu, renderable_) in self.world.get_components(Menu, Renderable):
             menu_box.handle_menu_input(input_event, entity, menu, self.world)
@@ -75,5 +75,5 @@ class DialogMenuSystem(zesper.Processor):
     def on_dialog_trigger(self, dialog_trigger_event: DialogTriggerEvent):
         dialog = self.world.component_for_entity(dialog_trigger_event.dialog_entity_id, Dialog)
         dialog_box.create_text_box(dialog_trigger_event.dialog_entity_id, dialog, self.world)
-        self.world.event_queue.enqueue_event(PauseEvent())
-        self.world.event_queue.enqueue_event(SoundTriggerEvent(self.TEXT_SCROLL_SOUND_ID))
+        self.world.event_queue.add(PauseEvent())
+        self.world.event_queue.add(SoundTriggerEvent(self.TEXT_SCROLL_SOUND_ID))

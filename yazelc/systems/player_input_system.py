@@ -22,7 +22,7 @@ class PlayerInputSystem(zesper.Processor):
         if self.block_timer.has_finished():
             if input_event.controller.is_button_pressed(Button.START):
                 menu_box.create_pause_menu(self.world)
-                self.world.event_queue.enqueue_event(PauseEvent())
+                self.world.event_queue.add(PauseEvent())
             else:
                 player.handle_input(input_event, self.player_entity_id, self.world)
 

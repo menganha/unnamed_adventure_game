@@ -48,7 +48,7 @@ def _handle_death_menu_input(input_event: InputEvent, ent_id, menu: cmp.Menu, wo
     if input_event.controller.is_button_pressed(Button.A):
         if menu_.item_idx_y == 0:
             world.delete_entity(ent_id)
-            world.event_queue.enqueue_event(RestartEvent())
+            world.event_queue.add(RestartEvent())
         elif menu_.item_idx_y == 1:
             quit_event = pygame.event.Event(pygame.QUIT)
             pygame.event.post(quit_event)
@@ -59,12 +59,12 @@ def _handle_pause_menu_input(input_event: InputEvent, ent_id, menu: cmp.Menu, wo
     if input_event.controller.is_button_pressed(Button.A):
         if menu_.item_idx_y == 0:
             world.delete_entity(ent_id)
-            world.event_queue.enqueue_event(ResumeEvent())
+            world.event_queue.add(ResumeEvent())
         elif menu_.item_idx_y == 1:
             quit_event = pygame.event.Event(pygame.QUIT)
             pygame.event.post(quit_event)
     elif input_event.controller.is_button_pressed(Button.START):
-        world.event_queue.enqueue_event(ResumeEvent())
+        world.event_queue.add(ResumeEvent())
         world.delete_entity(ent_id)
 
 

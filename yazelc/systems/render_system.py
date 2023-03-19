@@ -7,9 +7,9 @@ from yazelc.camera import Camera
 
 
 class RenderSystem(zesper.Processor):
-    def __init__(self, window: pygame.Surface, camera: Camera):
+    def __init__(self, window: pygame.Surface, camera: Camera = None):
         super().__init__()
-        self.camera = camera
+        self.camera = camera if camera else Camera(0, 0)
         self.window = window
 
     def process(self):

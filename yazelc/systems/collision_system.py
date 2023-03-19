@@ -39,7 +39,7 @@ class CollisionSystem(zesper.Processor):
             rect_dictionary = {ent: hb for ent, hb in transparent_hitboxes[index + 1:]}  # prevents double counting and self checking
             entities_that_collided = hitbox_1.collidedictall(rect_dictionary, 1)
             for ent_2, _ in entities_that_collided:
-                self.world.event_queue.enqueue_event(CollisionEvent(ent_1, ent_2))
+                self.world.event_queue.add(CollisionEvent(ent_1, ent_2))
 
     def on_collision(self, collision_event: CollisionEvent):
 
@@ -47,19 +47,19 @@ class CollisionSystem(zesper.Processor):
         if components := self.world.try_pair_signature(collision_event.ent_1, collision_event.ent_2, InteractorTag, Dialog):
             _, _, dialog_entity_id, _ = components
             dialog_trigger_event = DialogTriggerEvent(dialog_entity_id)
-            self.world.event_queue.enqueue_event(dialog_trigger_event)
+            self.world.event_queue.add(dialog_trigger_event)
         elif component := self.world.try_signature(collision_event.ent_1, collision_event.ent_2, Collectable):
             collectable_ent_id, collectable, colector_ent_id = component
             collection_event = CollectionEvent(collectable_ent_id, collectable, colector_ent_id)
-            self.world.event_queue.enqueue_event(collection_event)
+            self.world.event_queue.add(collection_event)
         elif components := self.world.try_pair_signature(collision_event.ent_1, collision_event.ent_2, Health, Weapon):
             victim_id, _, attacker_id, _ = components
             damage_event = DamageEvent(victim_id, attacker_id)
-            self.world.event_queue.enqueue_event(damage_event)
+            self.world.event_queue.add(damage_event)
         elif component := self.world.try_signature(collision_event.ent_1, collision_event.ent_2, Door):
             door_entity_id, _, transversing_entity_id = component
             hit_door_event = HitDoorEvent(door_entity_id, transversing_entity_id)
-            self.world.event_queue.enqueue_event(hit_door_event)
+            self.world.event_queue.add(hit_door_event)
 
     def _handle_corner_push(self, position: Position, velocity: Velocity, hitbox: HitBox, colliding_wall: HitBox,
                             impenetrable_hitboxes: list[HitBox]):

@@ -2,8 +2,9 @@ import pygame
 
 from yazelc import config as cfg
 from yazelc import zesper
-from yazelc.components import Vector, Renderable, Position
+from yazelc.components import Renderable, Position
 from yazelc.player import player
+from yazelc.utils.game_utils import IVec
 
 WHOLE_HEART_HEALTH_POINTS = 2
 HUD_DEPTH = 1001
@@ -14,7 +15,7 @@ HALF_HEART_RESOURCE_NAME = 'half_heart'
 EMPTY_HEART_RESOURCE_NAME = 'empty_heart'
 HUD_FONT_ID = 'HUD'
 
-HEART_OFFSET = Vector(2, 2)
+HEART_OFFSET = IVec(2, 2)
 
 
 def create_hud_entity(world: zesper.World, health_points: int) -> int:

@@ -1,8 +1,9 @@
 from yazelc import items
 from yazelc import zesper
-from yazelc.components import Collectable, InteractorTag, Health, Animation, Renderable, Position, Velocity, Tween, TweenType
+from yazelc.components import Collectable, InteractorTag, Health, Animation, Renderable, Position, Velocity, TweenPosition
 from yazelc.event.events import CollectionEvent, HudUpdateEvent, DeleteEntityEvent
 from yazelc.player.player import MAX_HEALTH
+from yazelc.tween import TweenFunction
 from yazelc.utils.game_utils import Direction
 
 
@@ -47,9 +48,10 @@ class InventorySystem(zesper.Processor):
             object_position = self.world.component_for_entity(collection_event.collectable_id, Position)
             position = Position(object_position.x, object_position.y - self.TREASURE_OBJECT_OFFSET)
             velocity = Velocity()
-            tween = Tween(TweenType.EASE_OUT_EXPO, Direction.UP, self.TREASURE_ITEM_TRAVEL_DISTANCE, self.TREASURE_OBJECT_LIFETIME)
+            tween = TweenPosition(TweenFunction.EASE_OUT_EXPO, Direction.UP, self.TREASURE_ITEM_TRAVEL_DISTANCE,
+                                  self.TREASURE_OBJECT_LIFETIME)
             fake_entity_item = self.world.create_entity(position, renderable, velocity, tween)
-            self.world.event_queue.enqueue_event(DeleteEntityEvent(fake_entity_item), self.TREASURE_OBJECT_LIFETIME)
+            self.world.event_queue.add(DeleteEntityEvent(fake_entity_item), self.TREASURE_OBJECT_LIFETIME)
 
             self._add_pickable(collection_event.collectable, self.player_entity_id)
             self.world.remove_component(collection_event.collectable_id, Collectable)
@@ -65,4 +67,4 @@ class InventorySystem(zesper.Processor):
             value = self.inventory[collectable.item_type]
 
         hud_update_event = HudUpdateEvent(collectable.item_type, value)
-        self.world.event_queue.enqueue_event(hud_update_event)
+        self.world.event_queue.add(hud_update_event)

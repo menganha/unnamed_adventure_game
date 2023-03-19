@@ -14,25 +14,17 @@ pygame.mixer.init()
 from yazelc import config as cfg
 from yazelc import scene_manager
 from yazelc.scenes.gameplay_scene import GameplayScene
-from yazelc.utils.game_utils import ImmutableVec
+from yazelc.scenes.intro_scene import IntroScene
+from yazelc.utils.game_utils import IVec
 
 INITIAL_MAP = Path('data', 'overworld', 'overworld_1.tmx')
 INITIAL_MUSIC_PATH = Path('assets', 'music', 'Quantic_y_Los_Míticos_del_Ritmo-Hotline_Bling.ogg')
-INITIAL_POS = ImmutableVec(10, 24)
+INITIAL_POS = IVec(10, 24)
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO, format='%(asctime)s %(message)s')
-    if len(sys.argv) == 4:
-        map_path = Path(sys.argv[1])
-        initial_pos_x = int(sys.argv[2])
-        initial_pos_y = int(sys.argv[3])
-    else:
-        map_path = INITIAL_MAP
-        initial_pos_x = INITIAL_POS.x
-        initial_pos_y = INITIAL_POS.y
     window = pygame.display.set_mode((cfg.RESOLUTION.x, cfg.RESOLUTION.y), pygame.SCALED, vsync=1)
 
-    # Get the main input device
     pygame.joystick.init()
     if pygame.joystick.get_count():
         controller = Gamepad(pygame.joystick.Joystick(0))
@@ -42,6 +34,14 @@ if __name__ == '__main__':
         pygame.joystick.quit()
         logging.info('Using keyboard controller')
 
-    gameplay_scene = GameplayScene(window, controller, map_path, initial_pos_x, initial_pos_y, music_path=INITIAL_MUSIC_PATH)
-    scene_manager.run_game_loop(initial_scene=gameplay_scene)
+    if len(sys.argv) > 1 and sys.argv[1].lower() == 'gameplay':
+        map_path = Path(sys.argv[1]) if sys.argv[1:] else INITIAL_MAP
+        initial_pos_x = int(sys.argv[2]) if sys.argv[2:] else INITIAL_POS.x
+        initial_pos_y = int(sys.argv[3]) if sys.argv[3:] else INITIAL_POS.y
+        scene = GameplayScene(window, controller, map_path, initial_pos_x, initial_pos_y, music_path=INITIAL_MUSIC_PATH)
+    else:
+        scene = IntroScene(window, controller)
+
+    # Get the main input device
+    scene_manager.run_game_loop(initial_scene=scene)
     pygame.quit()

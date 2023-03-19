@@ -113,3 +113,8 @@ class SoundEndEvent:
 @eventclass
 class DialogTriggerEvent:
     dialog_entity_id: int
+
+
+@eventclass
+class CutsceneFinishedEvent:
+    pass

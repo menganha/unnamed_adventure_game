@@ -113,7 +113,7 @@ def create_interactive_hitbox(player_entity_id: int, world: zesper.World):
     """ Creates a hitbox to detect interaction with other objects """
     entity_id = _create_hitbox_in_front(player_entity_id, INTERACTIVE_FRONT_RANGE, INTERACTIVE_SIDE_RANGE, world)
     world.add_component(entity_id, cmp.InteractorTag())
-    world.event_queue.enqueue_event(DeleteEntityEvent(entity_id), frames_delay=1)
+    world.event_queue.add(DeleteEntityEvent(entity_id), frames_delay=1)
 
 
 def handle_animation_for_input(ent_id: int, state: cmp.State, world: zesper.World):
@@ -188,15 +188,15 @@ def handle_input(input_event: InputEvent, player_entity_id: int, world: zesper.W
         # the number of active frames as we are counting already the frame when it is activated as active
         sound_trigger_event = SoundTriggerEvent(SWORD_SOUND_EFFECT)
         block_event = BlockInputEvent(SWORD_ACTIVE_FRAMES - 1)
-        world.event_queue.enqueue_event(sound_trigger_event)
-        world.event_queue.enqueue_event(block_event)
+        world.event_queue.add(sound_trigger_event)
+        world.event_queue.add(block_event)
 
     elif input_event.controller.is_button_pressed(Button.A):
         create_interactive_hitbox(player_entity_id, world)
 
     elif input_event.controller.is_button_pressed(Button.L):
         explosion_event = ExplosionEvent(position, 30, 30, cfg.C_WHITE)
-        world.event_queue.enqueue_event(explosion_event)
+        world.event_queue.add(explosion_event)
 
     elif input_event.controller.is_button_pressed(Button.X):
         drop_bomb(player_entity_id, world)

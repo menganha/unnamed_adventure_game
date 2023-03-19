@@ -6,10 +6,9 @@ import pygame
 
 from yazelc.font import Font
 from yazelc.items import CollectableItemType
-from yazelc.utils.game_utils import Direction, Status
+from yazelc.tween import TweenFunction
+from yazelc.utils.game_utils import Direction, Status, IVec
 from yazelc.utils.timer import Timer
-
-Vector = pygame.Vector2
 
 
 class Position(pygame.Vector2):
@@ -19,7 +18,7 @@ class Position(pygame.Vector2):
     camera is positioned
     """
 
-    def __init__(self, x: float, y: float, absolute: bool = False):
+    def __init__(self, x: float = 0, y: float = 0, absolute: bool = False):
         super().__init__(x, y)
         self.absolute = absolute
         self.prev_x: float = x
@@ -36,8 +35,17 @@ class Position(pygame.Vector2):
         self.prev_y = self.y
         super().update(x, y)
 
+    @classmethod
+    def from_direction(cls, direction: Direction, length: float, absolute: bool = False):
+        ivec = direction.to_ivec(length)
+        return cls.from_ivec(ivec, absolute)
 
-class Velocity(pygame.Vector2):
+    @classmethod
+    def from_ivec(cls, ivec: IVec, absolute: bool = False):
+        return cls(ivec.x, ivec.y, absolute)
+
+
+class Velocity(Position):
     ZERO_THRESHOLD = 1e-3
 
 
@@ -77,15 +85,9 @@ class InteractorTag:
     pass
 
 
-class TweenType(Enum):
-    EASE_OUT_CUBIC = auto()
-    EASE_OUT_QUINT = auto()
-    EASE_OUT_EXPO = auto()
-
-
 @component
-class Tween:
-    type: TweenType
+class TweenPosition:
+    function: TweenFunction
     direction: Direction
     length: float
     n_frames: int

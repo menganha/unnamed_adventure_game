@@ -1,17 +1,18 @@
 from yazelc import config as cfg
 from yazelc import zesper
-from yazelc.components import Position, Renderable, Vector
+from yazelc.components import Position, Renderable
 
 
 # TODO: Adds methods to change smoothly the camera from one position to the other
+# TODO: This class may be used migrated to the CameraSystem instead
 
 class Camera:
     """ Max dimensions refer where to the bound where the camera should not go beyond """
 
-    def __init__(self, x_pos: int, y_pos: int, max_x: int, max_y: int):
-        self.pos = Vector(x_pos, y_pos)
-        self.max_pos = Vector(max_x, max_y)
-        self.offset = Vector(max_x, max_y)
+    def __init__(self, x_pos: int, y_pos: int, max_x: int = cfg.RESOLUTION.x, max_y: int = cfg.RESOLUTION.y):
+        self.pos = Position(x_pos, y_pos)
+        self.max_pos = Position(max_x, max_y)
+        self.offset = Position(max_x, max_y)
         self.ent_id_to_track = None
 
     def update(self, world: zesper.World):
@@ -30,7 +31,7 @@ class Camera:
         self.offset = self._get_position_of_entity_to_track(ent_id, world)
 
     @staticmethod
-    def _get_position_of_entity_to_track(entity_id_to_follow: int, world: zesper.World) -> Vector:
+    def _get_position_of_entity_to_track(entity_id_to_follow: int, world: zesper.World) -> Position:
         """
         Used to get the relative position of the entity to track with respect to the camera
 
@@ -38,8 +39,8 @@ class Camera:
         that entity, and if it doesn't have any of the previous two components then return 0,0, i.e., just get a fixed camera
         """
         if renderable := world.try_component(entity_id_to_follow, Renderable):
-            return Vector(int((cfg.RESOLUTION.x - renderable.width) / 2), int((cfg.RESOLUTION.y - renderable.height) / 2))
+            return Position(int((cfg.RESOLUTION.x - renderable.width) / 2), int((cfg.RESOLUTION.y - renderable.height) / 2))
         elif position := world.try_component(entity_id_to_follow, Position):
-            return Vector(int((cfg.RESOLUTION.x - position.x) / 2), int((cfg.RESOLUTION.y - position.y) / 2))
+            return Position(int((cfg.RESOLUTION.x - position.x) / 2), int((cfg.RESOLUTION.y - position.y) / 2))
         else:
-            return Vector(0, 0)
+            return Position(0, 0)

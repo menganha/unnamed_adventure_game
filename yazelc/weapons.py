@@ -26,13 +26,13 @@ def create_bomb(position: Position, world: zesper.World):
     world.add_component(entity_id, position)
 
     bomb_explosion_event = BombExplosionEvent(entity_id)
-    world.event_queue.enqueue_event(bomb_explosion_event, BOMB_EXPLOSION_DELAY_TIME)
+    world.event_queue.add(bomb_explosion_event, BOMB_EXPLOSION_DELAY_TIME)
 
     x_center = position.x + BOMB_SPRITE_WIDTH // 2
     y_center = position.y + BOMB_SPRITE_WIDTH // 2
 
     explosion_event = ExplosionEvent((x_center, y_center), BOMB_EXPLOSION_PARTICLES, BOMB_RANGE, BOMB_EXPLOSION_COLOR)
-    world.event_queue.enqueue_event(explosion_event, BOMB_EXPLOSION_DELAY_TIME)
+    world.event_queue.add(explosion_event, BOMB_EXPLOSION_DELAY_TIME)
 
 
 def add_weapon_component_to_bomb(bomb_entity_id: int, world: zesper.World):

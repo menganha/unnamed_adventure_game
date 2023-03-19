@@ -70,7 +70,7 @@ class ResourceManager:
         if name not in self._fonts:
             if file_type == self.TRUE_TYPE_FONT_FILETYPE:
                 if path not in self._pygame_font_objects:
-                    self._pygame_font_objects.update({path: pygame.freetype.Font(path)})
+                    self._pygame_font_objects.update({path: pygame.freetype.Font(path, size=size)})
                 font = Font(self._pygame_font_objects[path], size, color)
                 self._fonts.update({name: font})
                 return font
@@ -78,7 +78,7 @@ class ResourceManager:
                 raise ValueError(f'Unknown font filetype: {path}')
         else:
             logging.info(f'Font on {path} has an existing instance with the id {name}')
-            self.get_font(name)
+            return self.get_font(name)
 
     def add_animation_strip(self, path: Path, sprite_width: int, flip: bool = False, explicit_name: str = None) -> list[pygame.Surface]:
         """

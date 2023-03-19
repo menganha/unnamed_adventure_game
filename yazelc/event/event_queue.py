@@ -11,7 +11,7 @@ class EventQueue:
         self._event_buffer: list[Any] = list()  # collects events with delays
         self._buffer_delays: dict[int, Timer] = dict()
 
-    def enqueue_event(self, event: Any, frames_delay: int = 0):
+    def add(self, event: Any, frames_delay: int = 0):
         if frames_delay:
             self._event_buffer.append(event)
             self._buffer_delays[id(event)] = Timer(frames_delay)

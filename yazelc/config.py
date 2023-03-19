@@ -3,9 +3,9 @@ Stores all the game globals
 """
 import pygame
 
-from yazelc.utils.game_utils import ImmutableVec
+from yazelc.utils.game_utils import IVec
 
-RESOLUTION = ImmutableVec(272, 240)
+RESOLUTION = IVec(272, 240)
 TILE_WIDTH = 16
 DEBUG_MODE = False
 

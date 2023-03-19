@@ -23,7 +23,7 @@ class AISystem(zesper.Processor):
 
             if brain.timer.has_finished() and not brain.block_timer.is_set():
                 brain.timer.reset()
-                self.world.event_queue.enqueue_event(EnemyDecisionEvent(ent, brain.behaviour_type))
+                self.world.event_queue.add(EnemyDecisionEvent(ent, brain.behaviour_type))
 
             brain.timer.tick()
 
