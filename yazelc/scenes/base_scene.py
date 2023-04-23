@@ -3,7 +3,7 @@ from typing import Optional
 
 import pygame
 
-from event.events import InputEvent
+from event.events import InputEvent, ChangeSceneEvent
 from yazelc import zesper
 from yazelc.controller import Controller
 from yazelc.event.event_manager import EventManager
@@ -23,22 +23,23 @@ class BaseScene(abc.ABC):
         self.event_queue: EventQueue = EventQueue()
         self.world: zesper.World = zesper.World(self.resource_manager, self.event_queue)
         self.controller: Controller = controller
-        self.in_scene: bool = True
         self.next_scene: Optional['BaseScene'] = None
+        self.finished: bool = False
+        self.event_manager.subscribe_handler_method(ChangeSceneEvent, self.on_change_scene)
 
     @abc.abstractmethod
     def on_enter(self):
         pass
 
-    def run(self):
-        self.in_scene = True
-        while self.in_scene:
-            self._process_event_queue()
-            self.world.process()
-        self.event_manager.remove_all_handlers()
+    def update(self):
+        self._process_event_queue()
+        self.world.process()
 
     @abc.abstractmethod
     def on_exit(self):
+        pass
+
+    def on_change_scene(self, change_scene_event: ChangeSceneEvent):
         pass
 
     def _process_event_queue(self):
@@ -49,10 +50,9 @@ class BaseScene(abc.ABC):
         """
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                self.in_scene = False
+                self.finished = True
                 self.next_scene = None
 
-        # for event in self.event_queue.get():
         while self.event_queue:
             event = self.event_queue.popleft()
             self.event_manager.dispatch_event(event)

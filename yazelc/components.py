@@ -4,6 +4,7 @@ from enum import Enum, auto
 
 import pygame
 
+from yazelc.config import RESOLUTION
 from yazelc.font import Font
 from yazelc.items import CollectableItemType
 from yazelc.tween import TweenFunction
@@ -34,6 +35,11 @@ class Position(pygame.Vector2):
         self.prev_x = self.x
         self.prev_y = self.y
         super().update(x, y)
+
+    @classmethod
+    def on_screen_center(cls, surface: pygame.Surface, absolute: bool = False):
+        """ Returns the Position to which the surface is centered on the screen"""
+        return cls((RESOLUTION.x - surface.get_width()) // 2, (RESOLUTION.y - surface.get_height()) // 2, absolute)
 
     @classmethod
     def from_direction(cls, direction: Direction, length: float, absolute: bool = False):
@@ -111,6 +117,7 @@ class Renderable:
 class MenuType(Enum):
     DEATH = auto()
     PAUSE = auto()
+    START = auto()
 
 
 @component

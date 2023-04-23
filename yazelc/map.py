@@ -160,8 +160,7 @@ class Map:
 
     def get_center_coord_from_tile(self, tile_x_pos: int, tile_y_pos: int) -> (int, int):
         """
-        Get tile center absolute coordinates from the position in "tile" coordinates, i.e. the one independent of
-        the tile size
+        Get tile center absolute coordinates from the position in "tile" coordinates, i.e. the one independent of the tile size
         """
         center_x = tile_x_pos * self.tmx_data.tilewidth + int(self.tmx_data.tilewidth / 2)
         center_y = tile_y_pos * self.tmx_data.tilewidth + int(self.tmx_data.tileheight / 2)

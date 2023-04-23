@@ -4,6 +4,7 @@ from yazelc import components as cmp
 from yazelc import config as cfg
 from yazelc import zesper
 from yazelc.controller import Button
+from yazelc.event.events import ChangeSceneEvent
 from yazelc.event.events import InputEvent, RestartEvent, ResumeEvent
 
 SURFACE_DEPTH = 2000  # Above everything else (1000 is the top map layer depth)
@@ -23,8 +24,7 @@ def create_death_menu(world: zesper.World):
     items = ['Save and Continue', 'Quit']
     font = world.resource_manager.get_font(MENU_FONT_ID)
     menu_type = cmp.MenuType.DEATH
-    menu = cmp.Menu(menu_type, title, items, font)
-    _create_menu_box(menu, world)
+    world.create_entity(get_components(title, items, font, menu_type))
 
 
 def create_pause_menu(world: zesper.World):
@@ -32,8 +32,7 @@ def create_pause_menu(world: zesper.World):
     items = ['Continue', 'Quit']
     font = world.resource_manager.get_font(MENU_FONT_ID)
     menu_type = cmp.MenuType.PAUSE
-    menu = cmp.Menu(menu_type, title, items, font)
-    _create_menu_box(menu, world)
+    world.create_entity(get_components(title, items, font, menu_type))
 
 
 def handle_menu_input(input_event: InputEvent, ent_id: int, menu: cmp.Menu, world: zesper.World):
@@ -41,6 +40,34 @@ def handle_menu_input(input_event: InputEvent, ent_id: int, menu: cmp.Menu, worl
         _handle_death_menu_input(input_event, ent_id, menu, world)
     elif menu.menu_type == cmp.MenuType.PAUSE:
         _handle_pause_menu_input(input_event, ent_id, menu, world)
+    elif menu.menu_type == cmp.MenuType.START:
+        _handle_start_game_menu_input(input_event, ent_id, menu, world)
+
+
+def get_components(title: str, items: list[str], font, menu_type: cmp.MenuType) -> tuple[cmp.Menu, cmp.Position, cmp.Renderable]:
+    height = INITIAL_HEIGHT + len(items) * ROW_HEIGHT_INCREMENT
+    menu = cmp.Menu(menu_type, title, items, font)
+    surface = pygame.Surface((WIDTH, height), pygame.SRCALPHA)
+    menu_pos_x = round((cfg.RESOLUTION.x - WIDTH) // 2)
+    menu_pos_y = round((cfg.RESOLUTION.y - height) // 2)
+
+    position = cmp.Position(menu_pos_x, menu_pos_y, absolute=True)
+    renderable = cmp.Renderable(image=surface, depth=SURFACE_DEPTH)
+
+    _refresh_menu_renderable(menu, surface)
+    return menu, position, renderable
+
+
+def _handle_start_game_menu_input(input_event: InputEvent, ent_id, menu: cmp.Menu, world: zesper.World):
+    menu_ = _update_menu(input_event, ent_id, menu, world)
+    if input_event.controller.is_button_pressed(Button.A) or input_event.controller.is_button_pressed(Button.START):
+        if menu_.item_idx_y == 0:
+            world.event_queue.add(ChangeSceneEvent('gameplay'))
+        elif menu_.item_idx_y == 1:
+            pass
+        elif menu_.item_idx_y == 2:
+            quit_event = pygame.event.Event(pygame.QUIT)
+            pygame.event.post(quit_event)
 
 
 def _handle_death_menu_input(input_event: InputEvent, ent_id, menu: cmp.Menu, world: zesper.World):
@@ -68,20 +95,6 @@ def _handle_pause_menu_input(input_event: InputEvent, ent_id, menu: cmp.Menu, wo
         world.delete_entity(ent_id)
 
 
-def _create_menu_box(menu: cmp.Menu, world: zesper.World):
-    height = INITIAL_HEIGHT + len(menu) * ROW_HEIGHT_INCREMENT
-    menu_pos_x = round((cfg.RESOLUTION.x - WIDTH) // 2)
-    menu_pos_y = round((cfg.RESOLUTION.y - height) // 2)
-
-    surface = pygame.Surface((WIDTH, height), pygame.SRCALPHA)
-    _refresh_menu_renderable(menu, surface)
-
-    entity = world.create_entity()
-    world.add_component(entity, cmp.Position(menu_pos_x, menu_pos_y, absolute=True))
-    world.add_component(entity, menu)
-    world.add_component(entity, cmp.Renderable(image=surface, depth=SURFACE_DEPTH))
-
-
 def _refresh_menu_renderable(menu: cmp.Menu, surface: pygame.Surface):
     """ Updates the menu image with the current selection """
     surface.fill(BG_COLOR)
@@ -96,8 +109,8 @@ def _refresh_menu_renderable(menu: cmp.Menu, surface: pygame.Surface):
 def _update_menu(input_event: InputEvent, ent_id: int, menu: cmp.Menu, world: zesper.World) -> cmp.Menu:
     """ Updates the menu's selected item depending on the input """
 
-    direction_x = - input_event.controller.is_button_down(Button.LEFT) + input_event.controller.is_button_down(Button.RIGHT)
-    direction_y = - input_event.controller.is_button_down(Button.UP) + input_event.controller.is_button_down(Button.DOWN)
+    direction_x = - input_event.controller.is_button_pressed(Button.LEFT) + input_event.controller.is_button_pressed(Button.RIGHT)
+    direction_y = - input_event.controller.is_button_pressed(Button.UP) + input_event.controller.is_button_pressed(Button.DOWN)
 
     menu.item_idx_x += direction_x
     menu.item_idx_y += direction_y

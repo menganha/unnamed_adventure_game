@@ -11,10 +11,6 @@ class DialogMenuSystem(zesper.Processor):
     """ Handles all text dialog (NPC and signs) and the context menus """
     TEXT_SCROLL_SOUND_ID = 'text_scroll_1'
 
-    def __init__(self):
-        super().__init__()
-        self._tick_counter: int = 0
-
     def process(self):
         for entity, (dialog, renderable_cmp) in self.world.get_components(Dialog, Renderable):
             if dialog.idle:
@@ -69,6 +65,7 @@ class DialogMenuSystem(zesper.Processor):
                     surface.fill(cfg.C_BLACK)
                     self.world.event_queue.add(SoundTriggerEvent(self.TEXT_SCROLL_SOUND_ID))
 
+        # Handle Menus. TODO: Should we have a separate system to handle these??
         for entity, (menu, renderable_) in self.world.get_components(Menu, Renderable):
             menu_box.handle_menu_input(input_event, entity, menu, self.world)
 

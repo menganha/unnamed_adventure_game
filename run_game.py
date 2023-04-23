@@ -12,7 +12,7 @@ pygame.freetype.init()
 pygame.mixer.init()
 
 from yazelc import config as cfg
-from yazelc import scene_manager
+from scenes import scene_manager
 from yazelc.scenes.gameplay_scene import GameplayScene
 from yazelc.scenes.intro_scene import IntroScene
 from yazelc.utils.game_utils import IVec
@@ -35,10 +35,9 @@ if __name__ == '__main__':
         logging.info('Using keyboard controller')
 
     if len(sys.argv) > 1 and sys.argv[1].lower() == 'gameplay':
-        map_path = Path(sys.argv[1]) if sys.argv[1:] else INITIAL_MAP
-        initial_pos_x = int(sys.argv[2]) if sys.argv[2:] else INITIAL_POS.x
-        initial_pos_y = int(sys.argv[3]) if sys.argv[3:] else INITIAL_POS.y
-        scene = GameplayScene(window, controller, map_path, initial_pos_x, initial_pos_y, music_path=INITIAL_MUSIC_PATH)
+        map_path = Path(sys.argv[2]) if sys.argv[2:] else INITIAL_MAP
+        initial_pos = IVec(int(sys.argv[3]) if sys.argv[3:] else INITIAL_POS.x, int(sys.argv[4]) if sys.argv[4:] else INITIAL_POS.y)
+        scene = GameplayScene(window, controller, map_path, initial_pos, music_path=INITIAL_MUSIC_PATH)
     else:
         scene = IntroScene(window, controller)
 

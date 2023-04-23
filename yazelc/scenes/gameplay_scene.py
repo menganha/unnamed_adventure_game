@@ -36,7 +36,7 @@ from yazelc.systems.render_system import RenderSystem
 from yazelc.systems.sound_system import SoundSystem
 from yazelc.systems.tween_system import TweenSystem
 from yazelc.systems.visual_effects_system import VisualEffectsSystem
-from yazelc.utils.game_utils import Direction
+from yazelc.utils.game_utils import Direction, IVec
 
 FULL_HEART_IMAGE_PATH = Path('assets', 'sprites', 'full_heart.png')
 PLAYER_IMAGE_PATH = Path('assets', 'sprites', 'player')
@@ -73,23 +73,21 @@ PROCESSOR_PRIORITY = {system: idx + 1 for idx, system in enumerate(reversed(
 
 class GameplayScene(BaseScene):
 
-    def __init__(self, window: pygame.Surface, controller: Controller, map_file_path: Path, start_tile_x_pos: int, start_tile_y_pos: int,
-                 player_components: Optional[tuple[Any, ...]] = None, music_path: Path = None):
+    def __init__(self, window: pygame.Surface, controller: Controller, map_file_path: Path, start_tile_position: IVec,
+                 player_components: tuple[Any, ...] = None, music_path: Path = None):
         super().__init__(window, controller)
         self.map_data_file = map_file_path
-        self.start_tile_x_pos = start_tile_x_pos
-        self.start_tile_y_pos = start_tile_y_pos
-        self._cached_scene_processors: list[zesper.Processor] = []
-        self.player_entity_id: Optional[int] = None
+        self.start_tile_position = start_tile_position
         self.camera: Optional[Camera] = None
         self.maps: Optional[Map] = None
-        if player_components:
-            self.player_entity_id = self.world.create_entity(*player_components)
+        self.player_entity_id: Optional[int] = None
         self.music_path = music_path
+        self._player_components = player_components
+        self._cached_scene_processors: list[zesper.Processor] = []
 
     def on_enter(self):
 
-        self.load_resources()
+        self._load_resources()
         self._generate_map()
         self._generate_objects()
 
@@ -98,10 +96,11 @@ class GameplayScene(BaseScene):
             pygame.mixer.music.play(-1)
 
         # Add player entity
-        player_x_pos, player_y_pos = self.maps.get_center_coord_from_tile(self.start_tile_x_pos, self.start_tile_y_pos)
-        if self.player_entity_id is None:
+        player_x_pos, player_y_pos = self.maps.get_center_coord_from_tile(*self.start_tile_position)
+        if self._player_components is None:
             self.player_entity_id = player.create_player_at(center_x_pos=player_x_pos, center_y_pos=player_y_pos, world=self.world)
         else:
+            self.player_entity_id = self.world.create_entity(*self._player_components)
             position = self.world.component_for_entity(self.player_entity_id, cmp.Position)
             velocity = self.world.component_for_entity(self.player_entity_id, cmp.Velocity)
             hitbox = self.world.component_for_entity(self.player_entity_id, cmp.HitBox)
@@ -169,7 +168,7 @@ class GameplayScene(BaseScene):
         self.event_manager.subscribe_handler_method(events.PauseEvent, self.on_pause)
         self.event_manager.subscribe_handler_method(events.ResumeEvent, self.on_resume)
 
-    def load_resources(self):
+    def _load_resources(self):
         """ Should load all resources for a given scene """
         # TODO: Do not use the resource manager instance reference  within the world instance but the one on this parent node
         world_map = WorldMap.from_map_file_path(self.map_data_file)
@@ -234,7 +233,7 @@ class GameplayScene(BaseScene):
             transition_effects.closing_circle(self.player_entity_id, self.camera, self.world)
         pygame.mixer.music.fadeout(20)
 
-    def on_pause(self, pause_event: events.PauseEvent):
+    def on_pause(self, _pause_event: events.PauseEvent):
         """
         Removes all control form other entities unless it has a dialog or menu component
         We store these components locally for later reinsertion
@@ -244,15 +243,15 @@ class GameplayScene(BaseScene):
         self.event_manager.remove_handler(input_processor)
         self._cached_scene_processors = self.world.remove_all_processors_except(RenderSystem, DialogMenuSystem)
 
-    def on_resume(self, resume_event: events.ResumeEvent):
+    def on_resume(self, _resume_event: events.ResumeEvent):
         for proc in self._cached_scene_processors:
             self.world.add_processor(proc, PROCESSOR_PRIORITY[type(proc)])
         input_processor = self.world.get_processor(PlayerInputSystem)
         self.event_manager.subscribe_handler(input_processor)
         self._cached_scene_processors = []
 
-    def on_restart(self, restart_event: events.RestartEvent):
-        self.in_scene = False
+    def on_restart(self, _restart_event: events.RestartEvent):
+        self.finished = True
         self.next_scene = self
         self.player_entity_id = None  # TODO: Should one keep the player or store some information here?
         self.world.clear_database()
@@ -265,11 +264,11 @@ class GameplayScene(BaseScene):
         door = self.world.component_for_entity(hit_door_event.door_entity, cmp.Door)
 
         if door.target_map.parent != self.map_data_file.parent:  # If it is not part of the same parent map, i.e., another world
-            self.in_scene = False
+            self.finished = True
             player_components = self.world.components_for_entity(self.player_entity_id)
             current_scene_class = type(self)  # NOTE: It may be other type of scenes
             non_overworld_music_path = Path('assets', 'music', 'Los_Miticos_del_Ritmo-La_Libanessa.ogg')
-            self.next_scene = current_scene_class(self.window, self.controller, door.target_map, door.target_x, door.target_y,
+            self.next_scene = current_scene_class(self.window, self.controller, door.target_map, IVec(door.target_x, door.target_y),
                                                   player_components, non_overworld_music_path)
         else:
             self.event_queue.clear()
@@ -335,7 +334,7 @@ class GameplayScene(BaseScene):
                 self.world.add_processor(proc, PROCESSOR_PRIORITY[type(proc)])
             self._cached_scene_processors = []
 
-    def on_death(self, death_event: events.DeathEvent):
+    def on_death(self, _death_event: events.DeathEvent):
         """
         Saves the status of the player (weapons, hearts, etc., wherever that is allocated in the end), removes all processors
         except the animation and render processor, and creates a death menu
