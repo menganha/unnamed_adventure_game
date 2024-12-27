@@ -28,7 +28,7 @@ IDLE_ANIMATION_FRAME = 10
 MOVE_ANIMATION_DELAY = 5
 
 # TODO: Modify the sprite such that the range of the sword is the same on all cardinal directions!!!
-SWORD_FRONT_RANGE = 15
+SWORD_FRONT_RANGE = 16
 SWORD_SIDE_RANGE = 20
 SWORD_FREEZE_FRAMES = 15
 SWORD_DAMAGE = 5
@@ -94,7 +94,13 @@ def drop_bomb(player_entity_id: int, world: zesper.World):
 
 def create_melee_weapon(player_entity_id: int, world: zesper.World):
     """ Creates a Weapon hitbox for the parent entity with a hitbox """
-    weapon_entity_id = _create_hitbox_in_front(player_entity_id, SWORD_FRONT_RANGE, SWORD_SIDE_RANGE, world)
+
+    weapon_entity_id = world.create_entity()
+
+    hitbox = _create_hitbox_in_front(player_entity_id, SWORD_FRONT_RANGE, SWORD_SIDE_RANGE, world)
+    world.add_component(weapon_entity_id, hitbox)
+
+    # world.add_component(hitbox_entity_id, hitbox)
     world.add_component(weapon_entity_id,
                         cmp.Weapon(damage=SWORD_DAMAGE, active_frames=SWORD_ACTIVE_FRAMES, freeze_frames=SWORD_FREEZE_FRAMES,
                                    recoil_velocity=SWORD_RECOIL_VEL))
@@ -111,7 +117,12 @@ def create_melee_weapon(player_entity_id: int, world: zesper.World):
 
 def create_interactive_hitbox(player_entity_id: int, world: zesper.World):
     """ Creates a hitbox to detect interaction with other objects """
-    entity_id = _create_hitbox_in_front(player_entity_id, INTERACTIVE_FRONT_RANGE, INTERACTIVE_SIDE_RANGE, world)
+
+    entity_id = world.create_entity()
+
+    hitbox = _create_hitbox_in_front(player_entity_id, INTERACTIVE_FRONT_RANGE, INTERACTIVE_SIDE_RANGE, world)
+
+    world.add_component(entity_id, hitbox)
     world.add_component(entity_id, cmp.InteractorTag())
     world.event_queue.add(DeleteEntityEvent(entity_id), frames_delay=1)
 
@@ -208,19 +219,21 @@ def handle_input(input_event: InputEvent, player_entity_id: int, world: zesper.W
         handle_animation_for_input(player_entity_id, state, world)
 
 
-def _create_hitbox_in_front(player_entity_id: int, front_range: int, side_range: int, world: zesper.World) -> int:
+def _create_hitbox_in_front(player_entity_id: int, front_range: int, side_range: int,
+                            world: zesper.World) -> cmp.HitBox:
     """ Creates a hitbox in the direction the player is facing """
     direction = world.component_for_entity(player_entity_id, cmp.State).direction
+    player_hitbox = world.component_for_entity(player_entity_id, cmp.HitBox)
+
     if direction in (Direction.LEFT, Direction.RIGHT):
         hitbox = cmp.HitBox(0, 0, front_range, side_range)
+        hitbox.x = player_hitbox.x + (
+                    (player_hitbox.w - front_range) + (player_hitbox.w + front_range) * (direction.value.x)) // 2
+        hitbox.y = player_hitbox.y + (player_hitbox.h - side_range) // 2
     else:
         hitbox = cmp.HitBox(0, 0, side_range, front_range)
+        hitbox.x = player_hitbox.x + (player_hitbox.w - side_range) // 2
+        hitbox.y = player_hitbox.y + (
+                    (player_hitbox.h - front_range) + (player_hitbox.h + front_range) * (direction.value.y)) // 2
 
-    player_hitbox = world.component_for_entity(player_entity_id, cmp.HitBox)
-    hitbox.centerx = player_hitbox.centerx + int((player_hitbox.w + front_range) * direction.value.x) / 2
-    hitbox.centery = player_hitbox.centery + int((player_hitbox.h + front_range) * direction.value.y) / 2
-
-    hitbox_entity_id = world.create_entity()
-    world.add_component(hitbox_entity_id, hitbox)
-
-    return hitbox_entity_id
+    return hitbox

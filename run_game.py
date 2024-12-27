@@ -7,9 +7,11 @@ import pygame
 from yazelc.gamepad import Gamepad
 from yazelc.keyboard import Keyboard
 
+# import pygame.freetype
+
 pygame.init()
-pygame.freetype.init()
-pygame.mixer.init()
+# pygame.freetype.init()
+# pygame.mixer.init()
 
 from yazelc import config as cfg
 from scenes import scene_manager
