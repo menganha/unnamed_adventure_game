@@ -79,7 +79,7 @@ class GameplayScene(BaseScene):
         self.map_data_file = map_file_path
         self.start_tile_position = start_tile_position
         self.camera: Optional[Camera] = None
-        self.maps: Optional[Map] = None
+        self.map: Optional[Map] = None
         self.player_entity_id: Optional[int] = None
         self.music_path = music_path
         self._player_components = player_components
@@ -96,9 +96,10 @@ class GameplayScene(BaseScene):
             pygame.mixer.music.play(-1)
 
         # Add player entity
-        player_x_pos, player_y_pos = self.maps.get_center_coord_from_tile(*self.start_tile_position)
+        player_x_pos, player_y_pos = self.map.get_center_coord_from_tile(*self.start_tile_position)
         if self._player_components is None:
-            self.player_entity_id = player.create_player_at(center_x_pos=player_x_pos, center_y_pos=player_y_pos, world=self.world)
+            self.player_entity_id = player.create_player_at(center_x_pos=player_x_pos, center_y_pos=player_y_pos,
+                                                            world=self.world)
         else:
             self.player_entity_id = self.world.create_entity(*self._player_components)
             position = self.world.component_for_entity(self.player_entity_id, cmp.Position)
@@ -109,7 +110,7 @@ class GameplayScene(BaseScene):
             position.x, position.y = player.get_position_of_sprite(hitbox)
 
         # Add camera entity
-        self.camera = Camera(0, 0, self.maps.width, self.maps.height)
+        self.camera = Camera(0, 0, self.map.width, self.map.height)
         self.camera.track_entity(self.player_entity_id, self.world)
 
         # Initialize the HUD
@@ -118,7 +119,7 @@ class GameplayScene(BaseScene):
 
         # Create a pickable item
         for idx in range(3):
-            x_pos, y_pos = self.maps.get_center_coord_from_tile(7 + idx, 17)
+            x_pos, y_pos = self.map.get_center_coord_from_tile(7 + idx, 17)
             items.create_entity(CollectableItemType.COIN, x_pos, y_pos, self.world)
         # items.create_entity(items.PickableItemType.HEART, 300, 355, self.world)
         # items.create_entity(items.PickableItemType.HEART, 350, 355, self.world)
@@ -173,6 +174,7 @@ class GameplayScene(BaseScene):
         # TODO: Do not use the resource manager instance reference  within the world instance but the one on this parent node
         world_map = WorldMap.from_map_file_path(self.map_data_file)
         for tileset_image_path in world_map.get_needed_images_path():
+            # We load all the resources for all maps in the particular world
             self.world.resource_manager.add_texture(tileset_image_path)
         self.world.resource_manager.add_font(FONT_PATH, FONT_SIZE, FONT_COLOR, dialog_box.DIALOG_FONT_ID)
         self.world.resource_manager.add_font(FONT_PATH, FONT_SIZE, FONT_COLOR, menu_box.MENU_FONT_ID)
@@ -181,13 +183,16 @@ class GameplayScene(BaseScene):
         self.world.resource_manager.add_texture(EMPTY_HEART_IMAGE_PATH)
         self.world.resource_manager.add_animation_strip(TREASURE_IMAGE_PATH, InventorySystem.TREASURE_TILE_SIZE,
                                                         explicit_name=InventorySystem.TREASURE_TEXTURE_ID)
-        self.world.resource_manager.add_animation_strip(COINS_IMAGE_PATH, items.COIN_TILE_SIZE, explicit_name=CollectableItemType.COIN.name)
-        self.world.resource_manager.add_animation_strip(BOMB_IMG_PATH, weapons.BOMB_SPRITE_WIDTH, explicit_name=weapons.BOMB_SPRITES_ID)
+        self.world.resource_manager.add_animation_strip(COINS_IMAGE_PATH, items.COIN_TILE_SIZE,
+                                                        explicit_name=CollectableItemType.COIN.name)
+        self.world.resource_manager.add_animation_strip(BOMB_IMG_PATH, weapons.BOMB_SPRITE_WIDTH,
+                                                        explicit_name=weapons.BOMB_SPRITES_ID)
         for path in SOUND_EFFECTS_PATH.glob(f'*{self.resource_manager.OGG_FILETYPE}'):
             self.world.resource_manager.add_sound(path)
 
         self.world.resource_manager.add_all_animation_strips(ENEMY_PATH, enemy.KEFER_ID, enemy.KEFER_SPRITE_WIDTH)
-        self.world.resource_manager.add_all_animation_strips(PLAYER_IMAGE_PATH, player.SPRITE_SHEET_ID, player.SPRITE_SIZE)
+        self.world.resource_manager.add_all_animation_strips(PLAYER_IMAGE_PATH, player.SPRITE_SHEET_ID,
+                                                             player.SPRITE_SIZE)
         self.world.resource_manager.add_all_animation_strips(ENEMY_PATH, enemy.JELLY_ID, enemy.JELLY_SPRITE_WIDTH)
 
         # idle animation
@@ -205,28 +210,29 @@ class GameplayScene(BaseScene):
         Generates the map with all the relevant data, e.g., items, enemies, triggers, etc.
         """
 
-        self.maps = Map(self.map_data_file, self.world.resource_manager)
+        self.map = Map(self.map_data_file, self.world.resource_manager)
 
-        for depth, map_layer in self.maps.get_map_images():
+        for depth, map_layer in self.map.get_map_images():
             layer_entity_id = self.world.create_entity()
             self.world.add_component(layer_entity_id, cmp.Position(x=x_pos, y=y_pos))
             self.world.add_component(layer_entity_id, cmp.Renderable(image=map_layer, depth=depth))
-            self.maps.layer_entities.append(layer_entity_id)
+            self.map.layer_entities.append(layer_entity_id)
 
     def _generate_objects(self):
         dialog_font = self.world.resource_manager.get_font(dialog_box.DIALOG_FONT_ID)
-        for components in self.maps.create_objects():
+        for components in self.map.create_colliders():
             ent_id = self.world.create_entity(*components)
-            self.maps.object_entities.append(ent_id)
-        for components in self.maps.create_interactive_objects(dialog_font):
+            self.map.object_entities.append(ent_id)
+        for components in self.map.create_interactive_objects(dialog_font):
             ent_id = self.world.create_entity(*components)
-            self.maps.object_entities.append(ent_id)
-        for door, hitbox in self.maps.create_doors():
+            self.map.object_entities.append(ent_id)
+        for door, hitbox in self.map.create_doors():
             ent_id = self.world.create_entity(door, hitbox)
-            self.maps.object_entities.append(ent_id)
-        for pos_x, pos_y, enemy_type in self.maps.create_enemies():
-            ent_id = enemy.create_enemy_at(pos_x, pos_y, self.world, enemy_type)  # TODO: Generalize for any type of enemy
-            self.maps.object_entities.append(ent_id)
+            self.map.object_entities.append(ent_id)
+        for pos_x, pos_y, enemy_type in self.map.create_enemies():
+            ent_id = enemy.create_enemy_at(pos_x, pos_y, self.world,
+                                           enemy_type)  # TODO: Generalize for any type of enemy
+            self.map.object_entities.append(ent_id)
 
     def on_exit(self):
         if type(self.next_scene) == type(self) and self.next_scene != self:  # Why do we make this check?
@@ -268,16 +274,17 @@ class GameplayScene(BaseScene):
             player_components = self.world.components_for_entity(self.player_entity_id)
             current_scene_class = type(self)  # NOTE: It may be other type of scenes
             non_overworld_music_path = Path('assets', 'music', 'Los_Miticos_del_Ritmo-La_Libanessa.ogg')
-            self.next_scene = current_scene_class(self.window, self.controller, door.target_map, IVec(door.target_x, door.target_y),
+            self.next_scene = current_scene_class(self.window, self.controller, door.target_map,
+                                                  IVec(door.target_x, door.target_y),
                                                   player_components, non_overworld_music_path)
         else:
             self.event_queue.clear()
 
             # Delete object entities and store references to old map layer image entities for generating the "scroll" effect
-            for ent_id in self.maps.object_entities:
+            for ent_id in self.map.object_entities:
                 if self.world.entity_exists(ent_id):
                     self.world.delete_entity(ent_id)
-            previous_map_layers = self.maps.layer_entities
+            previous_map_layers = self.map.layer_entities
 
             player_position = self.world.component_for_entity(self.player_entity_id, cmp.Position)
             player_hitbox = self.world.component_for_entity(self.player_entity_id, cmp.HitBox)
@@ -286,7 +293,8 @@ class GameplayScene(BaseScene):
             # player_position.x, player_position.y = self.maps.get_coord_from_tile(door.target_x, door.target_y)
             # player_hitbox.rect.centerx, player_hitbox.rect.centery = player.get_position_of_hitbox(player_position)
 
-            normal = [0 if abs(value) < ZERO_THRESHOLD else copysign(1, value) for value in (player_velocity.x, player_velocity.y)]
+            normal = [0 if abs(value) < ZERO_THRESHOLD else copysign(1, value) for value in
+                      (player_velocity.x, player_velocity.y)]
             map_velocity = [- value * MAP_VELOCITY_TRANSITION for value in normal]
             new_map_position = [nor * res for (nor, res) in zip(normal, cfg.RESOLUTION)]
 
@@ -294,7 +302,7 @@ class GameplayScene(BaseScene):
             self.map_data_file = door.target_map
             self._generate_map(*new_map_position)
 
-            for layer_entity_id in self.maps.layer_entities:
+            for layer_entity_id in self.map.layer_entities:
                 self.world.add_component(layer_entity_id, cmp.Velocity(*map_velocity))
             for layer_entity_id in previous_map_layers:
                 self.world.add_component(layer_entity_id, cmp.Velocity(*map_velocity))
@@ -319,11 +327,11 @@ class GameplayScene(BaseScene):
                 frames_to_exit -= 1
 
             player_velocity.x, player_velocity.y = 0, 0
-            player_position.x, player_position.y = self.maps.get_coord_from_tile(door.target_x, door.target_y)
+            player_position.x, player_position.y = self.map.get_coord_from_tile(door.target_x, door.target_y)
             player_hitbox.centerx, player_hitbox.centery = player.get_position_of_hitbox(player_position)
 
             # Remove velocity components and delete old map layer entities
-            for layer_entity_id in self.maps.layer_entities:
+            for layer_entity_id in self.map.layer_entities:
                 self.world.remove_component(layer_entity_id, cmp.Velocity)
             for layer_entity_id in previous_map_layers:
                 self.world.delete_entity(layer_entity_id)

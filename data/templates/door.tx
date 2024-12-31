@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<template>
+ <object width="4" height="16">
+  <properties>
+   <property name="target_door" value="dungeon_1:1_0.tmx"/>
+   <property name="target_x" type="int" value="1"/>
+   <property name="target_y" type="int" value="7"/>
+  </properties>
+ </object>
+</template>

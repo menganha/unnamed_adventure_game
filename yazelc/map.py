@@ -26,7 +26,7 @@ class WorldMap:
             self._data = json.load(file)
 
     def get_needed_images_path(self) -> list[Path]:
-        """ Gets the file paths of minimal subset of images to load all the maps of this world """
+        """ Gets the filepaths of all the tilesets used for the maps of this world """
         image_paths = []
         for single_map in self._data['maps']:
             file_name = single_map['fileName']
@@ -51,18 +51,28 @@ class WorldMap:
 
     @classmethod
     def from_map_file_path(cls, map_file_path: Path) -> 'WorldMap':
+        """ Derives from a map file (.tmx) the world map"""
         world_map_file_path = cls.get_world_map_file_path(map_file_path)
         return cls(world_map_file_path)
 
 
 class Map:
+    """
+    Loads ands stores all map entities from a TMX file
+
+    It joins the different tiles surfaces to generate a single image map
+
+    A tile layer with the name "foreground" has n special meaning. No colliders will be instantiated for it, and it
+    will generate it own image map that will be overlayed on top of all others. This is to show 3d depth by hiding
+    the character in between these two layers, e.g., in between trees
+
+    """
     DATA_PATH = Path('data')
     DOOR_TARGET_X_STR = 'target_x'
     DOOR_TARGET_Y_STR = 'target_y'
     DOOR_TARGET_STR = 'target_door'
     DOOR_PATH_SEP = ':'
     FOREGROUND_LAYER_NAME = 'foreground'
-    OBJECT_LAYER_NAME = 'colliders'
     INTERACTIVE_OBJECT_LAYER_NAME = 'interactive'
     ENEMY_LAYER_NAME = 'enemy'
     ENEMY_PROP = 'enemy'
@@ -78,7 +88,8 @@ class Map:
         self.tmx_data = TiledMap(str(map_file_path), image_loader=self.yazelc_tiled_image_loader)
         self.width = self.tmx_data.width * self.tmx_data.tilewidth
         self.height = self.tmx_data.height * self.tmx_data.tileheight
-        self.layer_entities = []
+
+        self.layer_entities = []  # TODO: Maybe remove this away and put it in some other container
         self.object_entities = []
 
     def get_map_images(self) -> list[tuple[int, pygame.Surface]]:
@@ -86,35 +97,39 @@ class Map:
         map_height = self.tmx_data.height * self.tmx_data.tileheight
         map_image = pygame.Surface((map_width, map_height), flags=pygame.SRCALPHA)
 
-        foreground_layer_exists = False
         for layer in self.tmx_data.layers:
             if not isinstance(layer, TiledTileLayer):
                 continue
             if layer.name == self.FOREGROUND_LAYER_NAME:
-                foreground_layer_exists = True
                 continue
             for x, y, image, in layer.tiles():
                 map_image.blit(image, (x * self.tmx_data.tilewidth, y * self.tmx_data.tileheight))
 
-        if foreground_layer_exists:  # Adds an extra image. could be generalized to a group
+        if self.FOREGROUND_LAYER_NAME in map(lambda name: name.lower(), self.tmx_data.layernames):
             map_foreground_image = pygame.Surface((map_width, map_height), flags=pygame.SRCALPHA)
             foreground_layer = self.tmx_data.get_layer_by_name(self.FOREGROUND_LAYER_NAME)
             for x, y, image, in foreground_layer.tiles():
                 map_foreground_image.blit(image, (x * self.tmx_data.tilewidth, y * self.tmx_data.tileheight))
             return [(self.GROUND_LEVEL_DEPTH, map_image), (self.FOREGROUND_LAYER_DEPTH, map_foreground_image)]
         else:
-            logging.info(f'No foreground layer named {self.FOREGROUND_LAYER_NAME} found for the map {self.map_file_path}')
+            logging.info(
+                f'No foreground layer named {self.FOREGROUND_LAYER_NAME} found for the map {self.map_file_path}')
             return [(self.GROUND_LEVEL_DEPTH, map_image)]
 
-    def create_objects(self) -> Iterator[tuple]:
-        if self.OBJECT_LAYER_NAME not in self.tmx_data.layernames:
-            logging.info(f'No {self.OBJECT_LAYER_NAME} layer found for the map {self.map_file_path}')
-            return
-        for obj in self.tmx_data.get_layer_by_name(self.OBJECT_LAYER_NAME):
-            hit_box = cmp.HitBox(obj.x, obj.y, obj.width, obj.height, impenetrable=True)
-            position = cmp.Position(obj.x, obj.y)
-            components = (hit_box,)
-            yield components
+    def create_colliders(self) -> Iterator[tuple]:
+        for layer_no, layer in enumerate(self.tmx_data.layers):
+            if not isinstance(layer, TiledTileLayer):
+                continue
+            if layer.name.lower() == self.FOREGROUND_LAYER_NAME:
+                continue
+            for x, y, _, in layer.tiles():
+                properties = self.tmx_data.get_tile_properties(x, y, layer_no)
+                if properties and 'colliders' in properties:
+                    collider = properties['colliders'][0]  # Assume tile has a single collider box
+                    hit_box = cmp.HitBox(x * self.tmx_data.tilewidth + collider.x,
+                                         y * self.tmx_data.tileheight + collider.y, collider.width, collider.height,
+                                         impenetrable=True)
+                    yield (hit_box,)
 
     def create_interactive_objects(self, font: Font) -> Iterator[tuple]:
         if self.INTERACTIVE_OBJECT_LAYER_NAME not in self.tmx_data.layernames:
@@ -182,6 +197,7 @@ class Map:
         Returns:
             function to load tile images
 
+        This is a direct copy of "pygame_image_loader" but retrieving the pygame Surfaces from the resource manager
         """
         if color_key:
             color_key = pygame.Color("#{0}".format(color_key))

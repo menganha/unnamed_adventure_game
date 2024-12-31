@@ -1,3 +1,0 @@
-rules_objects.tmx
-rules_border.tmx
-rules_interactive.tmx
