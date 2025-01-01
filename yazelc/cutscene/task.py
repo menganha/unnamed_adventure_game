@@ -7,7 +7,7 @@ from yazelc.zesper import World
 class Task(ABC):
 
     def run(self, world: World) -> Generator[None, None, None]:
-        """ Coroutine """
+        """ A simple generator that runs the task until is finished """
         while not self.is_finished(world):
             self.update(world)
             yield
@@ -19,4 +19,5 @@ class Task(ABC):
 
     @abstractmethod
     def is_finished(self, world: World) -> bool:
+        """ Signals when to finish the task. Otherwise, it loops forever"""
         pass

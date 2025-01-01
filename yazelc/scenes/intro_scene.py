@@ -60,16 +60,18 @@ class IntroScene(BaseScene):
 
         shield_ent = self.world.create_entity(Position(0, -150, absolute=True), Renderable(shield_surface))
 
+        shield_ent_2 = self.world.create_entity(Position(0, -150, absolute=True), Renderable(shield_surface))
+
         title = ''
         items = ['Start Game', 'Credits', 'Exit']
         menu_type = MenuType.START  # TODO: Callback is stored somewhere else. This seems highly un-encapsulated
         menu_components = menu_box.get_components(title, items, font, menu_type)
 
         # Set cutscene
-        task_list = [
-            FadeInTask(pg_logo_ent, TweenFunction.EASE_OUT_CUBIC, duration_frames=300),
+        task_list_main = [
+            FadeInTask(pg_logo_ent, tween_function=TweenFunction.EASE_OUT_CUBIC, duration_frames=300),
             WaitTask(duration_frames=100),
-            FadeOutTask(pg_logo_ent, TweenFunction.EASE_OUT_CUBIC, duration_frames=150),
+            FadeOutTask(pg_logo_ent, tween_function=TweenFunction.EASE_OUT_CUBIC, duration_frames=150),
             WaitTask(duration_frames=100),
             SpawnTask(*credit_ent_components, duration_frames=350),
             WaitTask(duration_frames=250),
@@ -78,9 +80,13 @@ class IntroScene(BaseScene):
             SpawnTask(*menu_components, duration_frames=-1)
         ]
 
+        secondary_task_list = [
+            MoveTask(shield_ent_2, final_pos=IVec(200, 90), duration_frames=350),
+        ]
+
         # Set systems
         render_sys = RenderSystem(self.window)
-        cutscene_sys = CutsceneSystem(*task_list)
+        cutscene_sys = CutsceneSystem(task_list_main, secondary_task_list)
         dialog_sys = DialogMenuSystem()
         self.world.add_processor(render_sys)
         self.world.add_processor(cutscene_sys)

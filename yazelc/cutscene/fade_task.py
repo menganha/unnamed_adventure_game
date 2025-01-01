@@ -26,7 +26,6 @@ class FadeInTask(Task):
 
 class FadeOutTask(FadeInTask):
     """ Moves from initial position to final one in the closes direction to the 8 moving possible ones """
-    MAX_ALPHA = 255
 
     def update(self, world: World):
         time = self.frame_counter / (self.duration_frames - 1)

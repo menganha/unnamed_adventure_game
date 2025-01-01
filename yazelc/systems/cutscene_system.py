@@ -3,28 +3,38 @@ from collections import deque
 
 from cutscene.task import Task
 from yazelc import zesper
-from yazelc.event.events import CutsceneFinishedEvent
 
 
 class CutsceneSystem(zesper.Processor):
-    """ Runs list of Task types which are coroutines (generators) """
+    """
+    Runs list of Task types which are coroutines (generators)  as a cutscene. It is possible to run in parallel more
+    than one list of tasks.
+    """
 
-    def __init__(self, *tasks: Task):
+    def __init__(self, *task_lists: list[Task]):
         super().__init__()
-        self.task_queue = deque(tasks)
-        self.coroutine = self._get_coroutine()
-        self._cutscene_finished = False if tasks else True
+
+        self.coroutine_list = dict()
+        for single_task_list in task_lists:
+            coroutine = self._get_coroutine(single_task_list)
+            self.coroutine_list.update({hex(id(coroutine)): coroutine})
+            logging.debug(f'Starting task list: {str(coroutine)}')
 
     def process(self, *args, **kwargs):
-        if not self._cutscene_finished:
-            try:
-                next(self.coroutine)
-            except StopIteration:
-                logging.info('Finished cutscene')
-                self.world.event_queue.add(CutsceneFinishedEvent())
-                self._cutscene_finished = True
+        task_list_to_remove = []
 
-    def _get_coroutine(self):
-        while self.task_queue:
-            task = self.task_queue.popleft()
+        for id_, coroutine in self.coroutine_list.items():
+            try:
+                next(coroutine)
+            except StopIteration:
+                task_list_to_remove.append(id_)
+                logging.debug(f'Finished task list {coroutine}')
+
+        for task_list_id in task_list_to_remove:
+            self.coroutine_list.pop(task_list_id)
+
+    def _get_coroutine(self, task_list: list[Task]):
+        task_queue = deque(task_list)
+        while task_queue:
+            task = task_queue.popleft()
             yield from task.run(self.world)

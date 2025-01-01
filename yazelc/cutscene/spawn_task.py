@@ -5,7 +5,7 @@ from yazelc.zesper import World
 
 
 class SpawnTask(Task):
-    """ Creates an entity with the given components and delete it if duration_frames is negative """
+    """ Creates an entity with the given components and deletes it if duration_frames is negative """
 
     def __init__(self, *components: Any, duration_frames: int = 1):
         self.components = components
