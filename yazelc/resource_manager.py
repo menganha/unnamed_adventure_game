@@ -3,6 +3,7 @@ from enum import Enum
 from pathlib import Path
 
 import pygame
+import pygame.freetype
 
 from yazelc import animation
 from yazelc.font import Font
@@ -71,7 +72,7 @@ class ResourceManager:
             if file_type == self.TRUE_TYPE_FONT_FILETYPE:
                 if path not in self._pygame_font_objects:
                     self._pygame_font_objects.update({path: pygame.freetype.Font(path, size=size)})
-                font = Font(self._pygame_font_objects[path], size, color)
+                font = Font(self._pygame_font_objects[path], color)
                 self._fonts.update({name: font})
                 return font
             else:

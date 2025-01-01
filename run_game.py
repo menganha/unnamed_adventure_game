@@ -4,14 +4,11 @@ from pathlib import Path
 
 import pygame
 
+pygame.init()
+
 from yazelc.gamepad import Gamepad
 from yazelc.keyboard import Keyboard
 
-# import pygame.freetype
-
-pygame.init()
-# pygame.freetype.init()
-# pygame.mixer.init()
 
 from yazelc import config as cfg
 from scenes import scene_manager
@@ -24,7 +21,9 @@ INITIAL_MUSIC_PATH = Path('assets', 'music', 'Quantic_y_Los_Míticos_del_Ritmo-H
 INITIAL_POS = IVec(10, 24)
 
 if __name__ == '__main__':
-    logging.basicConfig(level=logging.INFO, format='%(asctime)s %(message)s')
+    logging.basicConfig(level=logging.INFO, format='%(asctime)s.%(msecs)03d [%(levelname)s]: %(message)s',
+                        datefmt='%I:%M:%S')
+
     window = pygame.display.set_mode((cfg.RESOLUTION.x, cfg.RESOLUTION.y), pygame.SCALED, vsync=1)
 
     pygame.joystick.init()
