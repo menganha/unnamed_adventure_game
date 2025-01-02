@@ -22,17 +22,17 @@ class DialogMenuSystem(zesper.Processor):
 
             background = renderable_cmp.image
             width, height = background.get_size()
-            line_spacing = dialog.font.char_height + dialog_box.DELTA_LINE_SPACING
+            line_spacing = dialog.font.line_spacing + dialog_box.DELTA_LINE_SPACING
 
             if dialog.index == 0:
-                dialog.x_pos, dialog.y_pos = dialog_box.X_MARGIN, dialog.font.char_height + dialog_box.Y_MARGIN
+                dialog.x_pos, dialog.y_pos = dialog_box.X_MARGIN, dialog.font.line_spacing + dialog_box.Y_MARGIN
             if not dialog.font.fits_on_box(dialog.current_sentence(), width):
                 dialog.y_pos += line_spacing
                 dialog.x_pos = dialog_box.X_MARGIN
                 dialog.index_start = dialog.index
             if dialog.y_pos >= height - dialog_box.Y_MARGIN:
                 dialog_box.add_triangle_signal(entity, self.world)
-                dialog.x_pos, dialog.y_pos = dialog_box.X_MARGIN, dialog.font.char_height + dialog_box.Y_MARGIN
+                dialog.x_pos, dialog.y_pos = dialog_box.X_MARGIN, dialog.font.line_spacing + dialog_box.Y_MARGIN
                 dialog.index_start = dialog.index
                 dialog.idle = True
                 self.world.event_queue.add(SoundEndEvent(self.TEXT_SCROLL_SOUND_ID))

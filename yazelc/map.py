@@ -9,7 +9,7 @@ from typing import Iterator, Optional
 from xml.etree import ElementTree
 
 import pygame
-from pytmx import TiledTileLayer, TiledMap, util_pygame
+from pytmx import TiledTileLayer, TiledMap, util_pygame, TiledObjectGroup
 
 from yazelc import components as cmp
 from yazelc.font import Font
@@ -98,12 +98,17 @@ class Map:
         map_image = pygame.Surface((map_width, map_height), flags=pygame.SRCALPHA)
 
         for layer in self.tmx_data.layers:
-            if not isinstance(layer, TiledTileLayer):
-                continue
             if layer.name == self.FOREGROUND_LAYER_NAME:
                 continue
-            for x, y, image, in layer.tiles():
-                map_image.blit(image, (x * self.tmx_data.tilewidth, y * self.tmx_data.tileheight))
+            if isinstance(layer, TiledTileLayer):
+                for x, y, image, in layer.tiles():
+                    map_image.blit(image, (x * self.tmx_data.tilewidth, y * self.tmx_data.tileheight))
+            elif isinstance(layer, TiledObjectGroup):
+                for obj in layer:
+                    if obj.image:
+                        map_image.blit(obj.image, (obj.x, obj.y))
+            else:
+                logging.debug(f'Ignoring {str(layer)} layer type ')
 
         if self.FOREGROUND_LAYER_NAME in map(lambda name: name.lower(), self.tmx_data.layernames):
             map_foreground_image = pygame.Surface((map_width, map_height), flags=pygame.SRCALPHA)
@@ -118,18 +123,27 @@ class Map:
 
     def create_colliders(self) -> Iterator[tuple]:
         for layer_no, layer in enumerate(self.tmx_data.layers):
-            if not isinstance(layer, TiledTileLayer):
-                continue
             if layer.name.lower() == self.FOREGROUND_LAYER_NAME:
                 continue
-            for x, y, _, in layer.tiles():
-                properties = self.tmx_data.get_tile_properties(x, y, layer_no)
-                if properties and 'colliders' in properties:
-                    collider = properties['colliders'][0]  # Assume tile has a single collider box
-                    hit_box = cmp.HitBox(x * self.tmx_data.tilewidth + collider.x,
-                                         y * self.tmx_data.tileheight + collider.y, collider.width, collider.height,
-                                         impenetrable=True)
-                    yield (hit_box,)
+            if isinstance(layer, TiledTileLayer):
+                for x, y, _, in layer.tiles():
+                    properties = self.tmx_data.get_tile_properties(x, y, layer_no)
+                    if properties and 'colliders' in properties:
+                        collider = properties['colliders'][0]  # Assume tile has a single collider box
+                        hit_box = cmp.HitBox(x * self.tmx_data.tilewidth + collider.x,
+                                             y * self.tmx_data.tileheight + collider.y, collider.width, collider.height,
+                                             impenetrable=True)
+                        yield (hit_box,)
+            elif isinstance(layer, TiledObjectGroup):
+                for obj in layer:
+                    if obj.image and hasattr(obj, 'properties') and 'colliders' in obj.properties:
+                        collider = obj.properties['colliders'][0]  # Assume tile has a single collider box
+                        hit_box = cmp.HitBox(obj.x + collider.x,
+                                             obj.y + collider.y, collider.width, collider.height,
+                                             impenetrable=True)
+                        yield (hit_box,)
+            else:
+                logging.debug(f'Ignoring {str(layer)} layer type ')
 
     def create_interactive_objects(self, font: Font) -> Iterator[tuple]:
         if self.INTERACTIVE_OBJECT_LAYER_NAME not in self.tmx_data.layernames:
